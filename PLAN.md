@@ -123,6 +123,24 @@ The agent never touches photos directly. It calls a small set of tools that read
 
 ---
 
+### Phones without Apple Intelligence (decided 2026-11-10)
+
+The app must work fully on phones such as the iPhone 13 Pro Max, which have no Apple Intelligence. Two rules follow.
+
+**Nothing in Phases 1–3 may depend on Apple Intelligence.** Browsing, text recognition, labels, MobileCLIP search, auto-categories and duplicate detection use Vision and Core ML only, which run on the A15 and older chips.
+
+**Everything that needs a language model goes through one interface with interchangeable backends.** The agent, the lecture digest and captions call a single `LanguageModel` protocol and never a specific provider.
+
+| Backend | When it is used | Cost |
+|---|---|---|
+| Cloud small model (Claude Haiku 5.5 or similar) | Default on every phone | Well under a cent per request |
+| Apple Foundation Models | Automatically, when the phone has Apple Intelligence | Free |
+| Downloadable local model (1–3B parameters via MLX) | Optional offline mode, later | Free; 0.5–2 GB download, weaker results |
+
+Cloud requests carry text wherever possible: recognised slide text for digests, and the question plus a handful of search results for the agent. A digest of about 3,000 input and 800 output tokens costs roughly $0.0007 on Haiku 5.5 (estimate).
+
+If other people use the app, cloud calls are billed to the developer. Before any public release that needs a small proxy server with per-user limits, or user-supplied API keys, or a subscription. For personal use, a key in the Keychain is enough.
+
 ## 5. Build phases
 
 Each phase ends with something you can run on your phone.
@@ -139,6 +157,23 @@ Each phase ends with something you can run on your phone.
 | 7. Polish | Performance on the full library, battery, error states, TestFlight | Stable daily use |
 
 Phases 2 and 5 carry the most value; 6 is the most optional.
+
+### Phase 2 as built
+
+- **Index:** `Phophy/Index/`. A SQLite file (`index.sqlite` in the app's Application Support folder, via GRDB) with one row per photo: recognized text, Vision labels, MobileCLIP embedding. A trigram full-text table covers text and labels. Deleting the file is safe; it is rebuilt.
+- **Indexer:** runs after photo access is granted and whenever the library changes. Photos only; videos are skipped for now.
+- **Search:** word matches on text and labels first, then "looks like" matches ranked by MobileCLIP similarity. The cutoff (score of at least 0.20 and within 0.05 of the best hit) was tuned on MobileCLIP S0 with 7 test photos; re-check it on a real library and after changing the model.
+- **Search field** is pinned under the Search title, not merged into the tab bar: the tab-bar search field did not appear in the iOS 27 simulator.
+
+### MobileCLIP models (not in git)
+
+The models are about 120 MB and are ignored by git. Without them the app still builds and search falls back to text and labels. To install them, run this from the project folder:
+
+```bash
+for k in image text; do d=Phophy/CLIP/Models/mobileclip_s0_$k.mlpackage; mkdir -p $d/Data/com.apple.CoreML/weights; for f in Manifest.json Data/com.apple.CoreML/model.mlmodel Data/com.apple.CoreML/weights/weight.bin; do curl -fL "https://huggingface.co/apple/coreml-mobileclip/resolve/main/mobileclip_s0_$k.mlpackage/$f" -o "$d/$f"; done; done
+```
+
+To use the more accurate S2 model on a phone, download `mobileclip_s2_*` the same way and change `modelName` in `Phophy/CLIP/CLIPEncoder.swift`; photos are re-embedded automatically. The tokenizer in `Phophy/CLIP/Tokenizer/` comes from Apple's `ml-mobileclip` demo app (originally Hugging Face's swift-coreml-transformers).
 
 ---
 
