@@ -10,8 +10,8 @@ Analysis runs on the device wherever possible, so indexing thousands of photos c
 |---|---|---|
 | 0 | Xcode project, Liquid Glass shell | Done |
 | 1 | Photo library access, grids, photo view | Done |
-| 2 | On-device index (text recognition, MobileCLIP) and search | In progress |
-| 3 | Auto categories, duplicates, suggested albums | Planned |
+| 2 | On-device index (text recognition, MobileCLIP) and search | Done |
+| 3 | Auto categories, similar-photo cleanup, save as album | Done |
 | 4 | Agent chat over the index | Planned |
 | 5 | Lecture digest: slides to notes and flashcards | Planned |
 | 6 | AI photo editing | Planned |
@@ -45,6 +45,11 @@ xcrun simctl addmedia booted ~/Pictures/test/*.jpg
 | `Phophy/LibraryView.swift` | Home screen |
 | `Phophy/PhotoLibrary.swift` | PhotoKit access, permission, filters |
 | `Phophy/PhotoGridView.swift`, `PhotoDetailView.swift`, `AssetThumbnail.swift` | Browsing |
+| `Phophy/Index/` | On-device index, indexer and search engine |
+| `Phophy/CLIP/` | MobileCLIP encoder and tokenizer (models downloaded separately, see PLAN.md) |
+| `Phophy/SearchView.swift` | Search tab |
+| `Phophy/Collections/` | Automatic categories, similar photos, Collections tab |
+| `Phophy/Settings/` | Settings screen and AI backend choice |
 | `Phophy/Theme.swift` | Background and colour helpers |
 
 ## Privacy

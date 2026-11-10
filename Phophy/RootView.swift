@@ -5,6 +5,14 @@ import SwiftUI
 struct RootView: View {
     @State private var library = PhotoLibrary()
     @State private var indexStatus = IndexStatus()
+    @State private var collections = CollectionsModel()
+
+    /// What decides when collections are recomputed.
+    private struct CollectionsKey: Equatable {
+        let indexed: Int
+        let total: Int
+        let isRunning: Bool
+    }
 
     var body: some View {
         TabView {
@@ -12,11 +20,7 @@ struct RootView: View {
                 LibraryView()
             }
             Tab("Collections", systemImage: "square.stack") {
-                ComingSoonView(
-                    title: "Collections",
-                    systemImage: "square.stack",
-                    message: "Albums the agent sorts for you: slides, receipts, screenshots, people and places."
-                )
+                CollectionsView()
             }
             Tab("Study", systemImage: "text.book.closed") {
                 ComingSoonView(
@@ -36,6 +40,13 @@ struct RootView: View {
         .tint(.white)
         .environment(library)
         .environment(indexStatus)
+        .environment(collections)
+        .task(id: CollectionsKey(indexed: indexStatus.indexed, total: indexStatus.total, isRunning: indexStatus.isRunning)) {
+            guard library.hasAccess, indexStatus.total > 0 else { return }
+            // Recompute when indexing finishes, and every 100 photos while it runs.
+            guard !indexStatus.isRunning || indexStatus.indexed % 100 == 0 else { return }
+            await collections.refresh()
+        }
         .task { library.start() }
         .onChange(of: library.revision, initial: true) {
             guard library.hasAccess else { return }

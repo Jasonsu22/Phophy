@@ -30,6 +30,8 @@ enum PhotoFilter: String, Hashable, CaseIterable, Identifiable {
 enum Route: Hashable {
     case grid(PhotoFilter)
     case photo(localIdentifier: String)
+    case category(PhotoCategory)
+    case similarPhotos
 }
 
 extension View {
@@ -39,6 +41,8 @@ extension View {
             switch route {
             case let .grid(filter): PhotoGridView(filter: filter)
             case let .photo(localIdentifier): PhotoDetailView(localIdentifier: localIdentifier)
+            case let .category(category): CategoryGridView(category: category)
+            case .similarPhotos: SimilarPhotosView()
             }
         }
     }
@@ -90,6 +94,35 @@ final class PhotoLibrary: NSObject, PHPhotoLibraryChangeObserver {
     func setFavorite(_ isFavorite: Bool, for asset: PHAsset) async {
         try? await PHPhotoLibrary.shared().performChanges {
             PHAssetChangeRequest(for: asset).isFavorite = isFavorite
+        }
+    }
+
+    /// Moves photos to Recently Deleted. iOS asks the user to confirm first.
+    /// Returns false if the user declined or the change failed.
+    func delete(localIDs: [String]) async -> Bool {
+        let assets = PHAsset.fetchAssets(withLocalIdentifiers: localIDs, options: nil)
+        do {
+            try await PHPhotoLibrary.shared().performChanges {
+                PHAssetChangeRequest.deleteAssets(assets)
+            }
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    /// Adds photos to the album with this title, creating it if needed.
+    func addToAlbum(named title: String, localIDs: [String]) async throws {
+        let assets = PHAsset.fetchAssets(withLocalIdentifiers: localIDs, options: nil)
+        let options = PHFetchOptions()
+        options.predicate = NSPredicate(format: "title == %@", title)
+        let existing = PHAssetCollection
+            .fetchAssetCollections(with: .album, subtype: .albumRegular, options: options)
+            .firstObject
+        try await PHPhotoLibrary.shared().performChanges {
+            let request = existing.flatMap { PHAssetCollectionChangeRequest(for: $0) }
+                ?? PHAssetCollectionChangeRequest.creationRequestForAssetCollection(withTitle: title)
+            request.addAssets(assets)
         }
     }
 

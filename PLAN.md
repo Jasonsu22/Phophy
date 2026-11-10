@@ -177,6 +177,12 @@ To use the more accurate S2 model on a phone, download `mobileclip_s2_*` the sam
 
 ---
 
+### Phase 3 as built
+
+- **Categories:** Slides, Documents, Receipts, Food, People, Pets and Scenery are recognized by comparing each photo's MobileCLIP embedding with a few text descriptions per category, plus an "other" class so ordinary photos stay uncategorized. Slides, documents and receipts also need at least 20 characters of recognized text. Screenshots come from iOS directly. All thresholds live in `Collections/CollectionsEngine.swift` and were tuned on MobileCLIP S0 with a handful of test photos; re-check them on a real library.
+- **Similar photos:** each photo is compared with the next 23 photos taken after it; a cosine similarity of 0.92 or more counts as the same shot. The suggested keeper is a favorite, else the largest image. Deleting goes through iOS's own confirmation and into Recently Deleted.
+- **Save as album:** a category can be saved as a regular album in Photos, adding to an existing album of the same name.
+
 ## 6. iOS development basics for a first app
 
 ### Simulator

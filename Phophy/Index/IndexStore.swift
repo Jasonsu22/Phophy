@@ -156,6 +156,18 @@ nonisolated final class IndexStore: Sendable {
         }
     }
 
+    /// How many characters of text were recognized in each photo.
+    func textLengths() throws -> [String: Int] {
+        try db.read { db in
+            var lengths: [String: Int] = [:]
+            let rows = try Row.fetchCursor(db, sql: "SELECT local_id, length(ocr) AS n FROM asset")
+            while let row = try rows.next() {
+                lengths[row["local_id"]] = row["n"]
+            }
+            return lengths
+        }
+    }
+
     /// Every stored embedding for one model, as IDs plus one flat row-major matrix.
     func embeddings(model: String) throws -> (ids: [String], matrix: [Float], dimension: Int) {
         try db.read { db in
