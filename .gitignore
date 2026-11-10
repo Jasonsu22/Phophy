@@ -1,0 +1,9 @@
+.DS_Store
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.mlmodelc
+*.mlpackage
+.env
+Secrets.xcconfig
