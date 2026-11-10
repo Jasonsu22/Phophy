@@ -1,24 +1,73 @@
+import Photos
 import SwiftUI
 
-/// Home screen. Everything shown here is placeholder content until Phase 1
-/// connects the real photo library.
+/// Home screen: the newest photos, quick filters, and the way into everything else.
 struct LibraryView: View {
+    @Environment(PhotoLibrary.self) private var library
+    @Environment(\.openURL) private var openURL
+
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 4)
+    private let chipFilters: [PhotoFilter] = [.favorites, .screenshots, .videos]
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                header
-                chips
-                recents
-                DigestCard()
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    header
+                    content
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 24)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-            .padding(.bottom, 24)
+            .scrollIndicators(.hidden)
+            .background { AmbientBackground() }
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case let .grid(filter): PhotoGridView(filter: filter)
+                case let .photo(localIdentifier): PhotoDetailView(localIdentifier: localIdentifier)
+                }
+            }
         }
-        .scrollIndicators(.hidden)
-        .background { AmbientBackground() }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch library.status {
+        case .authorized, .limited:
+            chips
+            if library.recents.isEmpty {
+                ContentUnavailableView(
+                    "No photos yet",
+                    systemImage: "photo.on.rectangle",
+                    description: Text("Photos you take will appear here.")
+                )
+            } else {
+                recents
+            }
+            if library.status == .limited {
+                Text("Phophy can only see the photos you selected. Change this in Settings to see your whole library.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        case .notDetermined:
+            AccessCard(
+                title: "See your photos here",
+                message: "Phophy reads your library on this device. Nothing is uploaded.",
+                buttonTitle: "Allow photo access"
+            ) {
+                Task { await library.requestAccess() }
+            }
+        default:
+            AccessCard(
+                title: "Photo access is off",
+                message: "Turn on photo access for Phophy in Settings to browse and search your library.",
+                buttonTitle: "Open Settings"
+            ) {
+                if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+            }
+        }
     }
 
     private var header: some View {
@@ -47,12 +96,12 @@ struct LibraryView: View {
         ScrollView(.horizontal) {
             GlassEffectContainer(spacing: 8) {
                 HStack(spacing: 8) {
-                    ForEach(SampleData.categories) { category in
-                        Button {
-                        } label: {
+                    ForEach(chipFilters) { filter in
+                        NavigationLink(value: Route.grid(filter)) {
                             HStack(spacing: 6) {
-                                Text(category.name).fontWeight(.semibold)
-                                Text(category.count, format: .number).foregroundStyle(.secondary)
+                                Text(filter.title).fontWeight(.semibold)
+                                Text(library.counts[filter] ?? 0, format: .number)
+                                    .foregroundStyle(.secondary)
                             }
                             .font(.subheadline)
                             .padding(.vertical, 4)
@@ -71,13 +120,18 @@ struct LibraryView: View {
             HStack(alignment: .firstTextBaseline) {
                 Text("Recents").font(.title3.bold())
                 Spacer()
-                Button("See all") {}
-                    .font(.subheadline.weight(.semibold))
+                NavigationLink(value: Route.grid(.all)) {
+                    Text("See all \(library.counts[.all] ?? 0, format: .number)")
+                        .font(.subheadline.weight(.semibold))
+                }
             }
             LazyVGrid(columns: columns, spacing: 4) {
-                ForEach(SampleData.photos) { photo in
-                    PlaceholderPhoto(photo: photo)
-                        .frame(height: 84)
+                ForEach(library.recents, id: \.localIdentifier) { asset in
+                    NavigationLink(value: Route.photo(localIdentifier: asset.localIdentifier)) {
+                        AssetThumbnail(asset: asset)
+                            .frame(height: 84)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .clipShape(.rect(cornerRadius: 22))
@@ -85,37 +139,31 @@ struct LibraryView: View {
     }
 }
 
-struct DigestCard: View {
+/// Glass card that explains a permission state and offers the one next step.
+struct AccessCard: View {
+    let title: String
+    let message: String
+    let buttonTitle: String
+    let action: () -> Void
+
     var body: some View {
-        HStack(spacing: 14) {
-            Image(systemName: "rectangle.stack.fill")
+        VStack(alignment: .leading, spacing: 12) {
+            Image(systemName: "photo.on.rectangle.angled")
                 .font(.system(size: 30))
-                .frame(width: 52, height: 52)
                 .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 3) {
-                Text("DIGEST READY")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.secondary)
-                Text("Thursday's lecture")
-                    .font(.headline)
-                Text("14 slides → 1 page")
-                    .font(.subheadline)
-                    .lineLimit(1)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 0)
-            Button("Read") {}
+            Text(title).font(.title3.bold())
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Button(buttonTitle, action: action)
                 .buttonStyle(.glassProminent)
                 .tint(.white)
                 .foregroundStyle(Color(hex: 0x131A44))
                 .fontWeight(.bold)
+                .padding(.top, 4)
         }
-        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
         .glassEffect(.regular, in: .rect(cornerRadius: 28))
     }
-}
-
-#Preview {
-    LibraryView()
-        .preferredColorScheme(.dark)
 }

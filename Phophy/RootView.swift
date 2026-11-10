@@ -3,6 +3,8 @@ import SwiftUI
 /// The app's top level: a native tab bar (Liquid Glass on iOS 26+) with a
 /// separate search tab and an "ask" bar floating above it.
 struct RootView: View {
+    @State private var library = PhotoLibrary()
+
     var body: some View {
         TabView {
             Tab("Library", systemImage: "photo.on.rectangle") {
@@ -31,6 +33,8 @@ struct RootView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .tint(.white)
+        .environment(library)
+        .task { library.start() }
     }
 }
 
