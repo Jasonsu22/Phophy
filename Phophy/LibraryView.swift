@@ -5,6 +5,7 @@ import SwiftUI
 struct LibraryView: View {
     @Environment(PhotoLibrary.self) private var library
     @Environment(\.openURL) private var openURL
+    @State private var isShowingSettings = false
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 4)
     private let chipFilters: [PhotoFilter] = [.favorites, .screenshots, .videos]
@@ -23,12 +24,10 @@ struct LibraryView: View {
             .scrollIndicators(.hidden)
             .background { AmbientBackground() }
             .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(for: Route.self) { route in
-                switch route {
-                case let .grid(filter): PhotoGridView(filter: filter)
-                case let .photo(localIdentifier): PhotoDetailView(localIdentifier: localIdentifier)
-                }
-            }
+            .photoDestinations()
+        }
+        .sheet(isPresented: $isShowingSettings) {
+            SettingsView()
         }
     }
 
@@ -80,15 +79,30 @@ struct LibraryView: View {
                     .font(.largeTitle.bold())
             }
             Spacer()
-            Button {
-            } label: {
-                Image(systemName: "sparkles")
-                    .font(.title3)
-                    .frame(width: 30, height: 30)
+            GlassEffectContainer(spacing: 10) {
+                HStack(spacing: 10) {
+                    Button {
+                    } label: {
+                        Image(systemName: "sparkles")
+                            .font(.title3)
+                            .frame(width: 30, height: 30)
+                    }
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.circle)
+                    .accessibilityLabel("Open assistant")
+
+                    Button {
+                        isShowingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .font(.title3)
+                            .frame(width: 30, height: 30)
+                    }
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.circle)
+                    .accessibilityLabel("Settings")
+                }
             }
-            .buttonStyle(.glass)
-            .buttonBorderShape(.circle)
-            .accessibilityLabel("Open assistant")
         }
     }
 
