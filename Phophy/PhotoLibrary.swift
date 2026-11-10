@@ -32,6 +32,18 @@ enum Route: Hashable {
     case photo(localIdentifier: String)
 }
 
+extension View {
+    /// Where a `Route` leads. Apply once inside each NavigationStack.
+    func photoDestinations() -> some View {
+        navigationDestination(for: Route.self) { route in
+            switch route {
+            case let .grid(filter): PhotoGridView(filter: filter)
+            case let .photo(localIdentifier): PhotoDetailView(localIdentifier: localIdentifier)
+            }
+        }
+    }
+}
+
 /// Single entry point to the user's photo library (which includes iCloud Photos).
 @Observable
 final class PhotoLibrary: NSObject, PHPhotoLibraryChangeObserver {

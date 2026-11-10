@@ -10,6 +10,7 @@ struct PhotoDetailView: View {
     @State private var asset: PHAsset?
     @State private var image: UIImage?
     @State private var downloadProgress: Double?
+    @State private var isShowingInfo = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -40,8 +41,17 @@ struct PhotoDetailView: View {
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
+        .sheet(isPresented: $isShowingInfo) { infoSheet }
         .toolbar {
             if let asset {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isShowingInfo = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                    }
+                    .accessibilityLabel("What Phophy found in this photo")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         Task { await library.setFavorite(!asset.isFavorite, for: asset) }
@@ -52,6 +62,28 @@ struct PhotoDetailView: View {
                 }
             }
         }
+    }
+
+    private var infoSheet: some View {
+        let info = try? IndexStore.shared.info(for: localIdentifier)
+        return NavigationStack {
+            List {
+                if let info {
+                    Section("Shows") {
+                        Text(info.labels.isEmpty ? "No labels" : info.labels.joined(separator: " · "))
+                    }
+                    Section("Text in photo") {
+                        Text(info.text.isEmpty ? "No text found" : info.text)
+                            .textSelection(.enabled)
+                    }
+                } else {
+                    Text("This photo has not been indexed yet.")
+                }
+            }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .presentationDetents([.medium, .large])
     }
 
     private var title: String {

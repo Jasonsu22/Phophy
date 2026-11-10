@@ -4,6 +4,7 @@ import SwiftUI
 /// separate search tab and an "ask" bar floating above it.
 struct RootView: View {
     @State private var library = PhotoLibrary()
+    @State private var indexStatus = IndexStatus()
 
     var body: some View {
         TabView {
@@ -34,7 +35,16 @@ struct RootView: View {
         .tabBarMinimizeBehavior(.onScrollDown)
         .tint(.white)
         .environment(library)
+        .environment(indexStatus)
         .task { library.start() }
+        .onChange(of: library.revision, initial: true) {
+            guard library.hasAccess else { return }
+            // Detached so that a later library change cannot cancel work in progress.
+            let status = indexStatus
+            Task.detached(priority: .utility) {
+                await PhotoIndexer.shared.run(status: status)
+            }
+        }
     }
 }
 
@@ -56,25 +66,6 @@ struct AskBar: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Ask about your photos")
-    }
-}
-
-struct SearchView: View {
-    @State private var query = ""
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                AmbientBackground()
-                ContentUnavailableView(
-                    "Describe a photo",
-                    systemImage: "magnifyingglass",
-                    description: Text("Try “the whiteboard from October”. Search arrives in Phase 2.")
-                )
-            }
-            .navigationTitle("Search")
-            .searchable(text: $query, prompt: "Describe a photo")
-        }
     }
 }
 
