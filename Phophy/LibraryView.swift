@@ -7,6 +7,7 @@ struct LibraryView: View {
     @Environment(\.openURL) private var openURL
     @State private var isShowingSettings = false
     @Environment(AssistantModel.self) private var assistant
+    @Environment(StudyModel.self) private var study
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 4)
     private let chipFilters: [PhotoFilter] = [.favorites, .screenshots, .videos]
@@ -45,6 +46,12 @@ struct LibraryView: View {
                 )
             } else {
                 recents
+            }
+            if let session = study.sessions.first {
+                NavigationLink(value: Route.lecture(session.id)) {
+                    LatestLectureCard(session: session, digest: study.digests[session.id])
+                }
+                .buttonStyle(.plain)
             }
             if library.status == .limited {
                 Text("Phophy can only see the photos you selected. Change this in Settings to see your whole library.")
@@ -181,5 +188,39 @@ struct AccessCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
         .glassEffect(.regular, in: .rect(cornerRadius: 28))
+    }
+}
+
+/// The newest lecture, offered on the home screen.
+private struct LatestLectureCard: View {
+    let session: LectureSession
+    let digest: LectureDigest?
+
+    var body: some View {
+        HStack(spacing: 14) {
+            SlideStack(localIDs: Array(session.localIDs.prefix(3)))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(digest == nil ? "LATEST LECTURE" : "NOTES READY")
+                    .font(.caption.weight(.bold))
+                    .tracking(0.6)
+                    .foregroundStyle(.secondary)
+                Text(digest?.title ?? session.fallbackTitle)
+                    .font(.headline)
+                    .lineLimit(2)
+                Text(digest == nil ? "\(session.slideCount) · make notes" : "\(session.slideCount) → 1 page of notes")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+            Text(digest == nil ? "Open" : "Read")
+                .fontWeight(.bold)
+                .foregroundStyle(Color(hex: 0x131A44))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 9)
+                .background(.white, in: .capsule)
+        }
+        .padding(16)
+        .glassEffect(.regular, in: .rect(cornerRadius: 28))
+        .accessibilityElement(children: .combine)
     }
 }

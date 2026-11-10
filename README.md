@@ -13,7 +13,7 @@ Analysis runs on the device wherever possible, so indexing thousands of photos c
 | 2 | On-device index (text recognition, MobileCLIP) and search | Done |
 | 3 | Auto categories, similar-photo cleanup, save as album | Done |
 | 4 | Assistant chat over the index (Apple Intelligence, Claude, OpenAI or any OpenAI-compatible service) | Done |
-| 5 | Lecture digest: slides to notes and flashcards | Planned |
+| 5 | Lecture digest: slides grouped by lecture, turned into notes and flashcards | Done |
 | 6 | AI photo editing | Planned |
 
 The full plan, tech stack and cost strategy are in [PLAN.md](PLAN.md).
@@ -49,6 +49,7 @@ xcrun simctl addmedia booted ~/Pictures/test/*.jpg
 | `Phophy/CLIP/` | MobileCLIP encoder and tokenizer (models downloaded separately, see PLAN.md) |
 | `Phophy/SearchView.swift` | Search tab |
 | `Phophy/Collections/` | Automatic categories, similar photos, Collections tab |
+| `Phophy/Study/` | Lecture sessions, digests, Study tab, flashcards |
 | `Phophy/Assistant/` | Assistant chat, photo tools, cloud and on-device backends |
 | `Phophy/Settings/` | Settings screen and AI backend choice |
 | `Phophy/Theme.swift` | Background and colour helpers |

@@ -32,6 +32,9 @@ enum Route: Hashable {
     case photo(localIdentifier: String)
     case category(PhotoCategory)
     case similarPhotos
+    case lecture(String)
+    case flashcards(String)
+    case slideNotes(String)
 }
 
 extension View {
@@ -43,6 +46,9 @@ extension View {
             case let .photo(localIdentifier): PhotoDetailView(localIdentifier: localIdentifier)
             case let .category(category): CategoryGridView(category: category)
             case .similarPhotos: SimilarPhotosView()
+            case let .lecture(id): LectureDetailView(sessionID: id)
+            case let .flashcards(id): FlashcardsView(sessionID: id)
+            case let .slideNotes(id): SlideNotesView(sessionID: id)
             }
         }
     }

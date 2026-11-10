@@ -44,7 +44,39 @@ nonisolated final class IndexStore: Sendable {
                 );
                 """)
         }
+        migrator.registerMigration("v2-digests") { db in
+            try db.execute(sql: """
+                CREATE TABLE digest (
+                    session_key TEXT PRIMARY KEY NOT NULL,
+                    json BLOB NOT NULL,
+                    created_at REAL NOT NULL
+                );
+                """)
+        }
         try migrator.migrate(db)
+    }
+
+    // MARK: Lecture digests
+
+    /// Saved digests, keyed by lecture session. Kept so a digest is only
+    /// ever paid for once.
+    func saveDigest(_ json: Data, for sessionKey: String) throws {
+        try db.write { db in
+            try db.execute(
+                sql: "INSERT OR REPLACE INTO digest (session_key, json, created_at) VALUES (?, ?, ?)",
+                arguments: [sessionKey, json, Date().timeIntervalSince1970]
+            )
+        }
+    }
+
+    func allDigests() throws -> [String: Data] {
+        try db.read { db in
+            var digests: [String: Data] = [:]
+            for row in try Row.fetchAll(db, sql: "SELECT session_key, json FROM digest") {
+                digests[row["session_key"]] = row["json"]
+            }
+            return digests
+        }
     }
 
     // MARK: Writing

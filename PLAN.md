@@ -201,6 +201,16 @@ To use the more accurate S2 model on a phone, download `mobileclip_s2_*` the sam
   - Claude, OpenAI and real third-party services have not been tested with live keys.
   - Plain `http://` works for `localhost` only. A server elsewhere on the local network, such as Ollama on another Mac, needs HTTPS or an App Transport Security exception.
 
+### Phase 5 as built
+
+- **Lectures:** photos in the Slides category are grouped into lectures; slides less than 30 minutes apart belong to the same lecture.
+- **Notes:** "Make notes" sends only the text recognized on each slide, never the images, to the backend chosen in Settings. It returns a title, a 2–4 sentence summary, 3–7 key points with slide numbers, and 4–10 flashcards, written in the slides' language.
+  - On Apple Intelligence, structured generation (`@Generable`) is used, with about 6,000 characters of slide text.
+  - On the cloud, the model is asked for JSON, and the reply is parsed tolerantly; code fences and surrounding sentences are fine.
+- **Storage:** notes are saved in the index database, so each lecture is paid for once. They can be regenerated from the lecture page.
+- **Screens:** the Study tab lists lectures, and the newest lecture also appears as a card on the home screen. The lecture page shows the summary, key points, a slide strip, flip-card flashcards and the text of each slide.
+- **Testing:** Apple Intelligence produced good notes from four sample slides in the simulator. The cloud path was tested against the local mock server only.
+
 ## 6. iOS development basics for a first app
 
 ### Simulator

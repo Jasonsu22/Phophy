@@ -94,7 +94,7 @@ nonisolated enum ToolSpecs {
 }
 
 /// Sends a JSON request and maps HTTP failures to readable errors.
-private func postJSON(_ url: URL, body: [String: Any], headers: [String: String]) async throws -> [String: Any] {
+func postJSON(_ url: URL, body: [String: Any], headers: [String: String]) async throws -> [String: Any] {
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.timeoutInterval = 90

@@ -7,6 +7,7 @@ struct RootView: View {
     @State private var indexStatus = IndexStatus()
     @State private var collections = CollectionsModel()
     @State private var assistant = AssistantModel()
+    @State private var study = StudyModel()
 
     /// What decides when collections are recomputed.
     private struct CollectionsKey: Equatable {
@@ -24,11 +25,7 @@ struct RootView: View {
                 CollectionsView()
             }
             Tab("Study", systemImage: "text.book.closed") {
-                ComingSoonView(
-                    title: "Study",
-                    systemImage: "text.book.closed",
-                    message: "Lecture photos turned into notes and flashcards."
-                )
+                StudyView()
             }
             Tab(role: .search) {
                 SearchView()
@@ -43,12 +40,17 @@ struct RootView: View {
         .environment(indexStatus)
         .environment(collections)
         .environment(assistant)
+        .environment(study)
+        .onChange(of: collections.snapshot, initial: true) {
+            study.refresh(slideIDs: collections.ids(for: .slides))
+        }
         .sheet(isPresented: $assistant.isPresented) {
             AssistantView()
                 .environment(library)
                 .environment(indexStatus)
                 .environment(collections)
                 .environment(assistant)
+                .environment(study)
         }
         .task(id: CollectionsKey(indexed: indexStatus.indexed, total: indexStatus.total, isRunning: indexStatus.isRunning)) {
             guard library.hasAccess, indexStatus.total > 0 else { return }
