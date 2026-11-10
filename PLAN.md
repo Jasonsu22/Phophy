@@ -183,6 +183,24 @@ To use the more accurate S2 model on a phone, download `mobileclip_s2_*` the sam
 - **Similar photos:** each photo is compared with the next 23 photos taken after it; a cosine similarity of 0.92 or more counts as the same shot. The suggested keeper is a favorite, else the largest image. Deleting goes through iOS's own confirmation and into Recently Deleted.
 - **Save as album:** a category can be saved as a regular album in Photos, adding to an existing album of the same name.
 
+### Phase 4 as built
+
+- **Backends:** the assistant runs on Apple Intelligence when the phone has it and the user allows it, otherwise on a cloud model. The cloud provider is chosen in Settings (decided 2026-11-10, not tied to one company):
+  - **Claude**, through Anthropic's Messages API. The default model is `claude-haiku-5-5`.
+  - **OpenAI**, through the Chat Completions API. The default model is `gpt-5-mini`; check that this name is current.
+  - **Custom**: any service that speaks the OpenAI Chat Completions API, such as DeepSeek, OpenRouter, Groq, Ollama or LM Studio. The user enters the base URL and model, and a key if the service needs one. The model must support tool calling.
+- **Settings:** each provider has its own model name and API key. Keys are kept in the iPhone's Keychain, and the model names are editable.
+- **Tools:** the same five tools serve every backend: `search_photos`, `photos_by_date`, `list_collections`, `show_photos` and `propose_album`.
+  - Models only ever receive text: dates, categories, labels and recognized text, never images.
+  - Photos are referred to by short refs (p1, p2, ...).
+  - Albums are only created when the user taps the button the assistant offers.
+- **Small models:** Apple's on-device model often names photos instead of calling `show_photos`. The app therefore shows photos the reply mentions, or failing that the last search results, and strips the refs from the text.
+- **Testing:**
+  - Apple Intelligence was tested in the simulator.
+  - The OpenAI-compatible path was tested against a local mock server.
+  - Claude, OpenAI and real third-party services have not been tested with live keys.
+  - Plain `http://` works for `localhost` only. A server elsewhere on the local network, such as Ollama on another Mac, needs HTTPS or an App Transport Security exception.
+
 ## 6. iOS development basics for a first app
 
 ### Simulator

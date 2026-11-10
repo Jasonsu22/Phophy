@@ -9,6 +9,9 @@ enum AppSettings {
         static let useAppleIntelligence = "useAppleIntelligence"
         static let allowCloudAI = "allowCloudAI"
         static let indexICloudPhotos = "indexICloudPhotos"
+        static let cloudProvider = "cloudProvider"
+        static let customBaseURL = "customBaseURL"
+        static func cloudModel(_ provider: CloudProvider) -> String { "cloudModel.\(provider.rawValue)" }
     }
 
     /// Register defaults once at launch so unset values read as intended.
@@ -17,6 +20,8 @@ enum AppSettings {
             Key.useAppleIntelligence: true,
             Key.allowCloudAI: true,
             Key.indexICloudPhotos: true,
+            Key.cloudProvider: CloudProvider.anthropic.rawValue,
+            Key.customBaseURL: "",
         ])
     }
 
@@ -26,6 +31,21 @@ enum AppSettings {
 
     nonisolated static var allowCloudAI: Bool {
         UserDefaults.standard.bool(forKey: Key.allowCloudAI)
+    }
+
+    nonisolated static var cloudProvider: CloudProvider {
+        UserDefaults.standard.string(forKey: Key.cloudProvider).flatMap(CloudProvider.init) ?? .anthropic
+    }
+
+    nonisolated static var customBaseURL: String {
+        UserDefaults.standard.string(forKey: Key.customBaseURL) ?? ""
+    }
+
+    /// The model name for a provider: what the user typed, else its default.
+    nonisolated static func cloudModel(for provider: CloudProvider) -> String {
+        let saved = UserDefaults.standard.string(forKey: Key.cloudModel(provider))?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return saved.isEmpty ? provider.defaultModel : saved
     }
 
     /// Whether the indexer may download originals that are only in iCloud.
@@ -93,7 +113,7 @@ enum AIBackend: Equatable {
     var title: String {
         switch self {
         case .appleIntelligence: "Apple Intelligence on this iPhone"
-        case .cloud: "Cloud model"
+        case .cloud: "Cloud: \(AppSettings.cloudProvider.title)"
         case .off: "Off"
         }
     }

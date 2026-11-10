@@ -8,6 +8,14 @@ struct SettingsView: View {
     @AppStorage(AppSettings.Key.useAppleIntelligence) private var useAppleIntelligence = true
     @AppStorage(AppSettings.Key.allowCloudAI) private var allowCloudAI = true
     @AppStorage(AppSettings.Key.indexICloudPhotos) private var indexICloudPhotos = true
+    @AppStorage(AppSettings.Key.cloudProvider) private var providerID = CloudProvider.anthropic.rawValue
+    @AppStorage(AppSettings.Key.customBaseURL) private var customBaseURL = ""
+
+    @State private var modelName = ""
+    @State private var keyDraft = ""
+    @State private var hasKey = false
+
+    private var provider: CloudProvider { CloudProvider(rawValue: providerID) ?? .anthropic }
 
     @State private var appleIntelligence = AppleIntelligenceStatus.current
 
@@ -25,6 +33,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 28) {
                     CurrentModelCard(backend: backend)
                     aiSection
+                    if allowCloudAI { cloudSection }
                     indexSection
                     aboutSection
                 }
@@ -45,6 +54,11 @@ struct SettingsView: View {
             }
         }
         .presentationBackground(.clear)
+        .onAppear(perform: loadProviderFields)
+        .onChange(of: providerID) { loadProviderFields() }
+        .onChange(of: modelName) {
+            UserDefaults.standard.set(modelName, forKey: AppSettings.Key.cloudModel(provider))
+        }
         .onChange(of: scenePhase) {
             // The user may have turned Apple Intelligence on in iPhone Settings.
             if scenePhase == .active { appleIntelligence = .current }
@@ -88,6 +102,68 @@ struct SettingsView: View {
             return "Turn on Apple Intelligence in iPhone Settings to run the assistant on this iPhone."
         }
         return "This iPhone can't run Apple Intelligence, so the assistant uses the cloud model. Search and sorting still run entirely on your iPhone."
+    }
+
+    private var cloudSection: some View {
+        SettingsSection(title: "Cloud model", footer: provider.help) {
+            SettingsRow(icon: "server.rack", title: "Provider") {
+                Picker("Provider", selection: $providerID) {
+                    ForEach(CloudProvider.allCases) { provider in
+                        Text(provider.title).tag(provider.rawValue)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+            }
+            RowDivider()
+            FieldRow(icon: "cpu", title: "Model") {
+                TextField(provider.modelPlaceholder, text: $modelName)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+            }
+            if provider == .custom {
+                RowDivider()
+                FieldRow(icon: "link", title: "Base URL") {
+                    TextField("https://api.example.com/v1", text: $customBaseURL)
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
+            }
+            RowDivider()
+            if hasKey {
+                SettingsRow(icon: "key", title: "API key", subtitle: "Saved in your iPhone's Keychain") {
+                    Button("Remove", role: .destructive) {
+                        APIKeyStore.delete(for: provider)
+                        hasKey = false
+                    }
+                    .buttonStyle(.glass)
+                }
+            } else {
+                FieldRow(icon: "key", title: "API key") {
+                    HStack(spacing: 8) {
+                        SecureField(provider.keyPlaceholder, text: $keyDraft)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                        Button("Save") {
+                            let key = keyDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !key.isEmpty, APIKeyStore.save(key, for: provider) else { return }
+                            keyDraft = ""
+                            hasKey = true
+                        }
+                        .buttonStyle(.glass)
+                        .disabled(keyDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
+            }
+        }
+    }
+
+    private func loadProviderFields() {
+        let saved = UserDefaults.standard.string(forKey: AppSettings.Key.cloudModel(provider)) ?? ""
+        modelName = saved.isEmpty ? provider.defaultModel : saved
+        keyDraft = ""
+        hasKey = APIKeyStore.load(for: provider) != nil
     }
 
     private var indexSection: some View {
@@ -222,6 +298,31 @@ private struct SettingsRow<Trailing: View>: View {
         .padding(.horizontal, 14)
         .frame(minHeight: 58)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// A row whose control is a text field under its title.
+private struct FieldRow<Field: View>: View {
+    let icon: String
+    let title: String
+    @ViewBuilder let field: Field
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(.white)
+                .frame(width: 30, height: 30)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                field
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
     }
 }
 

@@ -6,6 +6,7 @@ struct LibraryView: View {
     @Environment(PhotoLibrary.self) private var library
     @Environment(\.openURL) private var openURL
     @State private var isShowingSettings = false
+    @Environment(AssistantModel.self) private var assistant
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 4)
     private let chipFilters: [PhotoFilter] = [.favorites, .screenshots, .videos]
@@ -82,6 +83,7 @@ struct LibraryView: View {
             GlassEffectContainer(spacing: 10) {
                 HStack(spacing: 10) {
                     Button {
+                        assistant.isPresented = true
                     } label: {
                         Image(systemName: "sparkles")
                             .font(.title3)

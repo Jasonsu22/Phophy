@@ -6,6 +6,7 @@ struct RootView: View {
     @State private var library = PhotoLibrary()
     @State private var indexStatus = IndexStatus()
     @State private var collections = CollectionsModel()
+    @State private var assistant = AssistantModel()
 
     /// What decides when collections are recomputed.
     private struct CollectionsKey: Equatable {
@@ -41,6 +42,14 @@ struct RootView: View {
         .environment(library)
         .environment(indexStatus)
         .environment(collections)
+        .environment(assistant)
+        .sheet(isPresented: $assistant.isPresented) {
+            AssistantView()
+                .environment(library)
+                .environment(indexStatus)
+                .environment(collections)
+                .environment(assistant)
+        }
         .task(id: CollectionsKey(indexed: indexStatus.indexed, total: indexStatus.total, isRunning: indexStatus.isRunning)) {
             guard library.hasAccess, indexStatus.total > 0 else { return }
             // Recompute when indexing finishes, and every 100 photos while it runs.
@@ -59,17 +68,19 @@ struct RootView: View {
     }
 }
 
-/// Entry point to the agent. A button for now; becomes a real input in Phase 4.
+/// Entry point to the assistant.
 struct AskBar: View {
+    @Environment(AssistantModel.self) private var assistant
+
     var body: some View {
         Button {
+            assistant.isPresented = true
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "sparkles")
                 Text("Ask about your photos")
                     .foregroundStyle(.secondary)
                 Spacer()
-                Image(systemName: "mic")
             }
             .padding(.horizontal, 16)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
