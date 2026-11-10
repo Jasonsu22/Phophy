@@ -101,7 +101,7 @@
 			mainGroup = AA0000000000000000000004;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				AA0000000000000000000013 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
+				AA0000000000000000000013 /* XCRemoteSwiftPackageReference "GRDB" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AA0000000000000000000005 /* Products */;
@@ -179,6 +179,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = PQAMD7QXZS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Phophy;
@@ -209,6 +210,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = PQAMD7QXZS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Phophy;
@@ -256,7 +258,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		AA0000000000000000000013 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+		AA0000000000000000000013 /* XCRemoteSwiftPackageReference "GRDB" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/groue/GRDB.swift";
 			requirement = {
@@ -269,7 +271,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		AA0000000000000000000012 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AA0000000000000000000013 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			package = AA0000000000000000000013 /* XCRemoteSwiftPackageReference "GRDB" */;
 			productName = GRDB;
 		};
 /* End XCSwiftPackageProductDependency section */
