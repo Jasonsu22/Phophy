@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Phophy">
+  <clipPath id="tile"><rect width="200" height="200" rx="46"/></clipPath>
+  <g clip-path="url(#tile)">
+    <rect width="200" height="200" fill="#2a2f8f"/>
+    <circle cx="158" cy="34" r="74" fill="#5a3fd6"/>
+    <circle cx="30" cy="190" r="70" fill="#0f8f9c"/>
+  </g>
+  <rect x="54" y="46" width="24" height="112" rx="12" fill="#ffffff"/>
+  <circle cx="110" cy="86" r="34" fill="none" stroke="#ffffff" stroke-width="24"/>
+  <circle cx="110" cy="86" r="11" fill="#8fe3ea"/>
+</svg>
