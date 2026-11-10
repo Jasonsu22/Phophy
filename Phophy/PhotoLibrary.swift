@@ -17,7 +17,7 @@ enum PhotoFilter: String, Hashable, CaseIterable, Identifiable {
         }
     }
 
-    var predicate: NSPredicate? {
+    nonisolated var predicate: NSPredicate? {
         switch self {
         case .all: nil
         case .favorites: NSPredicate(format: "isFavorite == YES")
@@ -29,7 +29,6 @@ enum PhotoFilter: String, Hashable, CaseIterable, Identifiable {
 
 enum Route: Hashable {
     case grid(PhotoFilter)
-    case photo(localIdentifier: String)
     case category(PhotoCategory)
     case similarPhotos
     case lecture(String)
@@ -40,15 +39,14 @@ enum Route: Hashable {
 extension View {
     /// Where a `Route` leads. Apply once inside each NavigationStack.
     func photoDestinations() -> some View {
-        navigationDestination(for: Route.self) { route in
+        modifier(AskBarSpace()).navigationDestination(for: Route.self) { route in
             switch route {
-            case let .grid(filter): PhotoGridView(filter: filter)
-            case let .photo(localIdentifier): PhotoDetailView(localIdentifier: localIdentifier)
-            case let .category(category): CategoryGridView(category: category)
-            case .similarPhotos: SimilarPhotosView()
-            case let .lecture(id): LectureDetailView(sessionID: id)
-            case let .flashcards(id): FlashcardsView(sessionID: id)
-            case let .slideNotes(id): SlideNotesView(sessionID: id)
+            case let .grid(filter): PhotoGridView(filter: filter).modifier(AskBarSpace())
+            case let .category(category): CategoryGridView(category: category).modifier(AskBarSpace())
+            case .similarPhotos: SimilarPhotosView().modifier(AskBarSpace())
+            case let .lecture(id): LectureDetailView(sessionID: id).modifier(AskBarSpace())
+            case let .flashcards(id): FlashcardsView(sessionID: id).modifier(AskBarSpace())
+            case let .slideNotes(id): SlideNotesView(sessionID: id).modifier(AskBarSpace())
             }
         }
     }
@@ -85,10 +83,16 @@ final class PhotoLibrary: NSObject, PHPhotoLibraryChangeObserver {
         start()
     }
 
-    func fetch(_ filter: PhotoFilter, limit: Int = 0) -> PHFetchResult<PHAsset> {
+    /// Newest first by default; `oldestFirst` gives the order Photos uses in
+    /// its grids, where the newest photo is at the bottom.
+    func fetch(_ filter: PhotoFilter, limit: Int = 0, oldestFirst: Bool = false) -> PHFetchResult<PHAsset> {
+        Self.fetch(filter, limit: limit, oldestFirst: oldestFirst)
+    }
+
+    nonisolated static func fetch(_ filter: PhotoFilter, limit: Int = 0, oldestFirst: Bool = false) -> PHFetchResult<PHAsset> {
         let options = PHFetchOptions()
         options.predicate = filter.predicate
-        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: oldestFirst)]
         options.fetchLimit = limit
         return PHAsset.fetchAssets(with: options)
     }
@@ -144,6 +148,18 @@ final class PhotoLibrary: NSObject, PHPhotoLibraryChangeObserver {
     nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
         Task { @MainActor in
             self.reload()
+        }
+    }
+}
+
+/// Room at the bottom of every screen for the floating ask bar, so the last
+/// content can scroll clear of it. None while the chat is open.
+struct AskBarSpace: ViewModifier {
+    @Environment(AssistantModel.self) private var assistant
+
+    func body(content: Content) -> some View {
+        content.safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: assistant.isPresented ? 0 : 58)
         }
     }
 }

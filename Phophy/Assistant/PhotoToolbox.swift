@@ -2,8 +2,8 @@ import Foundation
 import Photos
 
 /// Something the assistant decided to put in front of the user.
-nonisolated struct AlbumProposal: Identifiable, Sendable, Equatable {
-    let id = UUID()
+nonisolated struct AlbumProposal: Identifiable, Sendable, Equatable, Codable {
+    var id = UUID()
     let title: String
     let localIDs: [String]
 }
@@ -111,13 +111,15 @@ actor PhotoToolbox {
     func listCollections() -> String {
         var counts: [PhotoCategory: Int] = [:]
         for category in categories.values { counts[category, default: 0] += 1 }
-        let lines = PhotoCategory.allCases.map { "\($0.rawValue): \(counts[$0] ?? 0)" }
         let screenshots = PHAsset.fetchAssets(with: Self.screenshotOptions).count
         let total = PHAsset.fetchAssets(with: .image, options: nil).count
-        return """
-            Library: \(total) photos, \(indexedCount) indexed.
-            Collections: \(lines.joined(separator: ", ")), screenshots: \(screenshots).
-            """
+        // One labelled line each: small models misread long one-line lists.
+        var lines = [
+            "Total photos in the library: \(total) (\(indexedCount) indexed)",
+            "Screenshots: \(screenshots)",
+        ]
+        lines += PhotoCategory.allCases.map { "\($0.title): \(counts[$0] ?? 0)" }
+        return lines.joined(separator: "\n")
     }
 
     func show(refs: [String], caption: String?) -> String {

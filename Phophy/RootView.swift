@@ -1,13 +1,21 @@
 import SwiftUI
 
-/// The app's top level: a native tab bar (Liquid Glass on iOS 26+) with a
-/// separate search tab and an "ask" bar floating above it.
+/// The app's top level: a native tab bar (Liquid Glass on iOS 26+), the ask
+/// bar floating above it, the assistant's conversation over everything, and
+/// the full-screen photo viewer on top.
 struct RootView: View {
     @State private var library = PhotoLibrary()
     @State private var indexStatus = IndexStatus()
     @State private var collections = CollectionsModel()
     @State private var assistant = AssistantModel()
     @State private var study = StudyModel()
+    @State private var viewer = PhotoViewerModel()
+    @FocusState private var askFocused: Bool
+    @Namespace private var photoZoom
+
+    /// How far the ask bar sits above the bottom safe area while the tab bar shows.
+    private let askBarLift: CGFloat = 62
+    private let chatAnimation = Animation.smooth(duration: 0.38)
 
     /// What decides when collections are recomputed.
     private struct CollectionsKey: Equatable {
@@ -17,40 +25,64 @@ struct RootView: View {
     }
 
     var body: some View {
-        TabView {
-            Tab("Library", systemImage: "photo.on.rectangle") {
-                LibraryView()
+        ZStack(alignment: .bottom) {
+            TabView {
+                Tab("Library", systemImage: "photo.on.rectangle") {
+                    LibraryView().belowAskBar(chatOpen: assistant.isPresented)
+                }
+                Tab("Collections", systemImage: "square.stack") {
+                    CollectionsView().belowAskBar(chatOpen: assistant.isPresented)
+                }
+                Tab("Study", systemImage: "text.book.closed") {
+                    StudyView().belowAskBar(chatOpen: assistant.isPresented)
+                }
+                Tab(role: .search) {
+                    SearchView().belowAskBar(chatOpen: assistant.isPresented)
+                }
             }
-            Tab("Collections", systemImage: "square.stack") {
-                CollectionsView()
+            .tint(.white)
+
+            if assistant.isPresented {
+                // The app stays visible, softly blurred, behind the conversation.
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .overlay(Color.black.opacity(0.2))
+                    .ignoresSafeArea()
+                    .onTapGesture { askFocused = false }
+                    .transition(.opacity)
+
+                AssistantPanel(onClose: closeChat, onSend: send)
+                    .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .bottom)))
             }
-            Tab("Study", systemImage: "text.book.closed") {
-                StudyView()
-            }
-            Tab(role: .search) {
-                SearchView()
-            }
+
+            AskBar(isFocused: $askFocused, onSend: send)
+                .padding(.horizontal, assistant.isPresented ? 12 : 20)
+                .padding(.bottom, assistant.isPresented ? 8 : askBarLift)
+                // Closed, the bar must not jump above the keyboard of another field.
+                .ignoresSafeArea(assistant.isPresented ? [] : .keyboard)
         }
-        .tabViewBottomAccessory {
-            AskBar()
+        .fullScreenCover(item: $viewer.presentation) { presentation in
+            PhotoViewer(presentation: presentation)
+                .navigationTransition(.zoom(sourceID: viewer.currentID, in: photoZoom))
+                .environment(library)
+                .environment(viewer)
+                .environment(assistant)
         }
-        .tabBarMinimizeBehavior(.onScrollDown)
-        .tint(.white)
+        .environment(\.photoZoomNamespace, photoZoom)
         .environment(library)
         .environment(indexStatus)
         .environment(collections)
         .environment(assistant)
         .environment(study)
+        .environment(viewer)
+        .onChange(of: askFocused) {
+            // Tapping the ask bar opens the chat in place, ready to type.
+            if askFocused && !assistant.isPresented {
+                withAnimation(chatAnimation) { assistant.open() }
+            }
+        }
         .onChange(of: collections.snapshot, initial: true) {
             study.refresh(slideIDs: collections.ids(for: .slides))
-        }
-        .sheet(isPresented: $assistant.isPresented) {
-            AssistantView()
-                .environment(library)
-                .environment(indexStatus)
-                .environment(collections)
-                .environment(assistant)
-                .environment(study)
         }
         .task(id: CollectionsKey(indexed: indexStatus.indexed, total: indexStatus.total, isRunning: indexStatus.isRunning)) {
             guard library.hasAccess, indexStatus.total > 0 else { return }
@@ -68,28 +100,30 @@ struct RootView: View {
             }
         }
     }
+
+    private func closeChat() {
+        askFocused = false
+        withAnimation(chatAnimation) { assistant.close() }
+    }
+
+    private func send(_ raw: String) {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, !assistant.isWorking else { return }
+        assistant.draft = ""
+        if !assistant.isPresented { withAnimation(chatAnimation) { assistant.open() } }
+        var categories: [String: PhotoCategory] = [:]
+        for result in collections.snapshot.categories {
+            for id in result.localIDs { categories[id] = result.category }
+        }
+        let indexed = indexStatus.indexed
+        Task { await assistant.send(text, indexedCount: indexed, categories: categories) }
+    }
 }
 
-/// Entry point to the assistant.
-struct AskBar: View {
-    @Environment(AssistantModel.self) private var assistant
-
-    var body: some View {
-        Button {
-            assistant.isPresented = true
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "sparkles")
-                Text("Ask about your photos")
-                    .foregroundStyle(.secondary)
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Ask about your photos")
+private extension View {
+    /// Lets the tab bar slide away while the chat is open.
+    func belowAskBar(chatOpen: Bool) -> some View {
+        toolbarVisibility(chatOpen ? .hidden : .visible, for: .tabBar)
     }
 }
 

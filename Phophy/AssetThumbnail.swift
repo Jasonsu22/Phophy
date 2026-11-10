@@ -24,6 +24,7 @@ struct AssetThumbnail: View {
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
             .clipped()
+            .contentShape(.rect)
             .overlay(alignment: .bottomTrailing) { videoBadge }
             .onAppear { load(side: side) }
             .onDisappear { cancel() }

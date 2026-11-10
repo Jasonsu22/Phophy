@@ -76,12 +76,11 @@ private struct ResultSection: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title).font(.title3.bold())
             LazyVGrid(columns: columns, spacing: 4) {
-                ForEach(assets, id: \.localIdentifier) { asset in
-                    NavigationLink(value: Route.photo(localIdentifier: asset.localIdentifier)) {
-                        AssetThumbnail(asset: asset)
-                            .aspectRatio(1, contentMode: .fit)
-                    }
-                    .buttonStyle(.plain)
+                let assets = assets
+                ForEach(Array(assets.enumerated()), id: \.element.localIdentifier) { index, asset in
+                    AssetThumbnail(asset: asset)
+                        .aspectRatio(1, contentMode: .fit)
+                        .opensInViewer(.assets(assets), at: index, id: asset.localIdentifier)
                 }
             }
             .clipShape(.rect(cornerRadius: 22))

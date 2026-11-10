@@ -49,7 +49,7 @@ struct LibraryView: View {
             }
             if let session = study.sessions.first {
                 NavigationLink(value: Route.lecture(session.id)) {
-                    LatestLectureCard(session: session, digest: study.digests[session.id])
+                    LatestLectureCard(session: session, covers: study.covers[session.id] ?? [], digest: study.digests[session.id])
                 }
                 .buttonStyle(.plain)
             }
@@ -90,7 +90,7 @@ struct LibraryView: View {
             GlassEffectContainer(spacing: 10) {
                 HStack(spacing: 10) {
                     Button {
-                        assistant.isPresented = true
+                        withAnimation(.smooth(duration: 0.38)) { assistant.open() }
                     } label: {
                         Image(systemName: "sparkles")
                             .font(.title3)
@@ -149,12 +149,11 @@ struct LibraryView: View {
                 }
             }
             LazyVGrid(columns: columns, spacing: 4) {
-                ForEach(library.recents, id: \.localIdentifier) { asset in
-                    NavigationLink(value: Route.photo(localIdentifier: asset.localIdentifier)) {
-                        AssetThumbnail(asset: asset)
-                            .frame(height: 84)
-                    }
-                    .buttonStyle(.plain)
+                ForEach(Array(library.recents.enumerated()), id: \.element.localIdentifier) { index, asset in
+                    AssetThumbnail(asset: asset)
+                        .frame(height: 84)
+                        // Page through the library in Photos order: swiping left goes to newer photos.
+                        .opensInViewer(.fetch(library.fetch(.all, oldestFirst: true)), at: (library.counts[.all] ?? 0) - 1 - index, id: asset.localIdentifier)
                 }
             }
             .clipShape(.rect(cornerRadius: 22))
@@ -194,11 +193,12 @@ struct AccessCard: View {
 /// The newest lecture, offered on the home screen.
 private struct LatestLectureCard: View {
     let session: LectureSession
+    let covers: [PHAsset]
     let digest: LectureDigest?
 
     var body: some View {
         HStack(spacing: 14) {
-            SlideStack(localIDs: Array(session.localIDs.prefix(3)))
+            SlideStack(assets: covers)
             VStack(alignment: .leading, spacing: 3) {
                 Text(digest == nil ? "LATEST LECTURE" : "NOTES READY")
                     .font(.caption.weight(.bold))

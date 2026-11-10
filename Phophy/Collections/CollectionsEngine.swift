@@ -61,7 +61,8 @@ actor CollectionsEngine {
         let order = assets.compactMap { rowByID[$0.localIdentifier] }
 
         let categories = classify(data: data, classes: classes, order: order, textLengths: textLengths)
-        let groups = findSimilar(data: data, order: order, assets: assets)
+        let texts = (try? IndexStore.shared.allTexts()) ?? [:]
+        let groups = findSimilar(data: data, order: order, assets: assets, texts: texts)
         return CollectionsSnapshot(categories: categories, similarGroups: groups)
     }
 
@@ -135,10 +136,30 @@ actor CollectionsEngine {
 
     // MARK: Similar photos
 
+    /// Slides from one deck, or pages of one document, look alike to CLIP
+    /// because they share a layout. They only count as the same shot when the
+    /// text on them also matches: at least 85% of their words in common, as
+    /// two shots of the same slide read almost identically, and the same
+    /// numbers, since a different number usually means a different lecture,
+    /// page or price. Missing a real duplicate is harmless; offering to delete
+    /// a slide that only looks similar is not.
+    static func sameText(_ a: String?, _ b: String?) -> Bool {
+        func words(_ text: String?) -> Set<String> {
+            Set((text ?? "").lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init))
+        }
+        let wa = words(a), wb = words(b)
+        if wa.count < 4 && wb.count < 4 { return true }
+        let numbers = { (words: Set<String>) in words.filter { $0.allSatisfy(\.isNumber) } }
+        if numbers(wa) != numbers(wb) { return false }
+        let shared = wa.intersection(wb).count
+        return Double(shared) / Double(max(wa.union(wb).count, 1)) >= 0.85
+    }
+
     private func findSimilar(
         data: (ids: [String], matrix: [Float], dimension: Int),
         order: [Int],
-        assets: [PHAsset]
+        assets: [PHAsset],
+        texts: [String: String]
     ) -> [SimilarGroup] {
         let n = order.count, d = data.dimension
         var parent = Array(0..<n)
@@ -157,7 +178,8 @@ actor CollectionsEngine {
                 for b in (a + 1)..<min(a + neighborWindow, n) {
                     var similarity: Float = 0
                     vDSP_dotpr(base + order[a] * d, 1, base + order[b] * d, 1, &similarity, vDSP_Length(d))
-                    if similarity >= similarThreshold {
+                    let idA = data.ids[order[a]], idB = data.ids[order[b]]
+                    if similarity >= similarThreshold, Self.sameText(texts[idA], texts[idB]) {
                         parent[root(a)] = root(b)
                     }
                 }

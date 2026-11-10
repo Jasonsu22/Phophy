@@ -9,6 +9,14 @@ final class StudyModel {
     private(set) var working: Set<String> = []
     private(set) var errors: [String: String] = [:]
 
+    /// Up to three cover photos per session, fetched in one batch per refresh
+    /// so list rows never query the photo library themselves.
+    private(set) var covers: [String: [PHAsset]] = [:]
+
+    /// Per-session caches, filled the first time a lecture is opened.
+    @ObservationIgnored private var assetCache: [String: [PHAsset]] = [:]
+    @ObservationIgnored private var slideCache: [String: [DigestWriter.Slide]] = [:]
+
     /// Regroups the slide photos into sessions and loads saved digests.
     func refresh(slideIDs: [String]) {
         let fetched = PHAsset.fetchAssets(withLocalIdentifiers: slideIDs, options: nil)
@@ -17,6 +25,14 @@ final class StudyModel {
             photos.append((asset.localIdentifier, asset.creationDate ?? .distantPast))
         }
         sessions = LectureSession.group(photos)
+        assetCache = [:]
+        slideCache = [:]
+
+        var assetByID: [String: PHAsset] = [:]
+        fetched.enumerateObjects { asset, _, _ in assetByID[asset.localIdentifier] = asset }
+        covers = Dictionary(uniqueKeysWithValues: sessions.map { session in
+            (session.id, session.localIDs.prefix(3).compactMap { assetByID[$0] })
+        })
 
         let decoder = JSONDecoder()
         let saved = (try? IndexStore.shared.allDigests()) ?? [:]
@@ -27,18 +43,31 @@ final class StudyModel {
         sessions.first { $0.id == id }
     }
 
-    /// The text recognized on each slide of a session, in order.
-    func slides(of session: LectureSession) -> [DigestWriter.Slide] {
+    /// A session's photos in slide order, fetched once.
+    func assets(of session: LectureSession) -> [PHAsset] {
+        if let cached = assetCache[session.id] { return cached }
         let fetched = PHAsset.fetchAssets(withLocalIdentifiers: session.localIDs, options: nil)
+        var byID: [String: PHAsset] = [:]
+        fetched.enumerateObjects { asset, _, _ in byID[asset.localIdentifier] = asset }
+        let assets = session.localIDs.compactMap { byID[$0] }
+        assetCache[session.id] = assets
+        return assets
+    }
+
+    /// The text recognized on each slide of a session, in order, read once.
+    func slides(of session: LectureSession) -> [DigestWriter.Slide] {
+        if let cached = slideCache[session.id] { return cached }
         var dates: [String: Date] = [:]
-        fetched.enumerateObjects { asset, _, _ in dates[asset.localIdentifier] = asset.creationDate }
-        return session.localIDs.enumerated().map { index, id in
+        for asset in assets(of: session) { dates[asset.localIdentifier] = asset.creationDate }
+        let slides = session.localIDs.enumerated().map { index, id in
             DigestWriter.Slide(
                 number: index + 1,
                 time: dates[id] ?? session.start,
                 text: (try? IndexStore.shared.info(for: id))?.text ?? ""
             )
         }
+        slideCache[session.id] = slides
+        return slides
     }
 
     func makeDigest(for session: LectureSession) async {

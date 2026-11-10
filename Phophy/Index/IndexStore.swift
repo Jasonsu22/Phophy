@@ -188,6 +188,18 @@ nonisolated final class IndexStore: Sendable {
         }
     }
 
+    /// The text recognized in every photo that has some.
+    func allTexts() throws -> [String: String] {
+        try db.read { db in
+            var texts: [String: String] = [:]
+            let rows = try Row.fetchCursor(db, sql: "SELECT local_id, ocr FROM asset WHERE ocr != ''")
+            while let row = try rows.next() {
+                texts[row["local_id"]] = row["ocr"]
+            }
+            return texts
+        }
+    }
+
     /// How many characters of text were recognized in each photo.
     func textLengths() throws -> [String: Int] {
         try db.read { db in

@@ -7,3 +7,4 @@ xcuserdata/
 *.mlpackage
 .env
 Secrets.xcconfig
+docs/readme-preview/

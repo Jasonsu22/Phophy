@@ -271,16 +271,25 @@ struct AssetIDGrid: View {
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 2), count: 4)
 
     var body: some View {
+        let assets = assets
+        ScrollViewReader { proxy in
         ScrollView {
             LazyVGrid(columns: columns, spacing: 2) {
-                ForEach(assets, id: \.localIdentifier) { asset in
-                    NavigationLink(value: Route.photo(localIdentifier: asset.localIdentifier)) {
-                        AssetThumbnail(asset: asset)
-                            .aspectRatio(1, contentMode: .fit)
-                    }
-                    .buttonStyle(.plain)
+                ForEach(Array(assets.enumerated()), id: \.element.localIdentifier) { index, asset in
+                    AssetThumbnail(asset: asset)
+                        .aspectRatio(1, contentMode: .fit)
+                        .opensInViewer(.assets(assets), at: index, id: asset.localIdentifier)
+                        .id(index)
                 }
             }
+        }
+        // Like Photos: open on the newest photo, at the bottom.
+        .defaultScrollAnchor(.bottom, for: .initialOffset)
+        .defaultScrollAnchor(.bottom, for: .sizeChanges)
+        .task {
+            await Task.yield()
+            if !assets.isEmpty { proxy.scrollTo(assets.count - 1, anchor: .bottom) }
+        }
         }
         .background { AmbientBackground() }
     }
@@ -290,6 +299,7 @@ struct AssetIDGrid: View {
         let fetched = PHAsset.fetchAssets(withLocalIdentifiers: localIDs, options: nil)
         var byID: [String: PHAsset] = [:]
         fetched.enumerateObjects { asset, _, _ in byID[asset.localIdentifier] = asset }
-        return localIDs.compactMap { byID[$0] }
+        // The IDs arrive newest first; show them like Photos, newest at the bottom.
+        return localIDs.reversed().compactMap { byID[$0] }
     }
 }

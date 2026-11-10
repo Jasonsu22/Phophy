@@ -8,41 +8,63 @@ struct StudyView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Notes from your lecture photos")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        Text("Study")
-                            .font(.largeTitle.bold())
-                    }
-                    if study.sessions.isEmpty {
-                        ContentUnavailableView(
-                            "No lecture slides yet",
-                            systemImage: "text.book.closed",
-                            description: Text(indexStatus.isRunning
-                                ? "Phophy is still looking through your photos. Slides appear here, grouped by lecture."
-                                : "Photos of slides appear here, grouped by lecture.")
-                        )
-                        .padding(.top, 40)
-                    }
-                    ForEach(study.sessions) { session in
-                        NavigationLink(value: Route.lecture(session.id)) {
-                            LectureCard(session: session, digest: study.digests[session.id])
-                        }
-                        .buttonStyle(.plain)
-                    }
+            // A List is backed by a collection view: only the rows on screen
+            // exist, and rows that scroll away are reused for the ones coming
+            // in, so a long list of lectures stays smooth.
+            List {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Notes from your lecture photos")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Text("Study")
+                        .font(.largeTitle.bold())
                 }
-                .padding(.horizontal, 20)
                 .padding(.top, 8)
-                .padding(.bottom, 24)
+                .studyRow()
+
+                if study.sessions.isEmpty {
+                    ContentUnavailableView(
+                        "No lecture slides yet",
+                        systemImage: "text.book.closed",
+                        description: Text(indexStatus.isRunning
+                            ? "Phophy is still looking through your photos. Slides appear here, grouped by lecture."
+                            : "Photos of slides appear here, grouped by lecture.")
+                    )
+                    .padding(.top, 40)
+                    .studyRow()
+                }
+
+                ForEach(study.sessions) { session in
+                    // The invisible link keeps List from adding its own
+                    // disclosure arrow next to the card's.
+                    LectureCard(
+                        session: session,
+                        covers: study.covers[session.id] ?? [],
+                        digest: study.digests[session.id]
+                    )
+                    .background {
+                        NavigationLink(value: Route.lecture(session.id)) { EmptyView() }
+                            .opacity(0)
+                    }
+                    .studyRow()
+                }
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
             .scrollIndicators(.hidden)
             .background { AmbientBackground() }
             .toolbar(.hidden, for: .navigationBar)
             .photoDestinations()
         }
+    }
+}
+
+private extension View {
+    /// A list row with no separator or background, spaced like the rest of the app.
+    func studyRow() -> some View {
+        listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 9, leading: 20, bottom: 9, trailing: 20))
     }
 }
 
@@ -65,11 +87,12 @@ extension LectureSession {
 /// A lecture in a list: a small stack of its slides, when, and its title.
 struct LectureCard: View {
     let session: LectureSession
+    let covers: [PHAsset]
     let digest: LectureDigest?
 
     var body: some View {
         HStack(spacing: 14) {
-            SlideStack(localIDs: Array(session.localIDs.prefix(3)))
+            SlideStack(assets: covers)
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.timeLine)
                     .font(.caption.weight(.semibold))
@@ -95,23 +118,16 @@ struct LectureCard: View {
 
 /// Up to three slide thumbnails fanned like a stack of cards.
 struct SlideStack: View {
-    let localIDs: [String]
-    @Environment(PhotoLibrary.self) private var library
+    let assets: [PHAsset]
 
     var body: some View {
         ZStack {
-            ForEach(Array(localIDs.enumerated().reversed()), id: \.element) { index, id in
-                Group {
-                    if let asset = library.asset(withLocalIdentifier: id) {
-                        AssetThumbnail(asset: asset)
-                    } else {
-                        Rectangle().fill(.white.opacity(0.1))
-                    }
-                }
-                .frame(width: 50, height: 50)
-                .clipShape(.rect(cornerRadius: 10))
-                .rotationEffect(.degrees(Double(index) * 7 - 4))
-                .offset(x: CGFloat(index) * 4, y: CGFloat(index) * -2)
+            ForEach(Array(assets.enumerated().reversed()), id: \.element.localIdentifier) { index, asset in
+                AssetThumbnail(asset: asset)
+                    .frame(width: 50, height: 50)
+                    .clipShape(.rect(cornerRadius: 10))
+                    .rotationEffect(.degrees(Double(index) * 7 - 4))
+                    .offset(x: CGFloat(index) * 4, y: CGFloat(index) * -2)
             }
         }
         .frame(width: 62, height: 62)
@@ -223,19 +239,17 @@ struct LectureDetailView: View {
 
     private func slideStrip(_ session: LectureSession) -> some View {
         ScrollView(.horizontal) {
-            HStack(spacing: 8) {
-                ForEach(session.localIDs, id: \.self) { id in
-                    if let asset = library.asset(withLocalIdentifier: id) {
-                        NavigationLink(value: Route.photo(localIdentifier: id)) {
-                            AssetThumbnail(asset: asset)
-                                .frame(width: 120, height: 84)
-                                .clipShape(.rect(cornerRadius: 14))
-                        }
-                        .buttonStyle(.plain)
-                    }
+            LazyHStack(spacing: 8) {
+                let assets = study.assets(of: session)
+                ForEach(Array(assets.enumerated()), id: \.element.localIdentifier) { index, asset in
+                    AssetThumbnail(asset: asset)
+                        .frame(width: 120, height: 84)
+                        .clipShape(.rect(cornerRadius: 14))
+                        .opensInViewer(.assets(assets), at: index, id: asset.localIdentifier)
                 }
             }
         }
+        .frame(height: 84)
         .scrollIndicators(.hidden)
         .scrollClipDisabled()
     }
@@ -402,39 +416,15 @@ private struct FlipCard: View {
 struct SlideNotesView: View {
     let sessionID: String
     @Environment(StudyModel.self) private var study
-    @Environment(PhotoLibrary.self) private var library
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
+            // Lazy: a long lecture builds only the slides on screen.
+            LazyVStack(alignment: .leading, spacing: 14) {
                 if let session = study.session(id: sessionID) {
+                    let assets = study.assets(of: session)
                     ForEach(study.slides(of: session), id: \.number) { slide in
-                        let id = session.localIDs[slide.number - 1]
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack(spacing: 12) {
-                                if let asset = library.asset(withLocalIdentifier: id) {
-                                    NavigationLink(value: Route.photo(localIdentifier: id)) {
-                                        AssetThumbnail(asset: asset)
-                                            .frame(width: 72, height: 52)
-                                            .clipShape(.rect(cornerRadius: 10))
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Slide \(slide.number)").font(.headline)
-                                    Text(slide.time.formatted(date: .omitted, time: .shortened))
-                                        .font(.footnote)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            Text(slide.text.isEmpty ? "No text found on this slide." : slide.text)
-                                .font(.subheadline)
-                                .foregroundStyle(slide.text.isEmpty ? .secondary : .primary)
-                                .textSelection(.enabled)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(16)
-                        .glassEffect(.regular, in: .rect(cornerRadius: 24))
+                        SlideNoteRow(slide: slide, assets: assets)
                     }
                 }
             }
@@ -445,5 +435,41 @@ struct SlideNotesView: View {
         .background { AmbientBackground() }
         .navigationTitle("Slide by slide")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct SlideNoteRow: View {
+    let slide: DigestWriter.Slide
+    let assets: [PHAsset]
+    @Environment(PhotoViewerModel.self) private var viewer
+
+    private var asset: PHAsset? {
+        assets.indices.contains(slide.number - 1) ? assets[slide.number - 1] : nil
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                if let asset {
+                    AssetThumbnail(asset: asset)
+                        .frame(width: 72, height: 52)
+                        .clipShape(.rect(cornerRadius: 10))
+                        .opensInViewer(.assets(assets), at: slide.number - 1, id: asset.localIdentifier)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Slide \(slide.number)").font(.headline)
+                    Text(slide.time.formatted(date: .omitted, time: .shortened))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Text(slide.text.isEmpty ? "No text found on this slide." : slide.text)
+                .font(.subheadline)
+                .foregroundStyle(slide.text.isEmpty ? .secondary : .primary)
+                .textSelection(.enabled)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .glassEffect(.regular, in: .rect(cornerRadius: 24))
     }
 }
