@@ -157,6 +157,11 @@ struct PhotoViewer: View {
     @Environment(\.displayScale) private var displayScale
     @State private var position: Int
     @State private var chromeHidden = false
+
+    private struct PageState: Hashable {
+        let live: Bool
+        let chromeHidden: Bool
+    }
     @State private var showingInfo = false
     @State private var liveEnabled = true
     @State private var preheated: [PHAsset] = []
@@ -177,7 +182,7 @@ struct PhotoViewer: View {
             let target = PhotoLoading.targetSize(for: proxy.size, scale: displayScale)
             // A collection view only builds the pages near the screen, so
             // opening a photo costs the same in a library of 20 or 20,000.
-            PhotoPager(count: presentation.source.count, position: $position, liveEnabled: liveEnabled) { index, isCurrent in
+            PhotoPager(count: presentation.source.count, position: $position, pageState: PageState(live: liveEnabled, chromeHidden: chromeHidden)) { index, isCurrent in
                 // Each page is a little wider than the screen, so a black
                 // gap shows between photos while swiping, as in Photos.
                 AnyView(page(at: index, isCurrent: isCurrent, target: target).padding(.horizontal, Self.pageGap / 2))
@@ -215,7 +220,15 @@ struct PhotoViewer: View {
         Group {
             if let asset = presentation.source.asset(at: index) {
                 if asset.mediaType == .video {
-                    VideoPage(asset: asset, isCurrent: isCurrent, preload: index == presentation.start, targetSize: target)
+                    VideoPage(
+                        asset: asset,
+                        isCurrent: isCurrent,
+                        preload: index == presentation.start,
+                        controlsHidden: chromeHidden,
+                        onTap: {
+                            withAnimation(.easeInOut(duration: 0.2)) { chromeHidden.toggle() }
+                        }
+                    )
                 } else {
                     PhotoPage(
                         asset: asset,
@@ -385,7 +398,9 @@ struct PhotoViewer: View {
 private struct PhotoPager: UIViewRepresentable {
     let count: Int
     @Binding var position: Int
-    let liveEnabled: Bool
+    /// What the pages show besides their photo (Live on or off, whether
+    /// the bars are hidden); a change refreshes the pages on screen.
+    let pageState: AnyHashable
     let page: (_ index: Int, _ isCurrent: Bool) -> AnyView
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
@@ -414,13 +429,12 @@ private struct PhotoPager: UIViewRepresentable {
             view.page = position
             view.showPage()
         }
-        // The viewer is redrawn for many reasons (indexing progress, the
-        // bars showing and hiding). Only a new current page or Live being
-        // turned on or off needs the pages on screen to update; anything
-        // else would reload the photo and make it flash.
-        guard coordinator.shownPosition != position || coordinator.shownLive != liveEnabled else { return }
+        // The viewer is redrawn for many reasons. Only a new current page
+        // or a change in what pages show needs the pages on screen to
+        // update; anything else would reload the photo and make it flash.
+        guard coordinator.shownPosition != position || coordinator.shownState != pageState else { return }
         coordinator.shownPosition = position
-        coordinator.shownLive = liveEnabled
+        coordinator.shownState = pageState
         let visible = view.indexPathsForVisibleItems
         if !visible.isEmpty { view.reconfigureItems(at: visible) }
     }
@@ -430,12 +444,12 @@ private struct PhotoPager: UIViewRepresentable {
         var parent: PhotoPager
         /// What the pages on screen were last built with.
         var shownPosition: Int
-        var shownLive: Bool
+        var shownState: AnyHashable
 
         init(parent: PhotoPager) {
             self.parent = parent
             shownPosition = parent.position
-            shownLive = parent.liveEnabled
+            shownState = parent.pageState
         }
 
         func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -586,46 +600,77 @@ private struct PhotoPage: View {
     }
 }
 
-/// A video page: the poster frame at once, then a player that starts when
-/// the page is on screen and pauses when you swipe away.
+/// A video page, as in Photos: the poster frame at once, then the video,
+/// which plays when its page is on screen and pauses when you swipe away.
+/// Tap to show or hide the controls with the bars.
+///
+/// Drawn with an AVPlayerLayer rather than SwiftUI's VideoPlayer: pages live
+/// in collection view cells, which can't host VideoPlayer's view controller.
 private struct VideoPage: View {
     let asset: PHAsset
     let isCurrent: Bool
-    let targetSize: CGSize
+    let controlsHidden: Bool
+    let onTap: () -> Void
 
     @State private var poster: UIImage?
     @State private var player: AVPlayer?
     @State private var failed = false
     @State private var ready = false
+    @State private var isPlaying = false
+    @State private var position: Double = 0
+    @State private var duration: Double = 0
+    @State private var isScrubbing = false
+    @State private var timeObserver: Any?
 
-    init(asset: PHAsset, isCurrent: Bool, preload: Bool, targetSize: CGSize) {
+    init(asset: PHAsset, isCurrent: Bool, preload: Bool, controlsHidden: Bool, onTap: @escaping () -> Void) {
         self.asset = asset
         self.isCurrent = isCurrent
-        self.targetSize = targetSize
+        self.controlsHidden = controlsHidden
+        self.onTap = onTap
         _poster = State(initialValue: preload ? PhotoLoading.instantImage(for: asset) : nil)
+        _duration = State(initialValue: asset.duration)
     }
 
     var body: some View {
         ZStack {
             Color.black
             if let player {
-                // Kept clear of the viewer's own top and bottom bars, so the
-                // player's controls and timeline are never covered.
-                VideoPlayer(player: player)
-                    .padding(.top, 120)
-                    .padding(.bottom, 110)
+                PlayerLayerView(player: player, onReady: { ready = true })
             }
             if let poster, !ready {
                 Image(uiImage: poster)
                     .resizable()
                     .scaledToFit()
-                    .allowsHitTesting(false)
             }
             if player == nil && !failed {
                 ProgressView()
             }
             if failed {
                 ContentUnavailableView("Video not available", systemImage: "video.slash")
+            }
+        }
+        .contentShape(.rect)
+        .onTapGesture(perform: onTap)
+        .overlay {
+            if player != nil, !isPlaying, !controlsHidden {
+                Button(action: togglePlay) {
+                    Image(systemName: "play.fill")
+                        .font(.title)
+                        .frame(width: 72, height: 72)
+                }
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
+                .accessibilityLabel("Play")
+                .transition(.opacity)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if player != nil, !controlsHidden {
+                controls
+                    .padding(.horizontal, 20)
+                    // Sits above the viewer's own bottom bar.
+                    .padding(.bottom, 112)
+                    .transition(.opacity)
             }
         }
         .task(id: asset.localIdentifier) {
@@ -636,17 +681,127 @@ private struct VideoPage: View {
                 return
             }
             let player = AVPlayer(playerItem: item)
+            timeObserver = player.addPeriodicTimeObserver(
+                forInterval: CMTime(value: 1, timescale: 10), queue: .main
+            ) { [weak player] time in
+                guard let player else { return }
+                MainActor.assumeIsolated {
+                    isPlaying = player.timeControlStatus != .paused
+                    if !isScrubbing { position = time.seconds }
+                    let total = player.currentItem?.duration.seconds ?? 0
+                    if total.isFinite, total > 0 { duration = total }
+                }
+            }
             self.player = player
             if isCurrent { player.play() }
-            // Hide the poster once the first frame is on screen.
-            try? await Task.sleep(for: .milliseconds(250))
-            ready = true
+            // The time observer stops at the end, so listen for it: the
+            // play button comes back, ready to start over.
+            for await _ in NotificationCenter.default.notifications(named: AVPlayerItem.didPlayToEndTimeNotification, object: item) {
+                isPlaying = false
+                position = duration
+            }
         }
         .onChange(of: isCurrent) {
             if isCurrent { player?.play() } else { player?.pause() }
         }
-        .onDisappear { player?.pause() }
+        .onDisappear {
+            player?.pause()
+            if let timeObserver { player?.removeTimeObserver(timeObserver) }
+            timeObserver = nil
+        }
+        .accessibilityElement(children: .contain)
         .accessibilityLabel("Video")
+    }
+
+    private var controls: some View {
+        HStack(spacing: 12) {
+            Button(action: togglePlay) {
+                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                    .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isPlaying ? "Pause" : "Play")
+
+            Text(Self.format(position))
+                .monospacedDigit()
+            Slider(value: $position, in: 0...max(duration, 0.1)) { editing in
+                isScrubbing = editing
+                if !editing { seek(to: position) }
+            }
+            .onChange(of: position) {
+                if isScrubbing { seek(to: position) }
+            }
+            Text(Self.format(duration))
+                .monospacedDigit()
+        }
+        .font(.footnote.weight(.semibold))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .glassEffect(.regular, in: .capsule)
+    }
+
+    private func togglePlay() {
+        guard let player else { return }
+        if isPlaying {
+            player.pause()
+            isPlaying = false
+        } else {
+            // From the start again once it has ended, as in Photos.
+            if duration > 0, position >= duration - 0.2 { player.seek(to: .zero) }
+            player.play()
+            isPlaying = true
+        }
+    }
+
+    private func seek(to seconds: Double) {
+        player?.seek(
+            to: CMTime(seconds: seconds, preferredTimescale: 600),
+            toleranceBefore: .zero, toleranceAfter: .zero
+        )
+    }
+
+    private static func format(_ seconds: Double) -> String {
+        guard seconds.isFinite, seconds >= 0 else { return "0:00" }
+        let total = Int(seconds.rounded(.down))
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
+}
+
+/// Shows an AVPlayer's video, fitted to the page.
+private struct PlayerLayerView: UIViewRepresentable {
+    let player: AVPlayer
+    let onReady: () -> Void
+
+    func makeUIView(context: Context) -> PlayerUIView {
+        let view = PlayerUIView()
+        view.onReady = onReady
+        view.player = player
+        return view
+    }
+
+    func updateUIView(_ view: PlayerUIView, context: Context) {
+        view.onReady = onReady
+        if view.player !== player { view.player = player }
+    }
+}
+
+final class PlayerUIView: UIView {
+    override class var layerClass: AnyClass { AVPlayerLayer.self }
+    private var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
+    private var readyObservation: NSKeyValueObservation?
+    var onReady: (() -> Void)?
+
+    var player: AVPlayer? {
+        get { playerLayer.player }
+        set {
+            playerLayer.player = newValue
+            playerLayer.videoGravity = .resizeAspect
+            // Swap the poster for the video once its first frame is drawn.
+            readyObservation = playerLayer.observe(\.isReadyForDisplay, options: [.initial, .new]) { [weak self] layer, _ in
+                guard layer.isReadyForDisplay else { return }
+                DispatchQueue.main.async { self?.onReady?() }
+            }
+        }
     }
 }
 
