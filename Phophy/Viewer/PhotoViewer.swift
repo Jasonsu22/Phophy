@@ -110,9 +110,24 @@ enum PhotoLoading {
         return options
     }
 
+    private static let instantCache: NSCache<NSString, UIImage> = {
+        let cache = NSCache<NSString, UIImage>()
+        cache.countLimit = 40
+        return cache
+    }()
+
     /// The small copy Photos keeps ready for thumbnails. It comes back
-    /// immediately, so a page never starts empty.
+    /// immediately, so a page never starts empty. Kept in a small cache,
+    /// because SwiftUI may build a page's view several times.
     static func instantImage(for asset: PHAsset) -> UIImage? {
+        let key = asset.localIdentifier as NSString
+        if let cached = instantCache.object(forKey: key) { return cached }
+        let image = requestInstantImage(for: asset)
+        if let image { instantCache.setObject(image, forKey: key) }
+        return image
+    }
+
+    private static func requestInstantImage(for asset: PHAsset) -> UIImage? {
         let options = PHImageRequestOptions()
         options.isSynchronous = true
         options.deliveryMode = .fastFormat
@@ -140,6 +155,7 @@ struct PhotoViewer: View {
     @State private var showingInfo = false
     @State private var liveEnabled = true
     @State private var preheated: [PHAsset] = []
+    private static let pageGap: CGFloat = 20
 
     init(presentation: PhotoViewerModel.Presentation) {
         self.presentation = presentation
@@ -154,37 +170,14 @@ struct PhotoViewer: View {
     var body: some View {
         GeometryReader { proxy in
             let target = PhotoLoading.targetSize(for: proxy.size, scale: displayScale)
-            TabView(selection: $position) {
-                ForEach(0..<presentation.source.count, id: \.self) { index in
-                    Group {
-                        if let asset = presentation.source.asset(at: index) {
-                            if asset.mediaType == .video {
-                                VideoPage(
-                                    asset: asset,
-                                    isCurrent: index == position,
-                                    preload: index == presentation.start,
-                                    targetSize: target
-                                )
-                            } else {
-                                PhotoPage(
-                                    asset: asset,
-                                    isCurrent: index == position,
-                                    preload: index == presentation.start,
-                                    targetSize: target,
-                                    liveEnabled: liveEnabled,
-                                    onTap: {
-                                        withAnimation(.easeInOut(duration: 0.2)) { chromeHidden.toggle() }
-                                    }
-                                )
-                            }
-                        } else {
-                            Color.black
-                        }
-                    }
-                    .tag(index)
-                }
+            // A collection view only builds the pages near the screen, so
+            // opening a photo costs the same in a library of 20 or 20,000.
+            PhotoPager(count: presentation.source.count, position: $position, revision: library.revision) { index, isCurrent in
+                // Each page is a little wider than the screen, so a black
+                // gap shows between photos while swiping, as in Photos.
+                AnyView(page(at: index, isCurrent: isCurrent, target: target).padding(.horizontal, Self.pageGap / 2))
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            .padding(.horizontal, -Self.pageGap / 2)
             .onChange(of: position, initial: true) { preheat(around: position, target: target) }
         }
         .ignoresSafeArea()
@@ -210,6 +203,34 @@ struct PhotoViewer: View {
         .sheet(isPresented: $showingInfo) {
             if let current { PhotoInfoSheet(asset: current) }
         }
+    }
+
+    @ViewBuilder
+    private func page(at index: Int, isCurrent: Bool, target: CGSize) -> some View {
+        Group {
+            if let asset = presentation.source.asset(at: index) {
+                if asset.mediaType == .video {
+                    VideoPage(asset: asset, isCurrent: isCurrent, preload: index == presentation.start, targetSize: target)
+                } else {
+                    PhotoPage(
+                        asset: asset,
+                        isCurrent: isCurrent,
+                        preload: index == presentation.start,
+                        targetSize: target,
+                        liveEnabled: liveEnabled,
+                        onTap: {
+                            withAnimation(.easeInOut(duration: 0.2)) { chromeHidden.toggle() }
+                        }
+                    )
+                }
+            } else {
+                Color.black
+            }
+        }
+        // A reused cell showing another photo starts from scratch.
+        .id(presentation.source.asset(at: index)?.localIdentifier ?? "\(index)")
+        .environment(library)
+        .environment(\.colorScheme, .dark)
     }
 
     /// Asks Photos to get the photos either side of this one ready, so a
@@ -348,6 +369,110 @@ struct PhotoViewer: View {
             }
         }
         .padding(.horizontal, 20)
+    }
+}
+
+/// Pages sideways through photos, as Photos does: a paging collection view
+/// that builds a SwiftUI page for the cells on screen and reuses them.
+private struct PhotoPager: UIViewRepresentable {
+    let count: Int
+    @Binding var position: Int
+    let revision: Int
+    let page: (_ index: Int, _ isCurrent: Bool) -> AnyView
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeUIView(context: Context) -> PagerCollectionView {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
+        let view = PagerCollectionView(frame: .zero, collectionViewLayout: layout)
+        view.isPagingEnabled = true
+        view.showsHorizontalScrollIndicator = false
+        view.contentInsetAdjustmentBehavior = .never
+        view.backgroundColor = .clear
+        view.register(UICollectionViewCell.self, forCellWithReuseIdentifier: Coordinator.reuseID)
+        view.dataSource = context.coordinator
+        view.delegate = context.coordinator
+        view.page = position
+        return view
+    }
+
+    func updateUIView(_ view: PagerCollectionView, context: Context) {
+        let coordinator = context.coordinator
+        let previous = coordinator.parent
+        coordinator.parent = self
+        if previous.revision != revision || previous.count != count {
+            view.reloadData()
+        }
+        if view.page != position {
+            view.page = position
+            view.showPage()
+        }
+        // Pass the new state (which page is current, Live on or off) to the
+        // pages on screen without rebuilding them.
+        let visible = view.indexPathsForVisibleItems
+        if !visible.isEmpty { view.reconfigureItems(at: visible) }
+    }
+
+    final class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+        static let reuseID = "page"
+        var parent: PhotoPager
+
+        init(parent: PhotoPager) { self.parent = parent }
+
+        func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+            parent.count
+        }
+
+        func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Self.reuseID, for: indexPath)
+            let index = indexPath.item
+            let isCurrent = index == parent.position
+            cell.contentConfiguration = UIHostingConfiguration { parent.page(index, isCurrent) }
+                .margins(.all, 0)
+            return cell
+        }
+
+        func collectionView(_ collectionView: UICollectionView, layout: UICollectionViewLayout,
+                            sizeForItemAt indexPath: IndexPath) -> CGSize {
+            collectionView.bounds.size
+        }
+
+        func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) { settle(scrollView) }
+
+        func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) { settle(scrollView) }
+
+        /// Once a swipe comes to rest, that page becomes the current one.
+        private func settle(_ scrollView: UIScrollView) {
+            guard let pager = scrollView as? PagerCollectionView, pager.bounds.width > 0 else { return }
+            let index = Int((pager.contentOffset.x / pager.bounds.width).rounded())
+            guard index >= 0, index < parent.count, index != pager.page else { return }
+            pager.page = index
+            parent.position = index
+        }
+    }
+}
+
+final class PagerCollectionView: UICollectionView {
+    var page = 0
+    private var laidOutSize: CGSize = .zero
+
+    override func layoutSubviews() {
+        if bounds.size != laidOutSize, bounds.width > 0 {
+            // New size (first layout or rotation): resize pages and stay on
+            // the same photo.
+            laidOutSize = bounds.size
+            collectionViewLayout.invalidateLayout()
+            showPage()
+        }
+        super.layoutSubviews()
+    }
+
+    func showPage() {
+        guard bounds.width > 0 else { return }
+        setContentOffset(CGPoint(x: CGFloat(page) * bounds.width, y: 0), animated: false)
     }
 }
 

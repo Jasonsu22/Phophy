@@ -90,7 +90,7 @@ note on how it was reproduced. The lead re-ranks this list every week.
 
 | # | Bug / rough edge | Area | Owner |
 |---|---|---|---|
-| 1 | Opening and swiping photos is still slower on the iPhone 13 Pro Max than in Photos, worst while indexing runs | Viewer + indexing | C, A |
+| 1 | Opening a photo froze the screen for 1.5–3 s in a 16,000-photo library (the SwiftUI pager built a page for every photo). Fixed on 10 Nov with a collection-view pager; worst frame now 17–80 ms. The remaining spikes are probably indexing running at the same time. Measure with `-PhophyOpenTest` (prints frame times to the console) | Viewer + indexing | C, A |
 | 2 | Indexing runs only while the app is open, and competes with scrolling and the viewer for CPU and the Neural Engine | Indexing | A |
 | 3 | No thermal or Low Power Mode check: a long first index can warm the phone and drain the battery | Indexing | A |
 | 4 | The text model (81 MB) loads on the first search, so the first query takes a moment, and it then stays in memory | CLIP | A |

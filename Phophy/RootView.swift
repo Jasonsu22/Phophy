@@ -107,6 +107,25 @@ struct RootView: View {
                 try? await Task.sleep(for: .seconds(3))
                 send(arguments[index + 1])
             }
+            // Testing aid: `-PhophyOpenTest` opens and closes the newest photo
+            // a few times and prints how long the slowest frames took.
+            if arguments.contains("-PhophyOpenTest") {
+                try? await Task.sleep(for: .seconds(4))
+                for round in 1...6 {
+                    let monitor = FrameMonitor()
+                    let start = CACurrentMediaTime()
+                    let fetch = library.fetch(.all, oldestFirst: true)
+                    let fetched = CACurrentMediaTime()
+                    viewer.open(.fetch(fetch), at: fetch.count - 1)
+                    try? await Task.sleep(for: .milliseconds(1500))
+                    print(String(format: "OPENTEST round %d: %d photos, fetch %.0f ms, %@",
+                                 round, fetch.count, (fetched - start) * 1000, monitor.summary()))
+                    let closing = FrameMonitor()
+                    viewer.close()
+                    try? await Task.sleep(for: .milliseconds(1500))
+                    print("OPENTEST round \(round) close: \(closing.summary())")
+                }
+            }
         }
         #endif
         .onChange(of: library.revision, initial: true) {
