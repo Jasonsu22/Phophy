@@ -1,19 +1,42 @@
 # Phophy — team plan (from 10 November 2026)
 
-What is built, what is broken or weak, and who does what next. Three
-people, three tracks, each owning a set of folders so that work rarely
-collides. PLAN.md stays the record of how the app was designed; this file
-is the to-do list.
+What is built, what is broken or weak, and who does what next. Four
+people: a lead (the project's owner) and three members, each member on a
+track that owns a set of folders so that work rarely collides. PLAN.md
+stays the record of how the app was designed; this file is the to-do list.
 
 | | Track | Owns |
 |---|---|---|
+| **Lead** | Product, integration and release; Study tab; experiments | Shared files, `Phophy/Study/`, README, PLAN.md, this file, TestFlight |
 | **A** | Performance, indexing and reliability | `Phophy/Index/`, `Phophy/CLIP/`, `PhophyApp.swift`, background work |
-| **B** | Search quality and the assistant | `Phophy/Assistant/`, `SearchEngine.swift`, `Phophy/Study/`, evals |
+| **B** | Search quality and the assistant | `Phophy/Assistant/`, `SearchEngine.swift`, evals |
 | **C** | Viewer, photo editing and Photos-level polish | `Phophy/Viewer/`, grids, `Collections/`, `Settings/`, new `Phophy/Edit/` |
 
 Shared files (`RootView.swift`, `IndexStore.swift`, `PhotoLibrary.swift`)
-need a heads-up in the team chat before a change, and a small PR of their
-own.
+belong to the lead. Members post a heads-up in the team chat before
+changing one, and put the change in a small PR of its own, which the lead
+reviews.
+
+### The lead's job
+
+- **Decide** what "like Photos" means when it is unclear. Rank the bug
+  list each week, and say yes or no to experiments (section 5).
+- **Review and merge** every PR, and build `main` on a real phone at least
+  twice a week.
+- **Own the shared files** and the index format, so that changes from A,
+  B and C fit together. A schema change is agreed with A before it is
+  written.
+- **Supply real test data.** Write the first 30 eval questions (B1) from
+  your own library, and run the iPhone 13 Pro Max checks.
+- **Study tab (B4 below).** It is self-contained and fits around review
+  work.
+- **Release:**
+  - App Store Connect and TestFlight;
+  - the privacy policy and App Privacy labels (what goes to Apple Maps,
+    and what goes to the cloud provider the user chose);
+  - the README and screenshots.
+- **Spikes.** Run the one-day experiments from section 5 that the team
+  picks.
 
 ---
 
@@ -63,7 +86,7 @@ Test tools already in the repo or used so far:
 ## 1. Known bugs and rough edges (everyone, first week)
 
 Each person takes the bugs in their own area. Every bug fix gets a short
-note on how it was reproduced.
+note on how it was reproduced. The lead re-ranks this list every week.
 
 | # | Bug / rough edge | Area | Owner |
 |---|---|---|---|
@@ -232,7 +255,7 @@ agent.
 - **Streaming replies** for cloud backends, with steps appearing live.
 - Cap and trim the history file (#13); allow "Delete all chats".
 
-**B4. Study tab**
+**B4. Study tab (owned by the lead; B helps with prompts)**
 - Group slides by lecture using time gaps plus visual similarity, not only
   date.
 - Ask questions about a lecture ("explain slide 12"), with the slide text
@@ -332,13 +355,13 @@ Worth a day's spike each; keep the ones that test well.
 
 ## 6. Order of work
 
-| Weeks | A | B | C |
-|---|---|---|---|
-| 1 | A2 measure, A0 move test scripts into `Tools/`, A1 scheduling and thermal | B1 eval set and runner | C1 viewer profiling and fixes |
-| 2–3 | A1 background task, A3 memory and model loading | B2 multilingual queries, OCR text embeddings, tuning | C2 grid pinch, selection, filmstrip |
-| 4–5 | A4 videos, A5 reliability and tests | B3 new tools, streaming, actions | C3 editing steps 1–4 |
-| 6–7 | A6 scale test, help B with captions | B2 captions, people (spike) | C3 steps 5–7, C4 collections |
-| 8 | TestFlight build; everyone tests on their own phone for a week; fix the top 10 problems found | | |
+| Weeks | Lead | A | B | C |
+|---|---|---|---|---|
+| 1 | Rank the bug list, write 30 eval questions, set up branch rules and TestFlight | A2 measure, A0 move test scripts into `Tools/`, A1 scheduling and thermal | B1 eval set and runner | C1 viewer profiling and fixes |
+| 2–3 | Review and integrate; B4 grouping slides into lectures | A1 background task, A3 memory and model loading | B2 multilingual queries, OCR text embeddings, tuning | C2 grid pinch, selection, filmstrip |
+| 4–5 | B4 lecture questions and flash cards; privacy policy draft | A4 videos, A5 reliability and tests | B3 new tools, streaming, actions | C3 editing steps 1–4 |
+| 6–7 | Experiment spikes; App Privacy labels, README and screenshots | A6 scale test, help B with captions | B2 captions, people (spike) | C3 steps 5–7, C4 collections |
+| 8 | TestFlight build; all four test on their own phones for a week; the lead picks the top 10 problems to fix | | | |
 
 Milestones:
 
@@ -354,9 +377,10 @@ Milestones:
 ## 7. How we work
 
 - **Branches and PRs.** One branch per task (`a1-background-index`).
-  Small PRs, reviewed by one other member, and merged to `main` after a
-  build on the simulator and a check on a real phone for anything you can
-  see or feel.
+  Small PRs, reviewed by the lead (or by another member when the lead is
+  away), and merged to `main` after a build on the simulator and a check
+  on a real phone for anything you can see or feel. The lead's own PRs are
+  reviewed by a member.
 - **Builds.**
   - Simulator: `xcodebuild -project Phophy.xcodeproj -scheme Phophy
     -destination 'platform=iOS Simulator,name=iPhone 18 Pro'
