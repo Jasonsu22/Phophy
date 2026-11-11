@@ -237,21 +237,23 @@ struct LectureDetailView: View {
         return parts.joined(separator: " · ")
     }
 
+    /// Every slide of the lecture, side by side on reusable cells, so a
+    /// lecture with hundreds of slides scrolls smoothly.
     private func slideStrip(_ session: LectureSession) -> some View {
-        ScrollView(.horizontal) {
-            LazyHStack(spacing: 8) {
-                let assets = study.assets(of: session)
-                ForEach(Array(assets.enumerated()), id: \.element.localIdentifier) { index, asset in
-                    AssetThumbnail(asset: asset)
-                        .frame(width: 120, height: 84)
-                        .clipShape(.rect(cornerRadius: 14))
-                        .opensInViewer(.assets(assets), at: index, id: asset.localIdentifier)
-                }
-            }
-        }
+        let assets = study.assets(of: session)
+        return ReusableCollection(
+            sections: [.photos(
+                .assets(assets),
+                layout: .strip(itemSize: CGSize(width: 120, height: 84), spacing: 8),
+                // Runs to the screen's edges, as before.
+                insets: NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20),
+                cornerRadius: 14
+            )],
+            axis: .horizontal,
+            contentID: assets.map(\.localIdentifier)
+        )
         .frame(height: 84)
-        .scrollIndicators(.hidden)
-        .scrollClipDisabled()
+        .padding(.horizontal, -20)
     }
 }
 
@@ -418,20 +420,21 @@ struct SlideNotesView: View {
     @Environment(StudyModel.self) private var study
 
     var body: some View {
-        ScrollView {
-            // Lazy: a long lecture builds only the slides on screen.
-            LazyVStack(alignment: .leading, spacing: 14) {
-                if let session = study.session(id: sessionID) {
-                    let assets = study.assets(of: session)
-                    ForEach(study.slides(of: session), id: \.number) { slide in
-                        SlideNoteRow(slide: slide, assets: assets)
-                    }
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-            .padding(.bottom, 24)
-        }
+        // Reusable rows: a long lecture builds only the slides on screen.
+        let session = study.session(id: sessionID)
+        let assets = session.map { study.assets(of: $0) } ?? []
+        let slides = session.map { study.slides(of: $0) } ?? []
+        ReusableCollection(
+            sections: [ReusableSection(
+                layout: .rows(spacing: 14, estimatedHeight: 160),
+                count: slides.count,
+                insets: NSDirectionalEdgeInsets(top: 8, leading: 20, bottom: 24, trailing: 20)
+            ) { index in
+                AnyView(SlideNoteRow(slide: slides[index], assets: assets).frame(maxWidth: .infinity, alignment: .leading))
+            }],
+            contentID: slides.map(\.number)
+        )
+        .ignoresSafeArea(.container, edges: .vertical)
         .background { AmbientBackground() }
         .navigationTitle("Slide by slide")
         .navigationBarTitleDisplayMode(.inline)

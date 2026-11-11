@@ -263,35 +263,21 @@ struct CategoryGridView: View {
     }
 }
 
-/// A grid of specific photos, in the given order.
+/// A grid of specific photos, in the given order, on reusable cells.
 struct AssetIDGrid: View {
     let localIDs: [String]
 
     @Environment(PhotoLibrary.self) private var library
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 2), count: 4)
 
     var body: some View {
         let assets = assets
-        ScrollViewReader { proxy in
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 2) {
-                ForEach(Array(assets.enumerated()), id: \.element.localIdentifier) { index, asset in
-                    AssetThumbnail(asset: asset)
-                        .aspectRatio(1, contentMode: .fit)
-                        .opensInViewer(.assets(assets), at: index, id: asset.localIdentifier)
-                        .id(index)
-                }
-            }
-        }
-        // Like Photos: open on the newest photo, at the bottom.
-        .defaultScrollAnchor(.bottom, for: .initialOffset)
-        .defaultScrollAnchor(.bottom, for: .sizeChanges)
-        .task {
-            await Task.yield()
-            if !assets.isEmpty { proxy.scrollTo(assets.count - 1, anchor: .bottom) }
-        }
-        }
-        .background { AmbientBackground() }
+        PhotoGrid(source: .assets(assets), contentID: ContentKey(ids: localIDs, revision: library.revision))
+            .background { AmbientBackground() }
+    }
+
+    private struct ContentKey: Hashable {
+        let ids: [String]
+        let revision: Int
     }
 
     private var assets: [PHAsset] {

@@ -279,20 +279,24 @@ private struct PhotoStrip: View {
     let localIDs: [String]
     @Environment(PhotoLibrary.self) private var library
 
+    /// Reusable cells side by side: only the photos on screen are built.
     var body: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 6) {
-                let assets = assets
-                ForEach(Array(assets.enumerated()), id: \.element.localIdentifier) { index, asset in
-                    AssetThumbnail(asset: asset)
-                        .frame(width: 112, height: 112)
-                        .clipShape(.rect(cornerRadius: 16))
-                        .opensInViewer(.assets(assets), at: index, id: asset.localIdentifier)
-                }
-            }
-        }
-        .scrollIndicators(.hidden)
-        .scrollClipDisabled()
+        let assets = assets
+        ReusableCollection(
+            sections: [.photos(
+                .assets(assets),
+                layout: .strip(itemSize: CGSize(width: 112, height: 112), spacing: 6),
+                cornerRadius: 16
+            )],
+            axis: .horizontal,
+            contentID: ContentKey(ids: localIDs, revision: library.revision)
+        )
+        .frame(height: 112)
+    }
+
+    private struct ContentKey: Hashable {
+        let ids: [String]
+        let revision: Int
     }
 
     private var assets: [PHAsset] {
