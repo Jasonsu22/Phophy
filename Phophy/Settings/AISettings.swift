@@ -13,6 +13,9 @@ enum AppSettings {
         static let cloudProvider = "cloudProvider"
         static let customBaseURL = "customBaseURL"
         static func cloudModel(_ provider: CloudProvider) -> String { "cloudModel.\(provider.rawValue)" }
+        static let imageProvider = "imageProvider"
+        static let imageBaseURL = "imageBaseURL"
+        static func imageModel(_ provider: ImageProvider) -> String { "imageModel.\(provider.rawValue)" }
     }
 
     /// Register defaults once at launch so unset values read as intended.
@@ -24,6 +27,8 @@ enum AppSettings {
             Key.lookUpPlaces: true,
             Key.cloudProvider: CloudProvider.anthropic.rawValue,
             Key.customBaseURL: "",
+            Key.imageProvider: ImageProvider.openai.rawValue,
+            Key.imageBaseURL: "",
         ])
     }
 
@@ -46,6 +51,21 @@ enum AppSettings {
     /// The model name for a provider: what the user typed, else its default.
     nonisolated static func cloudModel(for provider: CloudProvider) -> String {
         let saved = UserDefaults.standard.string(forKey: Key.cloudModel(provider))?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return saved.isEmpty ? provider.defaultModel : saved
+    }
+
+    nonisolated static var imageProvider: ImageProvider {
+        UserDefaults.standard.string(forKey: Key.imageProvider).flatMap(ImageProvider.init) ?? .openai
+    }
+
+    nonisolated static var imageBaseURL: String {
+        UserDefaults.standard.string(forKey: Key.imageBaseURL) ?? ""
+    }
+
+    /// The image model for a provider: what the user typed, else its default.
+    nonisolated static func imageModel(for provider: ImageProvider) -> String {
+        let saved = UserDefaults.standard.string(forKey: Key.imageModel(provider))?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return saved.isEmpty ? provider.defaultModel : saved
     }

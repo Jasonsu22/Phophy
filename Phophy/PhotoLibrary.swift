@@ -77,6 +77,14 @@ final class PhotoLibrary: NSObject, PHPhotoLibraryChangeObserver {
         guard hasAccess else { return }
         if !isObserving {
             PHPhotoLibrary.shared().register(self)
+            // Photos doesn't reliably report an edit as a change to the
+            // picture, so the editor says so itself.
+            NotificationCenter.default.addObserver(
+                forName: .phophyPhotoEdited, object: nil, queue: .main
+            ) { [weak self] note in
+                guard let ids = note.userInfo?["localIDs"] as? [String] else { return }
+                MainActor.assumeIsolated { self?.markEdited(ids) }
+            }
             isObserving = true
         }
         reload()
@@ -159,8 +167,8 @@ final class PhotoLibrary: NSObject, PHPhotoLibraryChangeObserver {
 
     /// Photos reports a change whenever iCloud syncs or downloads anything,
     /// often several times a second while photos are being indexed.
-    /// Only photos added, removed or (un)favourited matter to the app, and
-    /// a burst of changes is handled once, a second later.
+    /// Only photos added, removed, edited or (un)favourited matter to the
+    /// app, and a burst of changes is handled once, a second later.
     private func handle(_ change: PHChange) {
         guard let everything else {
             scheduleReload()
@@ -179,9 +187,48 @@ final class PhotoLibrary: NSObject, PHPhotoLibraryChangeObserver {
                 || !(favoriteDetails.insertedIndexes?.isEmpty ?? true)
                 || !(favoriteDetails.removedIndexes?.isEmpty ?? true)
         }
-        if !details.hasIncrementalChanges || added || removed || favoriteChanged {
+        // An edit (here or in Photos) changes the picture itself.
+        // Photos says so per photo, which tells an edit apart from iCloud's
+        // background noise; it has to be asked about the photo as it was
+        // before the change. (When photos were also added or removed, the
+        // reload happens anyway.)
+        var edited: [String] = []
+        if !added, !removed, let changed = details.changedIndexes, changed.count <= 500 {
+            let before = details.fetchResultBeforeChanges
+            for index in changed where index < before.count {
+                let old = before.object(at: index)
+                if change.changeDetails(for: old)?.assetContentChanged == true {
+                    edited.append(old.localIdentifier)
+                }
+            }
+        }
+        if !edited.isEmpty { markEdited(edited) }
+        if !details.hasIncrementalChanges || added || removed || favoriteChanged || !edited.isEmpty {
             scheduleReload()
         }
+    }
+
+    /// Bumped for a photo each time its picture is edited. An edit keeps the
+    /// photo's ID (and, it turns out, its modification date), so thumbnails
+    /// and previews use this to know they must load the picture again.
+    private(set) var editMarks: [String: Int] = [:]
+
+    /// The key for a photo's current picture.
+    func contentKey(_ asset: PHAsset) -> String {
+        "\(asset.localIdentifier)#\(editMarks[asset.localIdentifier] ?? 0)"
+    }
+
+    /// A photo's picture changed: show the new one everywhere and index it
+    /// again (the old text and embedding are forgotten; the indexer picks the
+    /// photo up on the reload).
+    func markEdited(_ localIDs: [String]) {
+        for id in localIDs {
+            editMarks[id, default: 0] += 1
+            PhotoLoading.forget(id)
+        }
+        imageManager.stopCachingImagesForAllAssets()
+        try? IndexStore.shared.remove(localIDs: localIDs)
+        scheduleReload()
     }
 
     private func scheduleReload() {
@@ -205,4 +252,9 @@ struct AskBarSpace: ViewModifier {
             Color.clear.frame(height: assistant.isPresented ? 0 : 58)
         }
     }
+}
+
+extension Notification.Name {
+    /// Posted with `userInfo["localIDs"]` after photos are edited or reverted.
+    static let phophyPhotoEdited = Notification.Name("phophyPhotoEdited")
 }

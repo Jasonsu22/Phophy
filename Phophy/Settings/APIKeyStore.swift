@@ -6,11 +6,18 @@ import Security
 nonisolated enum APIKeyStore {
     private static let service = "app.phophy.api-keys"
 
-    static func load(for provider: CloudProvider) -> String? {
+    static func load(for provider: CloudProvider) -> String? { load(account: provider.rawValue) }
+
+    @discardableResult
+    static func save(_ key: String, for provider: CloudProvider) -> Bool { save(key, account: provider.rawValue) }
+
+    static func delete(for provider: CloudProvider) { delete(account: provider.rawValue) }
+
+    static func load(account: String) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: provider.rawValue,
+            kSecAttrAccount as String: account,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne,
         ]
@@ -23,23 +30,23 @@ nonisolated enum APIKeyStore {
     }
 
     @discardableResult
-    static func save(_ key: String, for provider: CloudProvider) -> Bool {
-        delete(for: provider)
+    static func save(_ key: String, account: String) -> Bool {
+        delete(account: account)
         let item: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: provider.rawValue,
+            kSecAttrAccount as String: account,
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
             kSecValueData as String: Data(key.utf8),
         ]
         return SecItemAdd(item as CFDictionary, nil) == errSecSuccess
     }
 
-    static func delete(for provider: CloudProvider) {
+    static func delete(account: String) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: provider.rawValue,
+            kSecAttrAccount as String: account,
         ]
         SecItemDelete(query as CFDictionary)
     }

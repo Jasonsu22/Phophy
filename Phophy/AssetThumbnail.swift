@@ -28,7 +28,9 @@ struct AssetThumbnail: View {
             .overlay(alignment: .bottomTrailing) { videoBadge }
             .onAppear { load(side: side) }
             .onDisappear { cancel() }
-            .onChange(of: asset.localIdentifier) {
+            // Another photo in a reused cell, or this photo edited (an edit
+            // keeps the ID, so the library's edit mark tells).
+            .onChange(of: library.contentKey(asset)) {
                 image = nil
                 load(side: side)
             }

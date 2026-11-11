@@ -211,6 +211,24 @@ To use the more accurate S2 model on a phone, download `mobileclip_s2_*` the sam
 - **Screens:** the Study tab lists lectures, and the newest lecture also appears as a card on the home screen. The lecture page shows the summary, key points, a slide strip, flip-card flashcards and the text of each slide.
 - **Testing:** Apple Intelligence produced good notes from four sample slides in the simulator. The cloud path was tested against the local mock server only.
 
+### Phase 6 as built
+
+- **Editor:** the edit button in the photo viewer opens a full-screen editor with five tools: Describe, Adjust, Looks, Crop and Subject. Press and hold the picture to compare with the original.
+- **Free, on the iPhone (Core Image and Vision):** auto enhance, exposure, contrast, saturation, warmth, eight looks, rotate, crop to a fixed shape, and replacing the background behind the main subject with blur, white, black or nothing (a cut-out).
+- **Describe:** a typed request such as "brighter and blur the background" is read on the iPhone by simple word rules (`Editor/EditInstructions.swift`), not by a language model, so it is free and instant. Only the parts the rules don't understand, such as "remove the person behind me", are offered to the AI image service, and only after the user taps to confirm the cost.
+- **Apple Intelligence reads requests** on phones that have it (added 2026-11-11, `Editor/EditRequestReader.swift`). It handles free wording and other languages, for example "it's gloomy, cheer it up" or "让它亮一点，背景虚化", and is merged with the word rules so it is never worse than them. Two lessons from testing: Apple's on-device model returned 0 for every number field, so it chooses words ("brighter", "little/normal/lot") instead of numbers; and it added unrequested changes until the prompt had examples of requests that only need the AI service. All 12 test requests read correctly in the simulator, in about 1 to 3.5 seconds each. Phones without Apple Intelligence, such as the iPhone 13 Pro Max, use the word rules.
+- **AI image service:** chosen in Settings › AI photo edits, separate from the chat provider because Claude doesn't edit images:
+  - **OpenAI**, through `POST /images/edits`. Default model `gpt-image-2`, quality medium. It reuses the assistant's OpenAI key if one is saved.
+  - **Google Gemini**, through `generateContent`. Default model `gemini-3.1-flash-image-preview`.
+  - **Custom**, any service that accepts OpenAI's image edit request.
+  - Image model names change often and both defaults are unconfirmed; check them against each provider's model list before relying on them.
+  - The photo is sent at about 1.5 megapixels and the result keeps that size.
+- **Saving:** edits are saved into the photo the way Apple's Photos app saves its own: the original is kept, the settings are stored with the photo, and reopening the editor brings them back. "Revert to Original" undoes everything, in Photos too.
+  - An AI edit can't be replayed from the original, so it is saved as a finished picture; it can still be reverted.
+  - A cut-out needs see-through pixels, which the photo format can't hold, so it is saved as a new PNG photo and the original is left alone.
+  - Saving an edit to a Live Photo turns it into a still photo, as in Photos.
+- **Testing (simulator):** typed requests, sliders, save, reopen and revert worked on screen. The AI path was tested against a local mock server: only the leftover request was sent, and the result and its undo worked. Subject detection can't run in the simulator ("Could not create inference context"), so the background tools were checked on the Mac with the same code and a real stock photo, where blur, cut-out, white background, rotate and crop all came out right. Not yet tested: subject detection on an iPhone, and OpenAI or Gemini with real keys.
+
 ## 6. iOS development basics for a first app
 
 ### Simulator
@@ -248,4 +266,4 @@ A free Apple ID signs apps for 7 days at a time (re-run from Xcode to renew). Th
 - **MobileCLIP licence** is a research licence. Personal use is fine; an App Store release needs a licence check or a swap to an openly licensed CLIP/SigLIP.
 - **Non-English search.** MobileCLIP is English-centric. If you want to search in Chinese, plan for a multilingual text encoder or query translation.
 - **First index time.** Thousands of photos take a while (Queryable reports minutes, not hours, on recent phones); do it in the background with progress shown.
-- **Image-edit model pricing** changes quickly; re-check before Phase 6.
+- **Image-edit model names and pricing** change quickly. Third-party sources in November 2026 put OpenAI edits at roughly $0.01–0.05 at medium quality and Gemini at a few cents; confirm on each provider's pricing page.

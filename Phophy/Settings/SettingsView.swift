@@ -12,6 +12,14 @@ struct SettingsView: View {
     @AppStorage(AppSettings.Key.cloudProvider) private var providerID = CloudProvider.anthropic.rawValue
     @AppStorage(AppSettings.Key.customBaseURL) private var customBaseURL = ""
 
+    @AppStorage(AppSettings.Key.imageProvider) private var imageProviderID = ImageProvider.openai.rawValue
+    @AppStorage(AppSettings.Key.imageBaseURL) private var imageBaseURL = ""
+    @State private var imageModelName = ""
+    @State private var imageKeyDraft = ""
+    @State private var hasImageKey = false
+
+    private var imageProvider: ImageProvider { ImageProvider(rawValue: imageProviderID) ?? .openai }
+
     @State private var modelName = ""
     @State private var keyDraft = ""
     @State private var hasKey = false
@@ -35,6 +43,7 @@ struct SettingsView: View {
                     CurrentModelCard(backend: backend)
                     aiSection
                     if allowCloudAI { cloudSection }
+                    imageSection
                     indexSection
                     aboutSection
                 }
@@ -56,6 +65,11 @@ struct SettingsView: View {
         }
         .presentationBackground(.clear)
         .onAppear(perform: loadProviderFields)
+        .onAppear(perform: loadImageFields)
+        .onChange(of: imageProviderID) { loadImageFields() }
+        .onChange(of: imageModelName) {
+            UserDefaults.standard.set(imageModelName, forKey: AppSettings.Key.imageModel(imageProvider))
+        }
         .onChange(of: providerID) { loadProviderFields() }
         .onChange(of: modelName) {
             UserDefaults.standard.set(modelName, forKey: AppSettings.Key.cloudModel(provider))
@@ -165,6 +179,79 @@ struct SettingsView: View {
         modelName = saved.isEmpty ? provider.defaultModel : saved
         keyDraft = ""
         hasKey = APIKeyStore.load(for: provider) != nil
+    }
+
+    private var imageSection: some View {
+        SettingsSection(
+            title: "AI photo edits",
+            footer: "Used only when you ask the editor for something your iPhone can't do itself, such as removing a person, and only after you confirm. " + imageProvider.help
+        ) {
+            SettingsRow(icon: "wand.and.sparkles", title: "Service") {
+                Picker("Service", selection: $imageProviderID) {
+                    ForEach(ImageProvider.allCases) { provider in
+                        Text(provider.title).tag(provider.rawValue)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+            }
+            RowDivider()
+            FieldRow(icon: "cpu", title: "Model") {
+                TextField(imageProvider.defaultModel.isEmpty ? "Model name" : imageProvider.defaultModel, text: $imageModelName)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+            }
+            if imageProvider == .custom {
+                RowDivider()
+                FieldRow(icon: "link", title: "Base URL") {
+                    TextField("https://api.example.com/v1", text: $imageBaseURL)
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
+            }
+            RowDivider()
+            if hasImageKey {
+                SettingsRow(icon: "key", title: "API key", subtitle: imageKeySubtitle) {
+                    if APIKeyStore.load(account: imageProvider.keyAccount) != nil {
+                        Button("Remove", role: .destructive) {
+                            APIKeyStore.delete(account: imageProvider.keyAccount)
+                            hasImageKey = imageProvider.savedKey != nil
+                        }
+                        .buttonStyle(.glass)
+                    }
+                }
+            } else {
+                FieldRow(icon: "key", title: "API key") {
+                    HStack(spacing: 8) {
+                        SecureField(imageProvider.keyPlaceholder, text: $imageKeyDraft)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                        Button("Save") {
+                            let key = imageKeyDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !key.isEmpty, APIKeyStore.save(key, account: imageProvider.keyAccount) else { return }
+                            imageKeyDraft = ""
+                            hasImageKey = true
+                        }
+                        .buttonStyle(.glass)
+                        .disabled(imageKeyDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
+            }
+        }
+    }
+
+    private var imageKeySubtitle: String {
+        APIKeyStore.load(account: imageProvider.keyAccount) == nil
+            ? "Using the assistant's OpenAI key"
+            : "Saved in your iPhone's Keychain"
+    }
+
+    private func loadImageFields() {
+        let saved = UserDefaults.standard.string(forKey: AppSettings.Key.imageModel(imageProvider)) ?? ""
+        imageModelName = saved.isEmpty ? imageProvider.defaultModel : saved
+        imageKeyDraft = ""
+        hasImageKey = imageProvider.savedKey != nil
     }
 
     private var indexSection: some View {

@@ -115,6 +115,11 @@ enum PhotoLoading {
     static var debugLoads = 0
     #endif
 
+    /// Drops a photo's cached preview, after it was edited.
+    static func forget(_ localID: String) {
+        instantCache.removeObject(forKey: localID as NSString)
+    }
+
     private static let instantCache: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
         cache.countLimit = 40
@@ -161,8 +166,12 @@ struct PhotoViewer: View {
     private struct PageState: Hashable {
         let live: Bool
         let chromeHidden: Bool
+        let editVersion: Int
     }
     @State private var showingInfo = false
+    @State private var editing: EditTarget?
+    /// Bumped when the editor closes, so pages show a just-saved edit.
+    @State private var editVersion = 0
     @State private var liveEnabled = true
     @State private var preheated: [PHAsset] = []
     private static let pageGap: CGFloat = 20
@@ -182,7 +191,7 @@ struct PhotoViewer: View {
             let target = PhotoLoading.targetSize(for: proxy.size, scale: displayScale)
             // A collection view only builds the pages near the screen, so
             // opening a photo costs the same in a library of 20 or 20,000.
-            PhotoPager(count: presentation.source.count, position: $position, pageState: PageState(live: liveEnabled, chromeHidden: chromeHidden)) { index, isCurrent in
+            PhotoPager(count: presentation.source.count, position: $position, pageState: PageState(live: liveEnabled, chromeHidden: chromeHidden, editVersion: editVersion)) { index, isCurrent in
                 // Each page is a little wider than the screen, so a black
                 // gap shows between photos while swiping, as in Photos.
                 AnyView(page(at: index, isCurrent: isCurrent, target: target).padding(.horizontal, Self.pageGap / 2))
@@ -213,6 +222,14 @@ struct PhotoViewer: View {
         .sheet(isPresented: $showingInfo) {
             if let current { PhotoInfoSheet(asset: current) }
         }
+        .fullScreenCover(item: $editing, onDismiss: { editVersion += 1 }) { target in
+            PhotoEditorView(asset: target.asset)
+        }
+    }
+
+    private struct EditTarget: Identifiable {
+        let asset: PHAsset
+        var id: String { asset.localIdentifier }
     }
 
     @ViewBuilder
@@ -246,7 +263,7 @@ struct PhotoViewer: View {
             }
         }
         // A reused cell showing another photo starts from scratch.
-        .id(presentation.source.asset(at: index)?.localIdentifier ?? "\(index)")
+        .id("\(presentation.source.asset(at: index)?.localIdentifier ?? "\(index)")#\(editVersion)")
         .environment(library)
         .environment(\.colorScheme, .dark)
         // Edge to edge, as in Photos: a cell's content otherwise stops at
@@ -363,6 +380,17 @@ struct PhotoViewer: View {
                                 .frame(width: 52, height: 44)
                         }
                         .accessibilityLabel("What Phophy found in this photo")
+
+                        if current.mediaType == .image {
+                            Button {
+                                editing = EditTarget(asset: current)
+                            } label: {
+                                Image(systemName: "slider.horizontal.3")
+                                    .font(.title3)
+                                    .frame(width: 52, height: 44)
+                            }
+                            .accessibilityLabel("Edit")
+                        }
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 6)
