@@ -1,59 +1,102 @@
-# Phophy
+<p align="center">
+  <img src="docs/media/banner.svg" alt="Phophy: your photos, understood. On your iPhone." width="100%">
+</p>
 
-An iOS app that puts an AI agent on top of your photo library: find any photo by describing it, organize automatically, turn lecture-slide photos into study notes, and edit photos with AI.
+<p align="center">
+  <b>An AI photo app for iPhone.</b> Find any photo by describing it, let it sort your library,<br>
+  and turn the lecture slides you photographed into notes and flashcards.
+</p>
 
-Analysis runs on the device wherever possible, so indexing thousands of photos costs nothing and your library is never uploaded in bulk.
+<p align="center">
+  <img alt="iOS 26+" src="https://img.shields.io/badge/iOS-26%2B-131a44?style=flat-square&logo=apple&logoColor=white">
+  <img alt="Swift 6" src="https://img.shields.io/badge/Swift-6-5a3fd6?style=flat-square&logo=swift&logoColor=white">
+  <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Liquid%20Glass-0f8f9c?style=flat-square">
+  <img alt="On-device AI" src="https://img.shields.io/badge/AI-on--device%20first-b4366f?style=flat-square">
+</p>
 
-## Status
+---
 
-| Phase | What | State |
-|---|---|---|
-| 0 | Xcode project, Liquid Glass shell | Done |
-| 1 | Photo library access, grids, photo view | Done |
-| 2 | On-device index (text recognition, MobileCLIP) and search | Done |
-| 3 | Auto categories, similar-photo cleanup, save as album | Done |
-| 4 | Assistant chat over the index (Apple Intelligence, Claude, OpenAI or any OpenAI-compatible service) | Done |
-| 5 | Lecture digest: slides grouped by lecture, turned into notes and flashcards | Done |
-| 6 | AI photo editing | Planned |
+## See it move
 
-The full plan, tech stack and cost strategy are in [PLAN.md](PLAN.md).
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="docs/media/assistant.gif" width="240" alt="Asking the assistant for waterfall photos"></td>
+    <td align="center" width="33%"><img src="docs/media/viewer.gif" width="240" alt="A photo zooming open from the grid, pinch to zoom, swipe down to close"></td>
+    <td align="center" width="33%"><img src="docs/media/study.gif" width="240" alt="A lecture's notes and flashcards"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Ask</b><br><sub>Type a question; matching photos come back with the answer.</sub></td>
+    <td align="center"><b>View</b><br><sub>Photos open and close like Apple's Photos app.</sub></td>
+    <td align="center"><b>Study</b><br><sub>Slide photos become a summary, key points and flashcards.</sub></td>
+  </tr>
+</table>
 
-## Requirements
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="docs/media/library.png" width="220" alt="Library home screen"></td>
+    <td align="center" width="33%"><img src="docs/media/collections.png" width="220" alt="Automatic collections"></td>
+    <td align="center" width="33%"><img src="docs/media/search.png" width="220" alt="Search by description"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Library</b></td>
+    <td align="center"><b>Collections</b></td>
+    <td align="center"><b>Search</b></td>
+  </tr>
+</table>
 
-- Xcode 27 or later
-- iOS 26 or later (simulator or device)
+## What it does
 
-## Run
+| | |
+|---|---|
+| 🔎 **Search by description** | "pink flowers", "whiteboard", or any word written in a photo. |
+| 🗂 **Sorts itself** | Slides, documents, receipts, food, people, pets and scenery. Near-duplicates are grouped for clean-up, and any collection can be saved as an album. |
+| ✨ **Assistant** | Ask about your library in plain words. It finds photos, counts them, and offers to make albums. Past chats are kept on your phone. |
+| 📚 **Lecture notes** | Slides photographed in one lecture become one page: summary, key points with slide numbers, and flip-card flashcards. |
+| 🖼 **Viewer** | Zooms out of its thumbnail, pinch or double-tap to zoom, swipe between photos, swipe down to close. |
 
-1. Open `Phophy.xcodeproj` in Xcode.
-2. Pick an iPhone simulator, or your own iPhone, as the run destination.
-3. Press Run (⌘R).
+## Private and cheap by design
 
-To run on a physical iPhone, select your Apple ID team under the target's Signing & Capabilities tab first. A free Apple ID is enough.
+Phophy reads each photo **once, on the iPhone**. Text recognition and labels come from Apple's Vision framework, and description search from Apple's MobileCLIP model. Indexing thousands of photos costs nothing and uploads nothing.
 
-The simulator ships with only a few photos. Add your own with:
+A language model is only used for the assistant and lecture notes, and it only ever receives **text**: dates, labels and the words read from photos, never the images. You choose which model in Settings:
+
+| Model | When |
+|---|---|
+| Apple Intelligence | Used first on iPhones that have it. Free and offline. |
+| Claude, OpenAI, or any OpenAI-compatible service | For other iPhones, or by choice. Bring your own API key; it stays in the Keychain. |
+
+## Run it
+
+Requires Xcode 27 or later and an iPhone or simulator on iOS 26 or later.
+
+1. Clone the repo and open `Phophy.xcodeproj`.
+2. Download Apple's MobileCLIP models into `Phophy/CLIP/Models/` (see [PLAN.md](PLAN.md#mobileclip-models-not-in-git)). Without them, the app still runs with text and label search only.
+3. Choose a simulator or your iPhone and press **Run** (⌘R). On a real iPhone, select your Apple ID team under *Signing & Capabilities* first; a free account works.
+
+To try it in the simulator with your own pictures:
 
 ```bash
 xcrun simctl addmedia booted ~/Pictures/test/*.jpg
 ```
 
-## Project layout
+## How it's built
 
-| Path | Contents |
+| Path | What's inside |
 |---|---|
-| `Phophy/PhophyApp.swift`, `RootView.swift` | App entry, tab bar, ask bar |
-| `Phophy/LibraryView.swift` | Home screen |
-| `Phophy/PhotoLibrary.swift` | PhotoKit access, permission, filters |
-| `Phophy/PhotoGridView.swift`, `PhotoDetailView.swift`, `AssetThumbnail.swift` | Browsing |
-| `Phophy/Index/` | On-device index, indexer and search engine |
-| `Phophy/CLIP/` | MobileCLIP encoder and tokenizer (models downloaded separately, see PLAN.md) |
-| `Phophy/SearchView.swift` | Search tab |
-| `Phophy/Collections/` | Automatic categories, similar photos, Collections tab |
-| `Phophy/Study/` | Lecture sessions, digests, Study tab, flashcards |
-| `Phophy/Assistant/` | Assistant chat, photo tools, cloud and on-device backends |
-| `Phophy/Settings/` | Settings screen and AI backend choice |
-| `Phophy/Theme.swift` | Background and colour helpers |
+| `Phophy/RootView.swift`, `LibraryView.swift` | Tabs, ask bar, home screen |
+| `Phophy/PhotoLibrary.swift`, `PhotoGridView.swift` | PhotoKit access, filters, grids |
+| `Phophy/Viewer/` | Full-screen photo viewer |
+| `Phophy/Index/` | On-device index (SQLite via GRDB), indexer, search engine |
+| `Phophy/CLIP/` | MobileCLIP encoder and tokenizer |
+| `Phophy/Collections/` | Categories, similar-photo clean-up |
+| `Phophy/Assistant/` | Chat, chat history, photo tools, Apple Intelligence and cloud backends |
+| `Phophy/Study/` | Lecture grouping, notes, flashcards |
+| `Phophy/Settings/` | Settings, AI provider choice, Keychain storage |
 
-## Privacy
+The full plan, cost reasoning and build phases are in [PLAN.md](PLAN.md).
 
-Phophy reads the photo library through Apple's PhotoKit after you grant access. Indexing happens on the device. Cloud models are used only for features you invoke, and only with the photos or text that request needs.
+## Roadmap
+
+- [x] Library, search, collections, assistant, lecture notes
+- [ ] AI photo editing
+- [ ] Indexing in the background while charging
