@@ -81,6 +81,14 @@ struct RootView: View {
                 withAnimation(chatAnimation) { assistant.open() }
             }
         }
+        .onChange(of: viewer.presentation?.id) {
+            // A photo opening takes the whole screen: put any keyboard away,
+            // whether it belongs to the ask bar or to the Search field.
+            if viewer.presentation != nil {
+                askFocused = false
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
+        }
         .onChange(of: collections.snapshot, initial: true) {
             study.refresh(slideIDs: collections.ids(for: .slides))
         }

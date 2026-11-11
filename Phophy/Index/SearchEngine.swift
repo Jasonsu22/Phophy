@@ -6,6 +6,9 @@ nonisolated struct SearchResults: Sendable, Equatable {
     var textMatches: [String] = []
     /// Photos that look like the description, best first.
     var lookAlikes: [String] = []
+    /// The five most similar photos whatever their score, for when nothing
+    /// passes the bar: weak guesses, labelled as such for the assistant.
+    var closest: [String] = []
 
     var isEmpty: Bool { textMatches.isEmpty && lookAlikes.isEmpty }
 }
@@ -51,6 +54,7 @@ actor SearchEngine {
         let ranked = zip(cache.ids, scores).sorted { $0.1 > $1.1 }
         guard let best = ranked.first?.1 else { return results }
 
+        results.closest = ranked.prefix(5).map(\.0)
         let alreadyShown = Set(results.textMatches)
         results.lookAlikes = ranked
             .prefix { $0.1 >= minimumScore && $0.1 >= best - margin }

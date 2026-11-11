@@ -147,10 +147,22 @@ struct AskBar: View {
             Image(systemName: "sparkles")
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
-            TextField("Ask about your photos", text: $assistant.draft, axis: .vertical)
+            // The placeholder is drawn here rather than by the field: a
+            // multi-line field can lose its own placeholder after the
+            // keyboard is dismissed from outside (opening a photo does that).
+            TextField("", text: $assistant.draft, axis: .vertical)
                 .lineLimit(1...4)
                 .focused(isFocused)
                 .submitLabel(.send)
+                .accessibilityLabel("Ask about your photos")
+                .overlay(alignment: .leading) {
+                    if assistant.draft.isEmpty {
+                        Text("Ask about your photos")
+                            .foregroundStyle(.secondary)
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
+                }
                 // In a multi-line field Return types a newline; treat it as Send.
                 .onChange(of: assistant.draft) {
                     if assistant.draft.contains("\n") {
@@ -236,6 +248,20 @@ private struct MessageView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
                 .glassEffect(.regular, in: .rect(cornerRadius: 22))
+
+                if let steps = message.steps, !steps.isEmpty {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
+                            Label(step, systemImage: step.hasPrefix("Searched") ? "magnifyingglass" : "calendar")
+                                .labelStyle(.titleAndIcon)
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 6)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Steps: " + steps.joined(separator: ", "))
+                }
 
                 if !message.photoIDs.isEmpty {
                     PhotoStrip(localIDs: message.photoIDs)

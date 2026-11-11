@@ -118,7 +118,8 @@ func postJSON(_ url: URL, body: [String: Any], headers: [String: String]) async 
     return json
 }
 
-private let maxToolRounds = 8
+/// Rounds of tool calls before the model is asked to answer with what it has.
+private let maxToolRounds = 6
 
 // MARK: - Claude (Anthropic Messages API)
 
@@ -139,17 +140,22 @@ final class AnthropicAssistant: ChatBackend {
         messages.append(["role": "user", "content": text])
         let tools = ToolSpecs.all.map { ["name": $0.name, "description": $0.description, "input_schema": $0.schema] }
 
-        for _ in 0..<maxToolRounds {
+        for round in 0...maxToolRounds {
+            // The last round allows no more tool calls, so the model answers
+            // with what it has found instead of the request failing.
+            let finalRound = round == maxToolRounds
+            var body: [String: Any] = [
+                "model": config.model,
+                "max_tokens": 4096,
+                "system": instructions,
+                "output_config": ["effort": "low"],
+                "tools": tools,
+                "messages": messages,
+            ]
+            if finalRound { body["tool_choice"] = ["type": "none"] }
             let response = try await postJSON(
                 config.baseURL.appending(path: "messages"),
-                body: [
-                    "model": config.model,
-                    "max_tokens": 4096,
-                    "system": instructions,
-                    "output_config": ["effort": "low"],
-                    "tools": tools,
-                    "messages": messages,
-                ],
+                body: body,
                 headers: ["x-api-key": config.apiKey ?? "", "anthropic-version": "2026-10-21"]
             )
             let content = response["content"] as? [[String: Any]] ?? []
@@ -204,10 +210,13 @@ final class OpenAICompatibleAssistant: ChatBackend {
         var headers: [String: String] = [:]
         if let key = config.apiKey { headers["authorization"] = "Bearer \(key)" }
 
-        for _ in 0..<maxToolRounds {
+        for round in 0...maxToolRounds {
+            var body: [String: Any] = ["model": config.model, "messages": messages, "tools": tools]
+            // The last round allows no more tool calls, so the model answers.
+            if round == maxToolRounds { body["tool_choice"] = "none" }
             let response = try await postJSON(
                 config.baseURL.appending(path: "chat/completions"),
-                body: ["model": config.model, "messages": messages, "tools": tools],
+                body: body,
                 headers: headers
             )
             guard let choice = (response["choices"] as? [[String: Any]])?.first,

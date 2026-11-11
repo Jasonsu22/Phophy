@@ -13,6 +13,8 @@ final class AssistantModel {
         var photoIDs: [String] = []
         var albums: [AlbumProposal] = []
         var isError = false
+        /// What the assistant did to answer, e.g. "Searched “waterfall” · 3 found".
+        var steps: [String]? = nil
     }
 
     struct Conversation: Identifiable, Codable {
@@ -148,7 +150,7 @@ final class AssistantModel {
             let reply = try await chat.send(prompt)
             let shown = await toolbox.present(reply: reply)
             let text = shown.text.isEmpty ? "Here they are." : shown.text
-            messages.append(Message(role: .assistant, text: text, photoIDs: shown.photoIDs, albums: shown.albums))
+            messages.append(Message(role: .assistant, text: text, photoIDs: shown.photoIDs, albums: shown.albums, steps: shown.steps))
         } catch {
             _ = await toolbox.present(reply: "")
             messages.append(Message(role: .assistant, text: error.localizedDescription, isError: true))

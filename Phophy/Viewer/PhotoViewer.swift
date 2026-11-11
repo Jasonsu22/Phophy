@@ -1,4 +1,6 @@
+import AVKit
 import Photos
+import PhotosUI
 import SwiftUI
 import UIKit
 
@@ -93,16 +95,51 @@ private struct OpensInViewer: ViewModifier {
     }
 }
 
-/// Full-screen viewer: swipe sideways for the next or previous photo, pinch
-/// or double-tap to zoom, swipe down to close, tap to hide the controls.
+/// How viewer pages load: one target size and one set of options, so the
+/// images preloaded for neighbouring pages are the ones the pages ask for.
+enum PhotoLoading {
+    static func targetSize(for size: CGSize, scale: CGFloat) -> CGSize {
+        CGSize(width: max(size.width, 1) * scale, height: max(size.height, 1) * scale)
+    }
+
+    static func pageOptions() -> PHImageRequestOptions {
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .opportunistic
+        options.resizeMode = .fast
+        options.isNetworkAccessAllowed = true
+        return options
+    }
+
+    /// The small copy Photos keeps ready for thumbnails. It comes back
+    /// immediately, so a page never starts empty.
+    static func instantImage(for asset: PHAsset) -> UIImage? {
+        let options = PHImageRequestOptions()
+        options.isSynchronous = true
+        options.deliveryMode = .fastFormat
+        options.resizeMode = .fast
+        options.isNetworkAccessAllowed = false
+        var result: UIImage?
+        PHImageManager.default().requestImage(
+            for: asset, targetSize: CGSize(width: 512, height: 512), contentMode: .aspectFit, options: options
+        ) { image, _ in result = image }
+        return result
+    }
+}
+
+/// Full-screen viewer, laid out like Photos: swipe sideways between photos,
+/// pinch or double-tap to zoom, swipe down to close, tap to hide the bars.
+/// Live Photos play when you press and hold; videos play when they open.
 struct PhotoViewer: View {
     let presentation: PhotoViewerModel.Presentation
 
     @Environment(PhotoViewerModel.self) private var viewer
     @Environment(PhotoLibrary.self) private var library
+    @Environment(\.displayScale) private var displayScale
     @State private var position: Int
     @State private var chromeHidden = false
     @State private var showingInfo = false
+    @State private var liveEnabled = true
+    @State private var preheated: [PHAsset] = []
 
     init(presentation: PhotoViewerModel.Presentation) {
         self.presentation = presentation
@@ -115,25 +152,41 @@ struct PhotoViewer: View {
     }
 
     var body: some View {
-        TabView(selection: $position) {
-            ForEach(0..<presentation.source.count, id: \.self) { index in
-                Group {
-                    if let asset = presentation.source.asset(at: index) {
-                        ZoomablePhotoPage(
-                            asset: asset,
-                            preload: index == presentation.start,
-                            onTap: {
-                                withAnimation(.easeInOut(duration: 0.2)) { chromeHidden.toggle() }
+        GeometryReader { proxy in
+            let target = PhotoLoading.targetSize(for: proxy.size, scale: displayScale)
+            TabView(selection: $position) {
+                ForEach(0..<presentation.source.count, id: \.self) { index in
+                    Group {
+                        if let asset = presentation.source.asset(at: index) {
+                            if asset.mediaType == .video {
+                                VideoPage(
+                                    asset: asset,
+                                    isCurrent: index == position,
+                                    preload: index == presentation.start,
+                                    targetSize: target
+                                )
+                            } else {
+                                PhotoPage(
+                                    asset: asset,
+                                    isCurrent: index == position,
+                                    preload: index == presentation.start,
+                                    targetSize: target,
+                                    liveEnabled: liveEnabled,
+                                    onTap: {
+                                        withAnimation(.easeInOut(duration: 0.2)) { chromeHidden.toggle() }
+                                    }
+                                )
                             }
-                        )
-                    } else {
-                        Color.black
+                        } else {
+                            Color.black
+                        }
                     }
+                    .tag(index)
                 }
-                .tag(index)
             }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .onChange(of: position, initial: true) { preheat(around: position, target: target) }
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
         .ignoresSafeArea()
         .background(Color.black.ignoresSafeArea())
         .overlay(alignment: .top) {
@@ -141,159 +194,339 @@ struct PhotoViewer: View {
                 topBar.transition(.opacity)
             }
         }
+        .overlay(alignment: .bottom) {
+            if !chromeHidden {
+                bottomBar.transition(.opacity)
+            }
+        }
         .statusBarHidden(chromeHidden)
         .environment(\.colorScheme, .dark)
         .onChange(of: position) {
             viewer.currentID = presentation.source.asset(at: position)?.localIdentifier ?? ""
+        }
+        .onDisappear {
+            library.imageManager.stopCachingImagesForAllAssets()
         }
         .sheet(isPresented: $showingInfo) {
             if let current { PhotoInfoSheet(asset: current) }
         }
     }
 
+    /// Asks Photos to get the photos either side of this one ready, so a
+    /// swipe shows a sharp image straight away.
+    private func preheat(around index: Int, target: CGSize) {
+        let wanted = (index - 2...index + 2)
+            .filter { $0 != index }
+            .compactMap { presentation.source.asset(at: $0) }
+            .filter { $0.mediaType == .image }
+        let wantedIDs = Set(wanted.map(\.localIdentifier))
+        let cachedIDs = Set(preheated.map(\.localIdentifier))
+        let options = PhotoLoading.pageOptions()
+        library.imageManager.stopCachingImages(
+            for: preheated.filter { !wantedIDs.contains($0.localIdentifier) },
+            targetSize: target, contentMode: .aspectFit, options: options
+        )
+        library.imageManager.startCachingImages(
+            for: wanted.filter { !cachedIDs.contains($0.localIdentifier) },
+            targetSize: target, contentMode: .aspectFit, options: options
+        )
+        preheated = wanted
+    }
+
     private var topBar: some View {
-        HStack(spacing: 12) {
-            Button {
-                viewer.close()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.body.weight(.semibold))
-                    .frame(width: 44, height: 44)
-            }
-            .buttonStyle(.glass)
-            .buttonBorderShape(.circle)
-            .accessibilityLabel("Close")
-
-            Spacer()
-
-            if let date = current?.creationDate {
-                VStack(spacing: 1) {
-                    Text(date, format: .dateTime.day().month(.abbreviated).year())
-                        .font(.subheadline.weight(.semibold))
-                    Text(presentation.source.count > 1
-                        ? "\(date.formatted(date: .omitted, time: .shortened)) · \(position + 1) of \(presentation.source.count)"
-                        : date.formatted(date: .omitted, time: .shortened))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .lineLimit(1)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 6)
-                .glassEffect(.regular, in: .capsule)
-            }
-
-            Spacer()
-
-            GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
+            ZStack {
+                HStack {
                     Button {
-                        showingInfo = true
+                        viewer.close()
                     } label: {
-                        Image(systemName: "info")
+                        Image(systemName: "chevron.left")
                             .font(.body.weight(.semibold))
                             .frame(width: 44, height: 44)
                     }
                     .buttonStyle(.glass)
                     .buttonBorderShape(.circle)
-                    .accessibilityLabel("What Phophy found in this photo")
-
-                    if let current {
-                        Button {
-                            Task { await library.setFavorite(!current.isFavorite, for: current) }
-                        } label: {
-                            Image(systemName: current.isFavorite ? "heart.fill" : "heart")
-                                .font(.body.weight(.semibold))
-                                .frame(width: 44, height: 44)
-                        }
-                        .buttonStyle(.glass)
-                        .buttonBorderShape(.circle)
-                        .accessibilityLabel(current.isFavorite ? "Remove from favorites" : "Add to favorites")
-                    }
+                    .accessibilityLabel("Close")
+                    Spacer()
                 }
+
+                if let date = current?.creationDate {
+                    VStack(spacing: 1) {
+                        Text(date, format: .dateTime.day().month(.wide).year())
+                            .font(.subheadline.weight(.semibold))
+                        Text(date, format: .dateTime.hour().minute())
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .lineLimit(1)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 6)
+                    .glassEffect(.regular, in: .capsule)
+                    .padding(.horizontal, 64)
+                }
+            }
+
+            if let current, current.mediaSubtypes.contains(.photoLive) {
+                Menu {
+                    Button {
+                        liveEnabled = true
+                    } label: {
+                        Label("Live", systemImage: liveEnabled ? "checkmark" : "livephoto")
+                    }
+                    Button {
+                        liveEnabled = false
+                    } label: {
+                        Label("Live Off", systemImage: liveEnabled ? "livephoto.slash" : "checkmark")
+                    }
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: liveEnabled ? "livephoto" : "livephoto.slash")
+                        Text(liveEnabled ? "LIVE" : "LIVE OFF")
+                            .font(.caption.weight(.semibold))
+                        Image(systemName: "chevron.down")
+                            .font(.caption2.weight(.bold))
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .glassEffect(.regular, in: .capsule)
+                }
+                .accessibilityLabel(liveEnabled ? "Live Photo, on" : "Live Photo, off")
+                .transition(.opacity)
             }
         }
         .padding(.horizontal, 16)
     }
+
+    private var bottomBar: some View {
+        HStack {
+            Color.clear.frame(width: 52, height: 52)
+            Spacer()
+            if let current {
+                GlassEffectContainer(spacing: 0) {
+                    HStack(spacing: 4) {
+                        Button {
+                            Task { await library.setFavorite(!current.isFavorite, for: current) }
+                        } label: {
+                            Image(systemName: current.isFavorite ? "heart.fill" : "heart")
+                                .font(.title3)
+                                .frame(width: 52, height: 44)
+                        }
+                        .accessibilityLabel(current.isFavorite ? "Remove from favorites" : "Add to favorites")
+
+                        Button {
+                            showingInfo = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                                .font(.title3)
+                                .frame(width: 52, height: 44)
+                        }
+                        .accessibilityLabel("What Phophy found in this photo")
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+                    .glassEffect(.regular.interactive(), in: .capsule)
+                }
+            }
+            Spacer()
+            if let current {
+                Button {
+                    Task {
+                        // iOS asks to confirm; the photo goes to Recently Deleted.
+                        if await library.delete(localIDs: [current.localIdentifier]) {
+                            viewer.close()
+                        }
+                    }
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.title3)
+                        .frame(width: 52, height: 52)
+                }
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
+                .accessibilityLabel("Delete")
+            }
+        }
+        .padding(.horizontal, 20)
+    }
 }
 
-/// One page of the viewer. The photo that was tapped is loaded before the
-/// first frame, so the zoom transition animates the real photo instead of an
-/// empty page; a sharper version replaces it when ready.
-private struct ZoomablePhotoPage: View {
+/// One photo page. It starts with the thumbnail Photos already has, swaps
+/// in a screen-sized image (usually preloaded), and asks for a larger one
+/// only when you zoom in. A Live Photo's motion loads once its page is on
+/// screen.
+private struct PhotoPage: View {
     let asset: PHAsset
+    let isCurrent: Bool
+    let targetSize: CGSize
+    let liveEnabled: Bool
     let onTap: () -> Void
 
     @Environment(PhotoLibrary.self) private var library
-    @Environment(\.displayScale) private var displayScale
     @State private var image: UIImage?
+    @State private var livePhoto: PHLivePhoto?
     @State private var progress: Double?
+    @State private var wantsFullSize = false
 
-    init(asset: PHAsset, preload: Bool, onTap: @escaping () -> Void) {
+    init(asset: PHAsset, isCurrent: Bool, preload: Bool, targetSize: CGSize, liveEnabled: Bool, onTap: @escaping () -> Void) {
         self.asset = asset
+        self.isCurrent = isCurrent
+        self.targetSize = targetSize
+        self.liveEnabled = liveEnabled
         self.onTap = onTap
-        _image = State(initialValue: preload ? Self.quickImage(for: asset) : nil)
+        _image = State(initialValue: preload ? PhotoLoading.instantImage(for: asset) : nil)
+    }
+
+    private struct LiveKey: Equatable {
+        let id: String
+        let isCurrent: Bool
     }
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                ZoomableImage(image: image, onTap: onTap)
-                if image == nil {
-                    ProgressView()
-                }
-                if let progress, progress < 1 {
-                    ProgressView("Downloading from iCloud", value: progress)
-                        .padding()
-                        .glassEffect(.regular, in: .rect(cornerRadius: 20))
-                        .padding(40)
-                }
+        ZStack {
+            ZoomableImage(
+                image: image,
+                livePhoto: liveEnabled ? livePhoto : nil,
+                isCurrent: isCurrent,
+                onTap: onTap,
+                onZoomIn: { wantsFullSize = true }
+            )
+            if image == nil {
+                ProgressView()
             }
-            .task(id: asset.localIdentifier) {
-                load(size: proxy.size)
+            if let progress, progress < 1 {
+                ProgressView("Downloading from iCloud", value: progress)
+                    .padding()
+                    .glassEffect(.regular, in: .rect(cornerRadius: 20))
+                    .padding(40)
             }
+        }
+        .task(id: asset.localIdentifier) {
+            if image == nil { image = PhotoLoading.instantImage(for: asset) }
+            load(targetSize)
+        }
+        .task(id: LiveKey(id: asset.localIdentifier, isCurrent: isCurrent)) {
+            if isCurrent, livePhoto == nil, asset.mediaSubtypes.contains(.photoLive) { loadLivePhoto() }
+        }
+        .onChange(of: wantsFullSize) {
+            if wantsFullSize { load(CGSize(width: targetSize.width * 2.5, height: targetSize.height * 2.5)) }
         }
         .accessibilityElement()
         .accessibilityLabel(asset.creationDate.map { "Photo, \($0.formatted(date: .long, time: .shortened))" } ?? "Photo")
         .accessibilityAddTraits(.isImage)
     }
 
-    /// A screen-sized copy straight from the device, without waiting.
-    private static func quickImage(for asset: PHAsset) -> UIImage? {
-        let options = PHImageRequestOptions()
-        options.isSynchronous = true
-        options.deliveryMode = .highQualityFormat
-        options.resizeMode = .fast
-        options.isNetworkAccessAllowed = false
-        var result: UIImage?
-        PHImageManager.default().requestImage(
-            for: asset, targetSize: CGSize(width: 1400, height: 1400), contentMode: .aspectFit, options: options
-        ) { image, _ in result = image }
-        return result
-    }
-
-    private func load(size: CGSize) {
-        let options = PHImageRequestOptions()
-        options.deliveryMode = image == nil ? .opportunistic : .highQualityFormat
-        options.isNetworkAccessAllowed = true
+    private func load(_ size: CGSize) {
+        let options = PhotoLoading.pageOptions()
         options.progressHandler = { value, _, _, _ in
             Task { @MainActor in progress = value }
         }
-        // Sharper than the screen, so zooming in stays crisp.
-        let target = CGSize(width: size.width * displayScale * 1.6, height: size.height * displayScale * 1.6)
         library.imageManager.requestImage(
-            for: asset, targetSize: target, contentMode: .aspectFit, options: options
+            for: asset, targetSize: size, contentMode: .aspectFit, options: options
         ) { result, info in
-            if let result { image = result }
+            // Never swap a sharper image for a blurrier one.
+            if let result, result.size.width >= (image?.size.width ?? 0) * 0.95 { image = result }
             if (info?[PHImageResultIsDegradedKey] as? Bool) != true { progress = nil }
+        }
+    }
+
+    private func loadLivePhoto() {
+        let options = PHLivePhotoRequestOptions()
+        options.deliveryMode = .opportunistic
+        options.isNetworkAccessAllowed = true
+        library.imageManager.requestLivePhoto(
+            for: asset, targetSize: targetSize, contentMode: .aspectFit, options: options
+        ) { live, _ in
+            if let live { livePhoto = live }
+        }
+    }
+}
+
+/// A video page: the poster frame at once, then a player that starts when
+/// the page is on screen and pauses when you swipe away.
+private struct VideoPage: View {
+    let asset: PHAsset
+    let isCurrent: Bool
+    let targetSize: CGSize
+
+    @State private var poster: UIImage?
+    @State private var player: AVPlayer?
+    @State private var failed = false
+    @State private var ready = false
+
+    init(asset: PHAsset, isCurrent: Bool, preload: Bool, targetSize: CGSize) {
+        self.asset = asset
+        self.isCurrent = isCurrent
+        self.targetSize = targetSize
+        _poster = State(initialValue: preload ? PhotoLoading.instantImage(for: asset) : nil)
+    }
+
+    var body: some View {
+        ZStack {
+            Color.black
+            if let player {
+                // Kept clear of the viewer's own top and bottom bars, so the
+                // player's controls and timeline are never covered.
+                VideoPlayer(player: player)
+                    .padding(.top, 120)
+                    .padding(.bottom, 110)
+            }
+            if let poster, !ready {
+                Image(uiImage: poster)
+                    .resizable()
+                    .scaledToFit()
+                    .allowsHitTesting(false)
+            }
+            if player == nil && !failed {
+                ProgressView()
+            }
+            if failed {
+                ContentUnavailableView("Video not available", systemImage: "video.slash")
+            }
+        }
+        .task(id: asset.localIdentifier) {
+            if poster == nil { poster = PhotoLoading.instantImage(for: asset) }
+            guard player == nil else { return }
+            guard let item = await requestPlayerItem(for: asset) else {
+                failed = true
+                return
+            }
+            let player = AVPlayer(playerItem: item)
+            self.player = player
+            if isCurrent { player.play() }
+            // Hide the poster once the first frame is on screen.
+            try? await Task.sleep(for: .milliseconds(250))
+            ready = true
+        }
+        .onChange(of: isCurrent) {
+            if isCurrent { player?.play() } else { player?.pause() }
+        }
+        .onDisappear { player?.pause() }
+        .accessibilityLabel("Video")
+    }
+}
+
+/// Fetches a playable item for a video, downloading from iCloud if needed.
+nonisolated func requestPlayerItem(for asset: PHAsset) async -> AVPlayerItem? {
+    let options = PHVideoRequestOptions()
+    options.isNetworkAccessAllowed = true
+    options.deliveryMode = .automatic
+    return await withCheckedContinuation { continuation in
+        PHImageManager.default().requestPlayerItem(forVideo: asset, options: options) { item, _ in
+            continuation.resume(returning: item)
         }
     }
 }
 
 /// UIScrollView-based zooming, as in Photos: pinch, double-tap, and panning
-/// around a zoomed photo. SwiftUI's own scroll view cannot zoom.
+/// around a zoomed photo. A Live Photo view sits over the still image and
+/// zooms with it; press and hold to play it.
 private struct ZoomableImage: UIViewRepresentable {
     let image: UIImage?
+    let livePhoto: PHLivePhoto?
+    let isCurrent: Bool
     let onTap: () -> Void
+    let onZoomIn: () -> Void
 
     func makeUIView(context: Context) -> ZoomScrollView {
         let view = ZoomScrollView()
@@ -303,27 +536,51 @@ private struct ZoomableImage: UIViewRepresentable {
 
     func updateUIView(_ view: ZoomScrollView, context: Context) {
         view.onSingleTap = onTap
+        view.onZoomIn = onZoomIn
         if view.image !== image { view.image = image }
+        if view.livePhoto !== livePhoto { view.livePhoto = livePhoto }
+        if view.isCurrent != isCurrent { view.isCurrent = isCurrent }
     }
 }
 
 final class ZoomScrollView: UIScrollView, UIScrollViewDelegate {
     var onSingleTap: (() -> Void)?
+    var onZoomIn: (() -> Void)?
 
+    private let content = UIView()
     private let imageView = UIImageView()
+    private let livePhotoView = PHLivePhotoView()
     private var fittedForSize: CGSize = .zero
+    private var askedForFullSize = false
 
     var image: UIImage? {
         didSet {
             imageView.image = image
             // A sharper copy of the same photo keeps the zoom and position;
             // only a different shape needs a fresh fit.
-            let oldRatio = oldValue.map { $0.size.width / max($0.size.height, 1) }
-            let newRatio = image.map { $0.size.width / max($0.size.height, 1) }
-            if oldRatio == nil || newRatio == nil || abs((oldRatio ?? 0) - (newRatio ?? 0)) > 0.01 {
-                setZoomScale(1, animated: false)
-                fittedForSize = .zero
-                setNeedsLayout()
+            if abs(Self.ratio(oldValue?.size) - Self.ratio(image?.size)) > 0.01 {
+                refit()
+            }
+        }
+    }
+
+    var livePhoto: PHLivePhoto? {
+        didSet {
+            livePhotoView.livePhoto = livePhoto
+            livePhotoView.isHidden = livePhoto == nil
+            if image == nil, livePhoto != nil { refit() }
+            // A short hint of the motion, as Photos does when a Live Photo appears.
+            if livePhoto != nil, oldValue == nil, isCurrent { livePhotoView.startPlayback(with: .hint) }
+        }
+    }
+
+    var isCurrent = false {
+        didSet {
+            if isCurrent, livePhoto != nil {
+                livePhotoView.startPlayback(with: .hint)
+            } else if !isCurrent {
+                livePhotoView.stopPlayback()
+                if zoomScale > minimumZoomScale { setZoomScale(minimumZoomScale, animated: false) }
             }
         }
     }
@@ -341,7 +598,13 @@ final class ZoomScrollView: UIScrollView, UIScrollViewDelegate {
         backgroundColor = .clear
         imageView.contentMode = .scaleAspectFit
         imageView.layer.minificationFilter = .trilinear
-        addSubview(imageView)
+        imageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        livePhotoView.contentMode = .scaleAspectFit
+        livePhotoView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        livePhotoView.isHidden = true
+        content.addSubview(imageView)
+        content.addSubview(livePhotoView)
+        addSubview(content)
 
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(handleDoubleTap(_:)))
         doubleTap.numberOfTapsRequired = 2
@@ -353,13 +616,32 @@ final class ZoomScrollView: UIScrollView, UIScrollViewDelegate {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    private static func ratio(_ size: CGSize?) -> CGFloat {
+        guard let size, size.height > 0 else { return 0 }
+        return size.width / size.height
+    }
+
+    private var contentAspectSize: CGSize? {
+        if let size = image?.size, size.width > 0 { return size }
+        if let size = livePhoto?.size, size.width > 0 { return size }
+        return nil
+    }
+
+    private func refit() {
+        setZoomScale(1, animated: false)
+        fittedForSize = .zero
+        setNeedsLayout()
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
         if bounds.size != fittedForSize, zoomScale <= minimumZoomScale + 0.001,
-           let size = imageView.image?.size, size.width > 0, size.height > 0, bounds.width > 0 {
+           let size = contentAspectSize, bounds.width > 0 {
             let scale = min(bounds.width / size.width, bounds.height / size.height)
             let fitted = CGSize(width: size.width * scale, height: size.height * scale)
-            imageView.frame = CGRect(origin: .zero, size: fitted)
+            content.frame = CGRect(origin: .zero, size: fitted)
+            imageView.frame = content.bounds
+            livePhotoView.frame = content.bounds
             contentSize = fitted
             fittedForSize = bounds.size
         }
@@ -373,9 +655,15 @@ final class ZoomScrollView: UIScrollView, UIScrollViewDelegate {
         if contentInset != insets { contentInset = insets }
     }
 
-    func viewForZooming(in scrollView: UIScrollView) -> UIView? { imageView }
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? { content }
 
-    func scrollViewDidZoom(_ scrollView: UIScrollView) { centerContent() }
+    func scrollViewDidZoom(_ scrollView: UIScrollView) {
+        centerContent()
+        if zoomScale > 1.3, !askedForFullSize {
+            askedForFullSize = true
+            onZoomIn?()
+        }
+    }
 
     @objc private func handleSingleTap() { onSingleTap?() }
 
@@ -383,7 +671,7 @@ final class ZoomScrollView: UIScrollView, UIScrollViewDelegate {
         if zoomScale > minimumZoomScale + 0.01 {
             setZoomScale(minimumZoomScale, animated: true)
         } else {
-            let point = recognizer.location(in: imageView)
+            let point = recognizer.location(in: content)
             let scale: CGFloat = 2.5
             let size = CGSize(width: bounds.width / scale, height: bounds.height / scale)
             zoom(to: CGRect(x: point.x - size.width / 2, y: point.y - size.height / 2,

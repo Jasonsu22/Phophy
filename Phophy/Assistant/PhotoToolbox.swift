@@ -26,6 +26,9 @@ actor PhotoToolbox {
     private var idByRef: [String: String] = [:]
 
     private var shownIDs: [String] = []
+    /// What the assistant did this turn, shown under its reply.
+    private var steps: [String] = []
+    private var searchesThisTurn = 0
     /// What the last search or date lookup this turn returned.
     private var lastResultIDs: [String] = []
     private var proposals: [AlbumProposal] = []
@@ -41,11 +44,14 @@ actor PhotoToolbox {
     /// Small models sometimes name photos in their reply ("p1, p2") instead
     /// of calling show_photos; those photos are shown too, and the refs,
     /// which mean nothing to the user, are taken out of the text.
-    func present(reply: String) -> (text: String, photoIDs: [String], albums: [AlbumProposal]) {
+    func present(reply: String) -> (text: String, photoIDs: [String], albums: [AlbumProposal], steps: [String]) {
+        let steps = self.steps
         defer {
             shownIDs = []
             proposals = []
             lastResultIDs = []
+            self.steps = []
+            searchesThisTurn = 0
         }
         let pattern = /\bp(\d+)\b/
         let mentioned = reply.matches(of: pattern).compactMap { idByRef["p\($0.1)"] }
@@ -53,7 +59,7 @@ actor PhotoToolbox {
         var ids = (shownIDs + mentioned).filter { seen.insert($0).inserted }
         // Last resort: the model looked photos up but showed none of them.
         if ids.isEmpty { ids = Array(lastResultIDs.prefix(12)) }
-        return (Self.removingRefs(from: reply), ids, proposals)
+        return (Self.removingRefs(from: reply), ids, proposals, steps)
     }
 
     /// Drops ref tokens and the punctuation left around them, line by line.
@@ -73,11 +79,26 @@ actor PhotoToolbox {
     // MARK: Tools
 
     func search(query: String, limit: Int) async -> String {
+        searchesThisTurn += 1
         let results = await SearchEngine.shared.search(query, indexedCount: indexedCount)
         let ids = Array((results.textMatches + results.lookAlikes).prefix(clamped(limit)))
-        lastResultIDs = ids
-        guard !ids.isEmpty else { return "No photos match “\(query)”." }
-        return "\(ids.count) photos, best match first:\n" + describe(ids)
+        if !ids.isEmpty {
+            lastResultIDs = ids
+            steps.append("Searched “\(query)” · \(ids.count) found")
+            return "\(ids.count) photos, best match first:\n" + describe(ids)
+        }
+        steps.append("Searched “\(query)” · no close match")
+        let budget = searchesThisTurn >= 3
+            ? "You have searched \(searchesThisTurn) times for this question. Stop searching and answer with what you have."
+            : "Try at most one clearly different wording; do not repeat near-identical searches."
+        guard !results.closest.isEmpty else {
+            return "No photos match “\(query)”, and nothing in the index is close. \(budget)"
+        }
+        return """
+            No close match for “\(query)”. The nearest photos, which may be unrelated:
+            \(describe(results.closest))
+            Use them only if their labels or text fit the question. \(budget)
+            """
     }
 
     func photosByDate(start: String, end: String, category: String?, limit: Int) -> String {
@@ -103,6 +124,7 @@ actor PhotoToolbox {
             if ids.count >= self.clamped(limit) { stop.pointee = true }
         }
         lastResultIDs = ids
+        steps.append("Looked at \(start) to \(end) · \(ids.count) found")
         guard !ids.isEmpty else { return "No photos between \(start) and \(end)." }
         let total = category == nil ? " (of \(fetched.count) in that period)" : ""
         return "\(ids.count) photos, newest first\(total):\n" + describe(ids)
@@ -239,6 +261,10 @@ nonisolated enum AssistantPrompt {
             You cannot see images. For each photo you get its date, its category, what it shows and \
             the text recognized in it. Use the tools to look things up instead of guessing, and say so \
             when nothing matches.
+
+            Search efficiently: usually one search is enough. If it finds nothing, try at most one \
+            clearly different wording or a date range, then answer with what you found. Never run \
+            more than three searches for one question.
 
             Whenever your answer is about particular photos, call show_photos with their refs so the \
             user sees them. Never write refs like p1 in your reply: the user can't see them. To group photos, call propose_album; the user confirms with a button, so \
