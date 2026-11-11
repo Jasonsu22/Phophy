@@ -26,8 +26,8 @@ final class OnDeviceAssistant {
     private static func makeSession(toolbox: PhotoToolbox) -> LanguageModelSession {
         LanguageModelSession(
             tools: [
-                SearchPhotosTool(toolbox: toolbox),
-                PhotosByDateTool(toolbox: toolbox),
+                FindPhotosTool(toolbox: toolbox),
+                ListPlacesTool(toolbox: toolbox),
                 ListCollectionsTool(toolbox: toolbox),
                 ShowPhotosTool(toolbox: toolbox),
                 ProposeAlbumTool(toolbox: toolbox),
@@ -37,39 +37,46 @@ final class OnDeviceAssistant {
     }
 }
 
-nonisolated struct SearchPhotosTool: Tool {
+nonisolated struct FindPhotosTool: Tool {
     let toolbox: PhotoToolbox
-    let name = "search_photos"
-    let description = "Find photos by describing what they show or by words that appear in them."
+    let name = "find_photos"
+    let description = "Find photos by place, dates, category and a description of what they show, all in one call."
 
     @Generable
     struct Arguments {
-        @Guide(description: "A short English description, or the words to look for")
-        var query: String
-    }
-
-    func call(arguments: Arguments) async throws -> String {
-        await toolbox.search(query: arguments.query, limit: 8)
-    }
-}
-
-nonisolated struct PhotosByDateTool: Tool {
-    let toolbox: PhotoToolbox
-    let name = "photos_by_date"
-    let description = "List photos taken between two dates, newest first."
-
-    @Generable
-    struct Arguments {
+        @Guide(description: "Short English description of what the photo shows or words in it; empty if none given")
+        var description: String?
+        @Guide(description: "Place, city or country where it was taken, e.g. Hong Kong")
+        var place: String?
         @Guide(description: "First day, YYYY-MM-DD")
-        var start: String
+        var start: String?
         @Guide(description: "Last day, YYYY-MM-DD, inclusive")
-        var end: String
+        var end: String?
         @Guide(description: "Optional category: slides, documents, receipts, food, people, pets, scenery or screenshots")
         var category: String?
     }
 
     func call(arguments: Arguments) async throws -> String {
-        await toolbox.photosByDate(start: arguments.start, end: arguments.end, category: arguments.category, limit: 10)
+        await toolbox.find(
+            description: arguments.description, place: arguments.place, start: arguments.start,
+            end: arguments.end, category: arguments.category, favoritesOnly: false, media: nil, limit: 8
+        )
+    }
+}
+
+nonisolated struct ListPlacesTool: Tool {
+    let toolbox: PhotoToolbox
+    let name = "list_places"
+    let description = "List places where photos were taken, with counts."
+
+    @Generable
+    struct Arguments {
+        @Guide(description: "Optional part of a place name")
+        var query: String?
+    }
+
+    func call(arguments: Arguments) async throws -> String {
+        await toolbox.listPlaces(matching: arguments.query)
     }
 }
 

@@ -149,11 +149,14 @@ struct LibraryView: View {
                 }
             }
             LazyVGrid(columns: columns, spacing: 4) {
-                ForEach(Array(library.recents.enumerated()), id: \.element.localIdentifier) { index, asset in
+                // Like Photos: oldest at the top, newest at the bottom right.
+                let recents = Array(library.recents.reversed())
+                let total = library.counts[.all] ?? 0
+                ForEach(Array(recents.enumerated()), id: \.element.localIdentifier) { position, asset in
                     AssetThumbnail(asset: asset)
                         .frame(height: 84)
-                        // Page through the library in Photos order: swiping left goes to newer photos.
-                        .opensInViewer(.fetch(library.fetch(.all, oldestFirst: true)), at: (library.counts[.all] ?? 0) - 1 - index, id: asset.localIdentifier)
+                        // Swiping in the viewer runs through the whole library, oldest to newest.
+                        .opensInViewer(.fetch(library.fetch(.all, oldestFirst: true)), at: total - recents.count + position, id: asset.localIdentifier)
                 }
             }
             .clipShape(.rect(cornerRadius: 22))

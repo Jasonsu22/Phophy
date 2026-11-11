@@ -34,13 +34,27 @@ actor CLIPEncoder {
               let constraint = imageModel.modelDescription.inputDescriptionsByName["image"]?.imageConstraint
         else { return nil }
 
-        let input = try MLFeatureValue(
-            cgImage: image,
-            constraint: constraint,
-            options: [.cropAndScale: VNImageCropAndScaleOption.centerCrop.rawValue]
-        )
-        let output = try imageModel.prediction(from: MLDictionaryFeatureProvider(dictionary: ["image": input]))
-        return Self.normalizedVector(from: output)
+        // The model sees a small square. A centre crop alone misses the
+        // edges of wide or tall photos, so the whole photo (fitted, with
+        // borders) is embedded too and the two are averaged.
+        var sum: [Float]?
+        for option in [VNImageCropAndScaleOption.centerCrop, .scaleFit] {
+            let input = try MLFeatureValue(
+                cgImage: image,
+                constraint: constraint,
+                options: [.cropAndScale: option.rawValue]
+            )
+            let output = try imageModel.prediction(from: MLDictionaryFeatureProvider(dictionary: ["image": input]))
+            guard let vector = Self.normalizedVector(from: output) else { continue }
+            sum = sum.map { zip($0, vector).map(+) } ?? vector
+        }
+        guard var vector = sum else { return nil }
+        var length: Float = 0
+        vDSP_svesq(vector, 1, &length, vDSP_Length(vector.count))
+        length = length.squareRoot()
+        guard length > 0 else { return nil }
+        vDSP_vsdiv(vector, 1, &length, &vector, 1, vDSP_Length(vector.count))
+        return vector
     }
 
     func embed(text: String) throws -> [Float]? {

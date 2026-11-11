@@ -31,23 +31,13 @@ nonisolated enum ToolSpecs {
     static var all: [Spec] {
         [
             Spec(
-                name: "search_photos",
-                description: "Find photos by describing what they show (\"a dog on the beach\") or by words that appear in them (\"invoice\", \"gradient descent\"). Returns matching photos with refs, dates, categories, labels and recognized text, best match first.",
+                name: "find_photos",
+                description: "Find photos using any mix of filters and a description. Filters cover the whole library: place (a place name, area, city or country, e.g. \"Hong Kong\"), a date range, a category, favorites, and type. The description ranks what's left by what the photos show and the words written in them. Give every detail the user mentioned in one call. Returns refs with date, place, category, labels and recognized text.",
                 schema: [
                     "type": "object",
                     "properties": [
-                        "query": ["type": "string", "description": "A short English description or the words to look for."],
-                        "limit": ["type": "integer", "description": "How many photos to return, 1 to 30. Default 12."],
-                    ],
-                    "required": ["query"],
-                ]
-            ),
-            Spec(
-                name: "photos_by_date",
-                description: "List photos taken between two dates, newest first, optionally only one category.",
-                schema: [
-                    "type": "object",
-                    "properties": [
+                        "description": ["type": "string", "description": "Short English description of what the photo shows or words in it, e.g. \"night skyline\" or \"invoice\". Omit if the user gave none."],
+                        "place": ["type": "string", "description": "Where it was taken: place, area, city or country name."],
                         "start": ["type": "string", "description": "First day, YYYY-MM-DD."],
                         "end": ["type": "string", "description": "Last day, YYYY-MM-DD, inclusive."],
                         "category": [
@@ -55,9 +45,20 @@ nonisolated enum ToolSpecs {
                             "enum": PhotoCategory.allCases.map(\.rawValue) + ["screenshots"],
                             "description": "Only photos in this category.",
                         ],
-                        "limit": ["type": "integer", "description": "How many photos to return, 1 to 30. Default 20."],
+                        "favorites_only": ["type": "boolean", "description": "Only favorite photos."],
+                        "media": ["type": "string", "enum": ["photo", "live", "video"], "description": "Only this type."],
+                        "limit": ["type": "integer", "description": "How many photos to return, 1 to 30. Default 12."],
                     ],
-                    "required": ["start", "end"],
+                ]
+            ),
+            Spec(
+                name: "list_places",
+                description: "List the places photos were taken, with photo counts and date spans. Use it to see how a place is named, or to answer where-did-I-go questions.",
+                schema: [
+                    "type": "object",
+                    "properties": [
+                        "query": ["type": "string", "description": "Optional part of a place name to filter by."],
+                    ],
                 ]
             ),
             Spec(

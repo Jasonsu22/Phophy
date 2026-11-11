@@ -8,6 +8,7 @@ struct SettingsView: View {
     @AppStorage(AppSettings.Key.useAppleIntelligence) private var useAppleIntelligence = true
     @AppStorage(AppSettings.Key.allowCloudAI) private var allowCloudAI = true
     @AppStorage(AppSettings.Key.indexICloudPhotos) private var indexICloudPhotos = true
+    @AppStorage(AppSettings.Key.lookUpPlaces) private var lookUpPlaces = true
     @AppStorage(AppSettings.Key.cloudProvider) private var providerID = CloudProvider.anthropic.rawValue
     @AppStorage(AppSettings.Key.customBaseURL) private var customBaseURL = ""
 
@@ -169,7 +170,7 @@ struct SettingsView: View {
     private var indexSection: some View {
         SettingsSection(
             title: "Photo index",
-            footer: "Indexing runs on your iPhone and is free. Photos kept only in iCloud are downloaded briefly to read them, which uses data."
+            footer: "Indexing runs on your iPhone and is free. Photos kept only in iCloud are downloaded briefly to read them, which uses data. Place names let you search by where a photo was taken."
         ) {
             SettingsRow(icon: "photo.stack.fill", title: "Indexed photos") {
                 Text("\(indexStatus.indexed, format: .number) of \(indexStatus.total, format: .number)")
@@ -193,6 +194,11 @@ struct SettingsView: View {
             RowDivider()
             SettingsRow(icon: "icloud.and.arrow.down.fill", title: "Index photos stored in iCloud") {
                 Toggle("Index photos stored in iCloud", isOn: $indexICloudPhotos)
+                    .labelsHidden()
+            }
+            RowDivider()
+            SettingsRow(icon: "mappin.and.ellipse", title: "Look up place names", subtitle: "Sends photo locations, not photos, to Apple Maps") {
+                Toggle("Look up place names", isOn: $lookUpPlaces)
                     .labelsHidden()
             }
         }

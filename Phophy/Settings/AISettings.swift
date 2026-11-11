@@ -9,6 +9,7 @@ enum AppSettings {
         static let useAppleIntelligence = "useAppleIntelligence"
         static let allowCloudAI = "allowCloudAI"
         static let indexICloudPhotos = "indexICloudPhotos"
+        static let lookUpPlaces = "lookUpPlaces"
         static let cloudProvider = "cloudProvider"
         static let customBaseURL = "customBaseURL"
         static func cloudModel(_ provider: CloudProvider) -> String { "cloudModel.\(provider.rawValue)" }
@@ -20,6 +21,7 @@ enum AppSettings {
             Key.useAppleIntelligence: true,
             Key.allowCloudAI: true,
             Key.indexICloudPhotos: true,
+            Key.lookUpPlaces: true,
             Key.cloudProvider: CloudProvider.anthropic.rawValue,
             Key.customBaseURL: "",
         ])
@@ -46,6 +48,11 @@ enum AppSettings {
         let saved = UserDefaults.standard.string(forKey: Key.cloudModel(provider))?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return saved.isEmpty ? provider.defaultModel : saved
+    }
+
+    /// Whether photo locations may be turned into place names with Apple Maps.
+    nonisolated static var lookUpPlaces: Bool {
+        UserDefaults.standard.bool(forKey: Key.lookUpPlaces)
     }
 
     /// Whether the indexer may download originals that are only in iCloud.

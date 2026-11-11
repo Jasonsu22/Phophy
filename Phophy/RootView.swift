@@ -99,6 +99,16 @@ struct RootView: View {
             await collections.refresh()
         }
         .task { library.start() }
+        #if DEBUG
+        .task {
+            // Testing aid: `-PhophyAsk "question"` asks the assistant on launch.
+            let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-PhophyAsk"), index + 1 < arguments.count {
+                try? await Task.sleep(for: .seconds(3))
+                send(arguments[index + 1])
+            }
+        }
+        #endif
         .onChange(of: library.revision, initial: true) {
             guard library.hasAccess else { return }
             // Detached so that a later library change cannot cancel work in progress.
