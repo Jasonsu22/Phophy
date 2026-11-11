@@ -65,6 +65,10 @@ final class PhotoLibrary: NSObject, PHPhotoLibraryChangeObserver {
 
     @ObservationIgnored let imageManager = PHCachingImageManager()
     @ObservationIgnored private var isObserving = false
+    /// Every asset, kept to tell real changes from background noise.
+    @ObservationIgnored private var everything: PHFetchResult<PHAsset>?
+    @ObservationIgnored private var favorites: PHFetchResult<PHAsset>?
+    @ObservationIgnored private var reloadScheduled = false
 
     var hasAccess: Bool { status == .authorized || status == .limited }
 
@@ -137,6 +141,8 @@ final class PhotoLibrary: NSObject, PHPhotoLibraryChangeObserver {
     }
 
     private func reload() {
+        everything = PHAsset.fetchAssets(with: nil)
+        favorites = fetch(.favorites)
         for filter in PhotoFilter.allCases {
             counts[filter] = fetch(filter).count
         }
@@ -147,7 +153,44 @@ final class PhotoLibrary: NSObject, PHPhotoLibraryChangeObserver {
 
     nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
         Task { @MainActor in
-            self.reload()
+            self.handle(changeInstance)
+        }
+    }
+
+    /// Photos reports a change whenever iCloud syncs or downloads anything,
+    /// often several times a second while photos are being indexed.
+    /// Only photos added, removed or (un)favourited matter to the app, and
+    /// a burst of changes is handled once, a second later.
+    private func handle(_ change: PHChange) {
+        guard let everything else {
+            scheduleReload()
+            return
+        }
+        guard let details = change.changeDetails(for: everything) else { return }
+        self.everything = details.fetchResultAfterChanges
+        let added = !(details.insertedIndexes?.isEmpty ?? true)
+        let removed = !(details.removedIndexes?.isEmpty ?? true)
+        // A photo becoming (or no longer being) a favourite enters or leaves
+        // the favourites fetch.
+        var favoriteChanged = false
+        if let favorites, let favoriteDetails = change.changeDetails(for: favorites) {
+            self.favorites = favoriteDetails.fetchResultAfterChanges
+            favoriteChanged = !favoriteDetails.hasIncrementalChanges
+                || !(favoriteDetails.insertedIndexes?.isEmpty ?? true)
+                || !(favoriteDetails.removedIndexes?.isEmpty ?? true)
+        }
+        if !details.hasIncrementalChanges || added || removed || favoriteChanged {
+            scheduleReload()
+        }
+    }
+
+    private func scheduleReload() {
+        guard !reloadScheduled else { return }
+        reloadScheduled = true
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1))
+            reloadScheduled = false
+            reload()
         }
     }
 }

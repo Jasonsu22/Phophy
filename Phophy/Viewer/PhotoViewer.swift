@@ -110,6 +110,11 @@ enum PhotoLoading {
         return options
     }
 
+    #if DEBUG
+    /// Testing aid: how many times pages have asked for their image.
+    static var debugLoads = 0
+    #endif
+
     private static let instantCache: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
         cache.countLimit = 40
@@ -172,7 +177,7 @@ struct PhotoViewer: View {
             let target = PhotoLoading.targetSize(for: proxy.size, scale: displayScale)
             // A collection view only builds the pages near the screen, so
             // opening a photo costs the same in a library of 20 or 20,000.
-            PhotoPager(count: presentation.source.count, position: $position, revision: library.revision) { index, isCurrent in
+            PhotoPager(count: presentation.source.count, position: $position, liveEnabled: liveEnabled) { index, isCurrent in
                 // Each page is a little wider than the screen, so a black
                 // gap shows between photos while swiping, as in Photos.
                 AnyView(page(at: index, isCurrent: isCurrent, target: target).padding(.horizontal, Self.pageGap / 2))
@@ -231,6 +236,9 @@ struct PhotoViewer: View {
         .id(presentation.source.asset(at: index)?.localIdentifier ?? "\(index)")
         .environment(library)
         .environment(\.colorScheme, .dark)
+        // Edge to edge, as in Photos: a cell's content otherwise stops at
+        // the status bar and the home indicator.
+        .ignoresSafeArea()
     }
 
     /// Asks Photos to get the photos either side of this one ready, so a
@@ -377,7 +385,7 @@ struct PhotoViewer: View {
 private struct PhotoPager: UIViewRepresentable {
     let count: Int
     @Binding var position: Int
-    let revision: Int
+    let liveEnabled: Bool
     let page: (_ index: Int, _ isCurrent: Bool) -> AnyView
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
@@ -401,17 +409,18 @@ private struct PhotoPager: UIViewRepresentable {
 
     func updateUIView(_ view: PagerCollectionView, context: Context) {
         let coordinator = context.coordinator
-        let previous = coordinator.parent
         coordinator.parent = self
-        if previous.revision != revision || previous.count != count {
-            view.reloadData()
-        }
         if view.page != position {
             view.page = position
             view.showPage()
         }
-        // Pass the new state (which page is current, Live on or off) to the
-        // pages on screen without rebuilding them.
+        // The viewer is redrawn for many reasons (indexing progress, the
+        // bars showing and hiding). Only a new current page or Live being
+        // turned on or off needs the pages on screen to update; anything
+        // else would reload the photo and make it flash.
+        guard coordinator.shownPosition != position || coordinator.shownLive != liveEnabled else { return }
+        coordinator.shownPosition = position
+        coordinator.shownLive = liveEnabled
         let visible = view.indexPathsForVisibleItems
         if !visible.isEmpty { view.reconfigureItems(at: visible) }
     }
@@ -419,8 +428,15 @@ private struct PhotoPager: UIViewRepresentable {
     final class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
         static let reuseID = "page"
         var parent: PhotoPager
+        /// What the pages on screen were last built with.
+        var shownPosition: Int
+        var shownLive: Bool
 
-        init(parent: PhotoPager) { self.parent = parent }
+        init(parent: PhotoPager) {
+            self.parent = parent
+            shownPosition = parent.position
+            shownLive = parent.liveEnabled
+        }
 
         func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
             parent.count
@@ -542,6 +558,9 @@ private struct PhotoPage: View {
     }
 
     private func load(_ size: CGSize) {
+        #if DEBUG
+        PhotoLoading.debugLoads += 1
+        #endif
         let options = PhotoLoading.pageOptions()
         options.progressHandler = { value, _, _, _ in
             Task { @MainActor in progress = value }

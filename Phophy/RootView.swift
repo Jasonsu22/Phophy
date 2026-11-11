@@ -17,13 +17,6 @@ struct RootView: View {
     private let askBarLift: CGFloat = 62
     private let chatAnimation = Animation.smooth(duration: 0.38)
 
-    /// What decides when collections are recomputed.
-    private struct CollectionsKey: Equatable {
-        let indexed: Int
-        let total: Int
-        let isRunning: Bool
-    }
-
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView {
@@ -68,6 +61,9 @@ struct RootView: View {
                 .environment(viewer)
                 .environment(assistant)
         }
+        // Watches indexing progress on its own, so progress updates redraw
+        // this empty view rather than the whole app.
+        .background { CollectionsRefresher() }
         .environment(\.photoZoomNamespace, photoZoom)
         .environment(library)
         .environment(indexStatus)
@@ -92,12 +88,6 @@ struct RootView: View {
         .onChange(of: collections.snapshot, initial: true) {
             study.refresh(slideIDs: collections.ids(for: .slides))
         }
-        .task(id: CollectionsKey(indexed: indexStatus.indexed, total: indexStatus.total, isRunning: indexStatus.isRunning)) {
-            guard library.hasAccess, indexStatus.total > 0 else { return }
-            // Recompute when indexing finishes, and every 100 photos while it runs.
-            guard !indexStatus.isRunning || indexStatus.indexed % 100 == 0 else { return }
-            await collections.refresh()
-        }
         .task { library.start() }
         #if DEBUG
         .task {
@@ -116,10 +106,16 @@ struct RootView: View {
                     let start = CACurrentMediaTime()
                     let fetch = library.fetch(.all, oldestFirst: true)
                     let fetched = CACurrentMediaTime()
+                    let loadsBefore = PhotoLoading.debugLoads
                     viewer.open(.fetch(fetch), at: fetch.count - 1)
                     try? await Task.sleep(for: .milliseconds(1500))
-                    print(String(format: "OPENTEST round %d: %d photos, fetch %.0f ms, %@",
-                                 round, fetch.count, (fetched - start) * 1000, monitor.summary()))
+                    let openSummary = monitor.summary()
+                    // Stay open a while: a steady page asks for its image once
+                    // per page built (the open one and its neighbours), then never again.
+                    try? await Task.sleep(for: .milliseconds(2500))
+                    print(String(format: "OPENTEST round %d: %d photos, fetch %.0f ms, %@, image loads in 4 s: %d",
+                                 round, fetch.count, (fetched - start) * 1000, openSummary,
+                                 PhotoLoading.debugLoads - loadsBefore))
                     let closing = FrameMonitor()
                     viewer.close()
                     try? await Task.sleep(for: .milliseconds(1500))
@@ -154,6 +150,28 @@ struct RootView: View {
         }
         let indexed = indexStatus.indexed
         Task { await assistant.send(text, indexedCount: indexed, categories: categories) }
+    }
+}
+
+/// Recomputes collections when indexing finishes, and every 100 photos
+/// while it runs.
+private struct CollectionsRefresher: View {
+    @Environment(PhotoLibrary.self) private var library
+    @Environment(IndexStatus.self) private var indexStatus
+    @Environment(CollectionsModel.self) private var collections
+
+    private struct Key: Equatable {
+        let step: Int
+        let total: Int
+        let isRunning: Bool
+    }
+
+    var body: some View {
+        Color.clear
+            .task(id: Key(step: indexStatus.indexed / 100, total: indexStatus.total, isRunning: indexStatus.isRunning)) {
+                guard library.hasAccess, indexStatus.total > 0 else { return }
+                await collections.refresh()
+            }
     }
 }
 

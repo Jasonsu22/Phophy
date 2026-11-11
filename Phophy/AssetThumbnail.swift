@@ -56,12 +56,19 @@ struct AssetThumbnail: View {
         return "\(kind), \(date.formatted(date: .long, time: .omitted))"
     }
 
-    private func load(side: CGFloat) {
-        cancel()
+    /// Shared with the grid's prefetching, so prefetched images are the ones
+    /// the thumbnails ask for.
+    nonisolated static func requestOptions() -> PHImageRequestOptions {
         let options = PHImageRequestOptions()
         options.deliveryMode = .opportunistic
         options.resizeMode = .fast
         options.isNetworkAccessAllowed = true
+        return options
+    }
+
+    private func load(side: CGFloat) {
+        cancel()
+        let options = Self.requestOptions()
         let pixels = side * displayScale
         requestID = library.imageManager.requestImage(
             for: asset,
