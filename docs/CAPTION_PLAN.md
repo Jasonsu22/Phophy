@@ -218,7 +218,11 @@ On the iPhone 13 Pro Max (20 Nov, `-PhophyPhoneBench`, 16,080 photos, 3,487 inde
 - **Model download:** about 1 GB, downloaded and loaded in 62 s on Wi-Fi.
 - **Memory:** 1.2 GB while the model is loaded (49 MB without it).
 - **Describing:** 12 photos in 29 s. Battery didn't move (75% → 75%), but the phone reported "serious" heat; indexing was running at the same time. The real queue pauses at "serious" heat; the test bypassed that.
-- **Quality:** good on real scenes ("A person is cooking a dish in a pot on a stove"), poor on screenshots: SmolVLM2 tends to invent "a person holding a smartphone". Screenshots are already searchable by their text, so they should be skipped.
+- **Quality:** good on real scenes ("A person is cooking a dish in a pot on a stove"), poor on screenshots at first: SmolVLM2 invented "a person holding a smartphone" for most of them.
+
+**Screenshots are described, not skipped** (decided 20 Nov). Their recognized text says what words are on them, not what they are, so "train ticket" or "offer letter" wouldn't find them. 2,173 of the first 3,531 indexed photos on the test iPhone are screenshots or mostly text, so this matters. Screenshots and photos with 160+ characters of text now get their own request: say what app or document it is and what it's about, with up to 400 characters of the text already read from it (times, signal bars and bare numbers removed). Replies that loop (repeated words, mostly numbers, long runs of one character) are dropped; the photo stays findable by its text.
+
+On the iPhone, with SmolVLM2, about 6 of 9 screenshots per run got a useful description ("a fund performance report", "course enrollment, add/drop period", "a graduate programme application"); the rest were vague or dropped. 1–6 s each. Apple's model and the cloud models should do much better here; not yet measured.
 
 ### Still to do
 

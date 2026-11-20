@@ -25,8 +25,10 @@ final class DescribeStatus {
 /// Writes descriptions for photos, cheapest first and only where they
 /// help: the costly layer of the index.
 ///
-/// - Photos whose recognized text is long (slides, documents, receipts,
-///   screenshots) are skipped: their text already says what they are.
+/// - Screenshots and photos that are mostly text (slides, documents,
+///   receipts) get a different request: what it is and what it's about,
+///   with the text already read from it, so "train ticket" finds a ticket
+///   whose text only says "G1234 08:15".
 /// - Near-duplicates (bursts, series: very similar look, taken within two
 ///   minutes) are described once and the description is copied.
 /// - Favourites go first, then the newest photos.
@@ -36,7 +38,8 @@ final class DescribeStatus {
 actor DescriptionService {
     static let shared = DescriptionService()
 
-    /// Recognized text longer than this means the photo is mostly text.
+    /// Recognized text longer than this means the photo is mostly text, and
+    /// is described as a screen or document.
     nonisolated static let textHeavy = 160
     /// Similarity above which two photos taken close together count as the same shot.
     nonisolated static let duplicateSimilarity: Float = 0.93
@@ -175,7 +178,6 @@ actor DescriptionService {
         let store = IndexStore.shared
         guard let library = try? store.embeddings(model: CLIPEncoder.modelName), !library.ids.isEmpty else { return [] }
         let done = (try? store.describedIDs()) ?? [:]
-        let textLengths = (try? store.textLengths()) ?? [:]
 
         // Newest first, by date taken.
         var taken: [String: Date] = [:]
@@ -187,7 +189,7 @@ actor DescriptionService {
         }
         let row = Dictionary(uniqueKeysWithValues: library.ids.enumerated().map { ($1, $0) })
         let candidates = library.ids
-            .filter { done[$0] == nil && (textLengths[$0] ?? 0) < Self.textHeavy }
+            .filter { done[$0] == nil }
             .sorted { (taken[$0] ?? .distantPast) > (taken[$1] ?? .distantPast) }
 
         // Fold near-duplicates into the newest of each run.
@@ -220,18 +222,26 @@ actor DescriptionService {
 
     private static func describe(_ job: Job, asset: PHAsset?, with describer: PhotoDescriber) async -> Bool {
         guard let asset, let image = await loadImage(asset, size: describer.imageSize) else { return false }
+        let text = (try? IndexStore.shared.info(for: job.id))?.text ?? ""
+        let context = DescribeContext(
+            isScreen: asset.mediaSubtypes.contains(.photoScreenshot) || text.count >= Self.textHeavy,
+            text: text
+        )
         do {
             let started = ContinuousClock.now
-            let description = try await describer.describe(Describers.scaled(image, to: describer.imageSize))
+            let description = try await describer.describe(Describers.scaled(image, to: describer.imageSize), context: context)
             #if DEBUG
             let ms = (ContinuousClock.now - started).components.attoseconds / 1_000_000_000_000_000
                 + (ContinuousClock.now - started).components.seconds * 1000
-            fputs("describe \(describer.id) \(ms) ms: \(description.caption) | \(description.keywordLine)\n", stderr)
+            fputs("describe \(describer.id)\(context.isScreen ? " screen" : "") \(ms) ms\(description.isUsable ? "" : " (dropped)"): \(description.caption) | \(description.keywordLine)\n", stderr)
             #endif
+            // A garbled reply is dropped but the photo still counts as done, so
+            // it isn't tried again and again; it stays findable by its text.
+            let usable = description.isUsable
             for id in [job.id] + job.copies {
                 try IndexStore.shared.saveDescription(
-                    localID: id, caption: description.caption,
-                    keywords: description.keywordLine, describedBy: describer.id
+                    localID: id, caption: usable ? description.caption : "",
+                    keywords: usable ? description.keywordLine : "", describedBy: describer.id
                 )
             }
             return true

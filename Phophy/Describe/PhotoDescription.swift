@@ -33,6 +33,19 @@ nonisolated struct PhotoDescription: Sendable, Codable, Equatable {
         self.keywordsChinese = keywordsChinese
     }
 
+    /// False for a reply that is mostly repeats or numbers (small models
+    /// sometimes loop on a status bar). Such a reply isn't worth indexing.
+    var isUsable: Bool {
+        // A run of one character ("Q1000000000…") is a loop too.
+        var run = 0, previous: Character?
+        for c in caption { run = c == previous ? run + 1 : 1; previous = c; if run >= 10 { return false } }
+        let words = caption.lowercased().split { !$0.isLetter && !$0.isNumber }
+        guard words.count >= 3 else { return !caption.isEmpty }
+        let distinct = Set(words).count
+        let numeric = words.filter { $0.allSatisfy(\.isNumber) }.count
+        return Double(distinct) / Double(words.count) >= 0.4 && Double(numeric) / Double(words.count) < 0.5
+    }
+
     /// Everything but the caption, as one line of comma-separated words.
     var keywordLine: String {
         var seen = Set<String>()
@@ -40,6 +53,21 @@ nonisolated struct PhotoDescription: Sendable, Codable, Equatable {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty && seen.insert($0.lowercased()).inserted }
             .joined(separator: ", ")
+    }
+
+    /// For screenshots and photos of screens or documents: say what it *is*
+    /// (a booking confirmation, a chat about dinner), using the text already read from it,
+    /// instead of describing pixels. Small models otherwise invent "a person
+    /// holding a smartphone" for every screenshot. (No examples in the
+    /// request itself: SmolVLM2 copied them as answers.)
+    static func screenNote(_ context: DescribeContext) -> String {
+        var note = "This image is a screenshot or a picture of a screen, document or sign, not a scene. " +
+            "Say what app, website or kind of document it is, and what it is about, in plain words. " +
+            "Don't list numbers or copy long text. " +
+            "Don't mention hands, phones or people unless they are clearly part of the picture."
+        let text = context.textExcerpt
+        if !text.isEmpty { note += " Text read from it: \"\(text)\"" }
+        return note
     }
 
     /// The instructions every describer gets, on-device or in the cloud.
@@ -79,5 +107,27 @@ nonisolated struct PhotoDescription: Sendable, Codable, Equatable {
             activity: string("activity"), keywords: list("keywords"), keywordsChinese: list("keywordsChinese")
         )
         return description.caption.isEmpty && description.objects.isEmpty ? nil : description
+    }
+}
+
+/// What's already known about a photo before it's described.
+nonisolated struct DescribeContext: Sendable {
+    /// A screenshot, or a photo that is mostly text (slides, receipts, documents).
+    var isScreen = false
+    /// Text recognized in the photo, if any.
+    var text = ""
+
+    static let none = DescribeContext()
+
+    /// The start of the recognized text, short enough to keep the request
+    /// small, without times, signal bars and bare numbers: small models
+    /// copied a status bar ("14:37 5G 804") over and over instead of answering.
+    var textExcerpt: String {
+        let words = text.split(whereSeparator: \.isWhitespace).filter { word in
+            let letters = word.filter(\.isLetter)
+            return letters.count >= 2 || letters.unicodeScalars.contains(where: TextNormalizer.isCJK)
+        }
+        let flat = words.joined(separator: " ")
+        return flat.count > 400 ? String(flat.prefix(400)) + "…" : flat
     }
 }

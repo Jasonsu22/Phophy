@@ -176,8 +176,18 @@ nonisolated enum SearchEvaluation {
             do { try await OnDeviceDescriber.download(model) } catch { log("bench: download failed: \(error)"); return }
             log("bench: downloaded and loaded in \(String(format: "%.0f", milliseconds(since: started) / 1000)) s, memory \(memoryMB()) MB")
         }
-        let done = (try? store.describedIDs()) ?? [:]
-        let todo = Array(ids.filter { done[$0] == nil }.shuffled().prefix(12))
+        // Start clean: earlier test runs are the only descriptions on this phone.
+        try? store.clearDescriptions(by: model.rawValue)
+        // Mostly screenshots and text-heavy photos (the hard case), some scenes.
+        let lengths = (try? store.textLengths()) ?? [:]
+        var screens = Set<String>()
+        PHAsset.fetchAssets(withLocalIdentifiers: ids, options: nil).enumerateObjects { asset, _, _ in
+            if asset.mediaSubtypes.contains(.photoScreenshot) { screens.insert(asset.localIdentifier) }
+        }
+        for (id, n) in lengths where n >= DescriptionService.textHeavy { screens.insert(id) }
+        let shuffled = ids.shuffled()
+        let todo = Array(shuffled.filter(screens.contains).prefix(9)) + Array(shuffled.filter { !screens.contains($0) }.prefix(3))
+        log("bench: \(screens.count) of \(ids.count) indexed photos are screens or text")
         let battery = await batteryLevel()
         let started = ContinuousClock.now
         for (n, id) in todo.enumerated() {

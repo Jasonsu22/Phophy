@@ -16,7 +16,7 @@ nonisolated protocol PhotoDescriber: Sendable {
     var id: String { get }
     /// Long side of the image to send, in pixels. Smaller is faster and, in the cloud, cheaper.
     var imageSize: Int { get }
-    func describe(_ image: CGImage) async throws -> PhotoDescription
+    func describe(_ image: CGImage, context: DescribeContext) async throws -> PhotoDescription
 }
 
 /// Which describer writes descriptions. Stored in settings.
@@ -140,6 +140,10 @@ nonisolated struct OnDeviceDescriber: PhotoDescriber {
     /// The request small models get.
     static let plainRequest = "Describe this photo in two short sentences. Name the main objects, their colours, the place, and what any people or animals are doing."
 
+    static func plainScreenRequest(_ context: DescribeContext) -> String {
+        PhotoDescription.screenNote(context) + " Answer in two short sentences."
+    }
+
     static func isDownloaded(_ choice: DownloadableModel) async -> Bool {
         await languageModel(choice).isAvailable
     }
@@ -149,14 +153,15 @@ nonisolated struct OnDeviceDescriber: PhotoDescriber {
         try await languageModel(choice).preload()
     }
 
-    func describe(_ image: CGImage) async throws -> PhotoDescription {
+    func describe(_ image: CGImage, context: DescribeContext) async throws -> PhotoDescription {
         // A fresh session per photo, so earlier photos don't fill the context.
         let session = makeSession()
         if plain {
+            let request = context.isScreen ? Self.plainScreenRequest(context) : Self.plainRequest
             let response = try await session.respond(
                 options: GenerationOptions(sampling: .greedy, maximumResponseTokens: 80)
             ) {
-                Self.plainRequest
+                request
                 Attachment(image)
             }
             let text = response.content.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -167,7 +172,7 @@ nonisolated struct OnDeviceDescriber: PhotoDescriber {
             generating: PhotoDescription.self,
             options: GenerationOptions(sampling: .greedy, maximumResponseTokens: 220)
         ) {
-            "Describe this photo."
+            context.isScreen ? "Describe this image. " + PhotoDescription.screenNote(context) : "Describe this photo."
             Attachment(image)
         }
         return response.content
@@ -215,17 +220,18 @@ nonisolated struct CloudDescriber: PhotoDescriber {
         }
     }
 
-    func describe(_ image: CGImage) async throws -> PhotoDescription {
+    func describe(_ image: CGImage, context: DescribeContext) async throws -> PhotoDescription {
         guard let jpeg = Self.jpeg(image) else { throw DescriberError.badReply("couldn't encode the photo") }
+        let prompt = context.isScreen ? PhotoDescription.screenNote(context) + " " + PhotoDescription.jsonPrompt : PhotoDescription.jsonPrompt
         let text = switch service {
-        case .gemini: try await gemini(jpeg)
-        case .openai: try await openAI(jpeg)
+        case .gemini: try await gemini(jpeg, prompt: prompt)
+        case .openai: try await openAI(jpeg, prompt: prompt)
         }
         guard let description = PhotoDescription.parse(text) else { throw DescriberError.badReply(text) }
         return description
     }
 
-    private func gemini(_ jpeg: Data) async throws -> String {
+    private func gemini(_ jpeg: Data, prompt: String) async throws -> String {
         var request = URLRequest(url: URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent")!)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -234,7 +240,7 @@ nonisolated struct CloudDescriber: PhotoDescriber {
             "systemInstruction": ["parts": [["text": PhotoDescription.instructions]]],
             "contents": [["parts": [
                 ["inline_data": ["mime_type": "image/jpeg", "data": jpeg.base64EncodedString()]],
-                ["text": PhotoDescription.jsonPrompt],
+                ["text": prompt],
             ]]],
             "generationConfig": [
                 "responseMimeType": "application/json",
@@ -250,7 +256,7 @@ nonisolated struct CloudDescriber: PhotoDescriber {
         return parts?.compactMap { $0["text"] as? String }.joined() ?? ""
     }
 
-    private func openAI(_ jpeg: Data) async throws -> String {
+    private func openAI(_ jpeg: Data, prompt: String) async throws -> String {
         var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -260,7 +266,7 @@ nonisolated struct CloudDescriber: PhotoDescriber {
             "messages": [
                 ["role": "system", "content": PhotoDescription.instructions],
                 ["role": "user", "content": [
-                    ["type": "text", "text": PhotoDescription.jsonPrompt],
+                    ["type": "text", "text": prompt],
                     ["type": "image_url", "image_url": ["url": "data:image/jpeg;base64," + jpeg.base64EncodedString(), "detail": "low"]],
                 ]],
             ],
