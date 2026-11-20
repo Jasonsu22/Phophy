@@ -4,6 +4,7 @@ import SwiftUI
 struct PhophyApp: App {
     init() {
         AppSettings.registerDefaults()
+        BackgroundWork.register()
     }
 
     var body: some Scene {

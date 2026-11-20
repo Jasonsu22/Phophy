@@ -16,6 +16,10 @@ enum AppSettings {
         static let imageProvider = "imageProvider"
         static let imageBaseURL = "imageBaseURL"
         static func imageModel(_ provider: ImageProvider) -> String { "imageModel.\(provider.rawValue)" }
+        static let describer = "describer"
+        static let downloadableModel = "downloadableModel"
+        static let cloudDescriptionsConsented = "cloudDescriptionsConsented"
+        static let describeOnlyWhenCharging = "describeOnlyWhenCharging"
     }
 
     /// Register defaults once at launch so unset values read as intended.
@@ -29,7 +33,29 @@ enum AppSettings {
             Key.customBaseURL: "",
             Key.imageProvider: ImageProvider.openai.rawValue,
             Key.imageBaseURL: "",
+            Key.describer: DescriberChoice.automatic.rawValue,
+            Key.downloadableModel: DownloadableModel.smolVLM.rawValue,
+            Key.cloudDescriptionsConsented: false,
+            Key.describeOnlyWhenCharging: false,
         ])
+    }
+
+    /// Who writes photo descriptions for search.
+    nonisolated static var describer: DescriberChoice {
+        UserDefaults.standard.string(forKey: Key.describer).flatMap(DescriberChoice.init) ?? .automatic
+    }
+
+    nonisolated static var downloadableModel: DownloadableModel {
+        UserDefaults.standard.string(forKey: Key.downloadableModel).flatMap(DownloadableModel.init) ?? .smolVLM
+    }
+
+    /// The user read and accepted that cloud descriptions upload photos.
+    nonisolated static var cloudDescriptionsConsented: Bool {
+        UserDefaults.standard.bool(forKey: Key.cloudDescriptionsConsented)
+    }
+
+    nonisolated static var describeOnlyWhenCharging: Bool {
+        UserDefaults.standard.bool(forKey: Key.describeOnlyWhenCharging)
     }
 
     nonisolated static var useAppleIntelligence: Bool {

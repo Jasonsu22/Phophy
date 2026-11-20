@@ -8,6 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		AA0000000000000000000011 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000012 /* GRDB */; };
+		AA0000000000000000000051 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000041 /* MLXVLM */; };
+		AA0000000000000000000052 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000042 /* MLXLMCommon */; };
+		AA0000000000000000000053 /* MLXFoundationModels in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000043 /* MLXFoundationModels */; };
+		AA0000000000000000000054 /* MLXHuggingFace in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000044 /* MLXHuggingFace */; };
+		AA0000000000000000000055 /* HuggingFace in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000045 /* HuggingFace */; };
+		AA0000000000000000000056 /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000000000000000000046 /* Tokenizers */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +34,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA0000000000000000000011 /* GRDB in Frameworks */,
+				AA0000000000000000000051 /* MLXVLM in Frameworks */,
+				AA0000000000000000000052 /* MLXLMCommon in Frameworks */,
+				AA0000000000000000000053 /* MLXFoundationModels in Frameworks */,
+				AA0000000000000000000054 /* MLXHuggingFace in Frameworks */,
+				AA0000000000000000000055 /* HuggingFace in Frameworks */,
+				AA0000000000000000000056 /* Tokenizers in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +83,12 @@
 			name = Phophy;
 			packageProductDependencies = (
 				AA0000000000000000000012 /* GRDB */,
+				AA0000000000000000000041 /* MLXVLM */,
+				AA0000000000000000000042 /* MLXLMCommon */,
+				AA0000000000000000000043 /* MLXFoundationModels */,
+				AA0000000000000000000044 /* MLXHuggingFace */,
+				AA0000000000000000000045 /* HuggingFace */,
+				AA0000000000000000000046 /* Tokenizers */,
 			);
 			productName = Phophy;
 			productReference = AA0000000000000000000001 /* Phophy.app */;
@@ -102,6 +120,9 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				AA0000000000000000000013 /* XCRemoteSwiftPackageReference "GRDB" */,
+				AA0000000000000000000031 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */,
+				AA0000000000000000000032 /* XCRemoteSwiftPackageReference "swift-huggingface" */,
+				AA0000000000000000000033 /* XCRemoteSwiftPackageReference "swift-transformers" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AA0000000000000000000005 /* Products */;
@@ -182,6 +203,7 @@
 				DEVELOPMENT_TEAM = PQAMD7QXZS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Phophy-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Phophy;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Phophy saves edited photos and the albums it creates to your library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Phophy reads your photos on this device to index, search and organize them.";
@@ -213,6 +235,7 @@
 				DEVELOPMENT_TEAM = PQAMD7QXZS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Phophy-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Phophy;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Phophy saves edited photos and the albums it creates to your library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Phophy reads your photos on this device to index, search and organize them.";
@@ -266,6 +289,30 @@
 				minimumVersion = 7.0.0;
 			};
 		};
+		AA0000000000000000000031 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift-lm";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 3.33.0;
+			};
+		};
+		AA0000000000000000000032 /* XCRemoteSwiftPackageReference "swift-huggingface" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/huggingface/swift-huggingface";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.9.0;
+			};
+		};
+		AA0000000000000000000033 /* XCRemoteSwiftPackageReference "swift-transformers" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/huggingface/swift-transformers";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -273,6 +320,36 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AA0000000000000000000013 /* XCRemoteSwiftPackageReference "GRDB" */;
 			productName = GRDB;
+		};
+		AA0000000000000000000041 /* MLXVLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000031 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXVLM;
+		};
+		AA0000000000000000000042 /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000031 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLMCommon;
+		};
+		AA0000000000000000000043 /* MLXFoundationModels */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000031 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXFoundationModels;
+		};
+		AA0000000000000000000044 /* MLXHuggingFace */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000031 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXHuggingFace;
+		};
+		AA0000000000000000000045 /* HuggingFace */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000032 /* XCRemoteSwiftPackageReference "swift-huggingface" */;
+			productName = HuggingFace;
+		};
+		AA0000000000000000000046 /* Tokenizers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000033 /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			productName = Tokenizers;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

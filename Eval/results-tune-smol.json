@@ -1,0 +1,974 @@
+{
+  "1 before" : [
+    {
+      "metrics" : {
+        "MRR" : 0.9469696969696971,
+        "P@10" : 0.45909090909090905,
+        "R@50" : 0.5071767080958257,
+        "ms/query" : 17.546434704545455
+      },
+      "misses" : [
+
+      ],
+      "name" : "Objects and scenes",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.08817271743408107,
+        "P@10" : 0.01818181818181818,
+        "R@50" : 0.04905181160194528,
+        "ms/query" : 18.629464
+      },
+      "misses" : [
+        "狗",
+        "自行车",
+        "海滩",
+        "雪地",
+        "吉他",
+        "足球",
+        "棒球",
+        "篮球",
+        "山",
+        "厨房",
+        "建筑工人",
+        "婴儿",
+        "舞台",
+        "湖",
+        "船",
+        "马",
+        "游泳",
+        "滑板",
+        "雨伞",
+        "人群",
+        "墨镜",
+        "市场",
+        "麦克风",
+        "打鼓",
+        "桥",
+        "攀岩",
+        "猫",
+        "火车",
+        "画画",
+        "摩托车",
+        "网球",
+        "冲浪",
+        "涂鸦",
+        "滑雪",
+        "跳舞",
+        "喷泉",
+        "牛仔竞技",
+        "葡萄酒"
+      ],
+      "name" : "Objects and scenes, Chinese",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.30330747049828855,
+        "P@10" : 0.1318181818181818,
+        "R@50" : 0.18388827082008904,
+        "ms/query" : 16.111267045454547
+      },
+      "misses" : [
+        "dgo",
+        "baech",
+        "snwo",
+        "gutiar",
+        "socer",
+        "basebal",
+        "basketbal",
+        "kichen",
+        "resturant",
+        "babby",
+        "stgae",
+        "carr",
+        "laek",
+        "baot",
+        "hrose",
+        "umbrela",
+        "crwod",
+        "markt",
+        "bnech",
+        "microphnoe",
+        "drusm",
+        "cta",
+        "brid",
+        "trian",
+        "tenis",
+        "grafitti",
+        "polcie",
+        "rodoe",
+        "wien"
+      ],
+      "name" : "Objects and scenes, typos",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8299029581529582,
+        "R@1" : 0.76,
+        "R@10" : 0.96,
+        "R@5" : 0.925,
+        "ms/query" : 17.263504845
+      },
+      "misses" : [
+        "A man in a red hat and a woman in a black dress are sitting outside a building on the street",
+        "A man wearing an orange suit with his face painted white is holding a guitar above his shoulder",
+        "Two blond women sit outside as people walk by wearing casual clothing and some wearing bookbags",
+        "Two performers putting on a mock fight for an audience that is watching attentively",
+        "A dog with big ears is holding a small stick in its mouth",
+        "An older man who appears to be in his sixty's, seems to be doing some type of magical form of play with three children and an adult female, being his targeted group",
+        "Blond man crossing street, in white shirt and red t-shirt, carrying a white bag",
+        "People are dancing on a checkered platform while people are watching"
+      ],
+      "name" : "Detailed descriptions",
+      "queries" : 200
+    },
+    {
+      "metrics" : {
+        "MRR" : 0,
+        "ms/query" : 17.5403498
+      },
+      "misses" : [
+        "一个红头发留着脏辫的男人坐着弹木吉他",
+        "一只橘色小猫咬了金发小孩的鼻子",
+        "一男一女骑自行车穿过荒野，远处是起伏的山丘和蓝天",
+        "穿黑夹克的男人站在砖砌店面前",
+        "穿粉色外套的小女孩和两个穿同款衣服的姐妹走在路上",
+        "穿牛仔裤的老人在海滩上扔一个红色小球",
+        "额头上戴着泳镜的小女孩在泳池里玩水",
+        "穿白衬衫的男人对着麦克风弹白色吉他",
+        "一群人在街上表演整齐的武术",
+        "三个建筑工人在墙边的空地上挖坑",
+        "雨天很多人打着伞站在有石像的喷泉旁",
+        "公园里三个孩子在玩健身器材",
+        "两个戴帽子拄拐杖的男人站在水边的逆光剪影",
+        "牛仔竞技中一头公牛冲向一个男人",
+        "一个有纹身穿靴子的女人抬起腿",
+        "两个穿白衣服的人在粉刷砖墙",
+        "穿黑T恤的女孩在厨房里拿着一个小披萨",
+        "金发女人在昏暗的餐厅里倒葡萄酒",
+        "一个小孩从后面抱着更小的孩子",
+        "一只黑白相间的狗在雪地里玩橙色的球",
+        "穿绿裙子的女人坐在一把破旧的绿黄色椅子上",
+        "小男孩坐在女孩腿上指着什么东西",
+        "女孩在河岸上奔跑跳跃",
+        "穿哥特洛丽塔服装参加漫展的年轻女人",
+        "戴头巾的男人和两个警察站在白色帐篷前",
+        "穿紧身衣的杂技演员被托举起来",
+        "男人骑自行车经过画着和平手势涂鸦的墙",
+        "三只棕白色的狗互相咬着玩",
+        "短黑发的女人抱着穿粉色衣服含奶嘴的婴儿",
+        "人们聚在白色帐篷下坐在桌边"
+      ],
+      "name" : "Detailed descriptions, Chinese",
+      "queries" : 30
+    }
+  ],
+  "10 visual scores + rerank, keywords 1.0" : [
+    {
+      "metrics" : {
+        "MRR" : 0.9583333333333335,
+        "P@10" : 0.6022727272727274,
+        "R@50" : 0.8838494653000002,
+        "ms/query" : 22.03464875
+      },
+      "misses" : [
+
+      ],
+      "name" : "Objects and scenes",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8282369146005508,
+        "P@10" : 0.47727272727272735,
+        "R@50" : 0.7637565216275113,
+        "ms/query" : 17.38098584090909
+      },
+      "misses" : [
+        "雪地",
+        "湖",
+        "雨伞",
+        "墨镜",
+        "打鼓",
+        "涂鸦"
+      ],
+      "name" : "Objects and scenes, Chinese",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8912878787878789,
+        "P@10" : 0.5750000000000001,
+        "R@50" : 0.8323343137848486,
+        "ms/query" : 11.722024681818182
+      },
+      "misses" : [
+        "brid",
+        "paintnig",
+        "fountian"
+      ],
+      "name" : "Objects and scenes, typos",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8341309523809524,
+        "R@1" : 0.76,
+        "R@10" : 0.985,
+        "R@5" : 0.96,
+        "ms/query" : 23.870113915
+      },
+      "misses" : [
+        "A man wearing an orange suit with his face painted white is holding a guitar above his shoulder",
+        "Two blond women sit outside as people walk by wearing casual clothing and some wearing bookbags",
+        "Blond man crossing street, in white shirt and red t-shirt, carrying a white bag"
+      ],
+      "name" : "Detailed descriptions",
+      "queries" : 200
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.5449300664935339,
+        "R@1" : 0.4666666666666667,
+        "R@10" : 0.6666666666666666,
+        "R@5" : 0.6,
+        "ms/query" : 27.554491733333336
+      },
+      "misses" : [
+        "穿粉色外套的小女孩和两个穿同款衣服的姐妹走在路上",
+        "三个建筑工人在墙边的空地上挖坑",
+        "两个戴帽子拄拐杖的男人站在水边的逆光剪影",
+        "牛仔竞技中一头公牛冲向一个男人",
+        "两个穿白衣服的人在粉刷砖墙",
+        "一个小孩从后面抱着更小的孩子",
+        "小男孩坐在女孩腿上指着什么东西",
+        "女孩在河岸上奔跑跳跃",
+        "穿紧身衣的杂技演员被托举起来",
+        "三只棕白色的狗互相咬着玩"
+      ],
+      "name" : "Detailed descriptions, Chinese",
+      "queries" : 30
+    }
+  ],
+  "2 keywords+tags" : [
+    {
+      "metrics" : {
+        "MRR" : 0.9564393939393938,
+        "P@10" : 0.5886363636363637,
+        "R@50" : 0.7770879187657264,
+        "ms/query" : 16.456543522727273
+      },
+      "misses" : [
+
+      ],
+      "name" : "Objects and scenes",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.7916666666666665,
+        "P@10" : 0.46590909090909105,
+        "R@50" : 0.6690203754207766,
+        "ms/query" : 16.49915909090909
+      },
+      "misses" : [
+        "雪地",
+        "湖",
+        "雨伞",
+        "墨镜",
+        "打鼓",
+        "涂鸦"
+      ],
+      "name" : "Objects and scenes, Chinese",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.30406504625586434,
+        "P@10" : 0.13636363636363635,
+        "R@50" : 0.18388827082008904,
+        "ms/query" : 16.577138204545456
+      },
+      "misses" : [
+        "dgo",
+        "baech",
+        "snwo",
+        "gutiar",
+        "socer",
+        "basebal",
+        "basketbal",
+        "kichen",
+        "resturant",
+        "babby",
+        "stgae",
+        "carr",
+        "laek",
+        "baot",
+        "hrose",
+        "umbrela",
+        "crwod",
+        "markt",
+        "bnech",
+        "microphnoe",
+        "drusm",
+        "cta",
+        "brid",
+        "trian",
+        "tenis",
+        "grafitti",
+        "polcie",
+        "rodoe",
+        "wien"
+      ],
+      "name" : "Objects and scenes, typos",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8135222922502331,
+        "R@1" : 0.71,
+        "R@10" : 0.985,
+        "R@5" : 0.955,
+        "ms/query" : 19.609837544999998
+      },
+      "misses" : [
+        "A man wearing an orange suit with his face painted white is holding a guitar above his shoulder",
+        "Two blond women sit outside as people walk by wearing casual clothing and some wearing bookbags",
+        "Blond man crossing street, in white shirt and red t-shirt, carrying a white bag"
+      ],
+      "name" : "Detailed descriptions",
+      "queries" : 200
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.4661777155306567,
+        "R@1" : 0.3333333333333333,
+        "R@10" : 0.6666666666666666,
+        "R@5" : 0.6333333333333333,
+        "ms/query" : 22.758282066666666
+      },
+      "misses" : [
+        "穿粉色外套的小女孩和两个穿同款衣服的姐妹走在路上",
+        "三个建筑工人在墙边的空地上挖坑",
+        "两个戴帽子拄拐杖的男人站在水边的逆光剪影",
+        "牛仔竞技中一头公牛冲向一个男人",
+        "两个穿白衣服的人在粉刷砖墙",
+        "一个小孩从后面抱着更小的孩子",
+        "小男孩坐在女孩腿上指着什么东西",
+        "女孩在河岸上奔跑跳跃",
+        "穿紧身衣的杂技演员被托举起来",
+        "三只棕白色的狗互相咬着玩"
+      ],
+      "name" : "Detailed descriptions, Chinese",
+      "queries" : 30
+    }
+  ],
+  "3 +typos" : [
+    {
+      "metrics" : {
+        "MRR" : 0.9564393939393938,
+        "P@10" : 0.5886363636363637,
+        "R@50" : 0.7770879187657264,
+        "ms/query" : 16.577143863636362
+      },
+      "misses" : [
+
+      ],
+      "name" : "Objects and scenes",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.7916666666666665,
+        "P@10" : 0.46590909090909105,
+        "R@50" : 0.6690203754207766,
+        "ms/query" : 10.185001818181819
+      },
+      "misses" : [
+        "雪地",
+        "湖",
+        "雨伞",
+        "墨镜",
+        "打鼓",
+        "涂鸦"
+      ],
+      "name" : "Objects and scenes, Chinese",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8882575757575757,
+        "P@10" : 0.565909090909091,
+        "R@50" : 0.7382351049129124,
+        "ms/query" : 5.246624954545454
+      },
+      "misses" : [
+        "brid",
+        "paintnig",
+        "fountian"
+      ],
+      "name" : "Objects and scenes, typos",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8115222922502332,
+        "R@1" : 0.71,
+        "R@10" : 0.985,
+        "R@5" : 0.95,
+        "ms/query" : 20.037064785
+      },
+      "misses" : [
+        "A man wearing an orange suit with his face painted white is holding a guitar above his shoulder",
+        "Two blond women sit outside as people walk by wearing casual clothing and some wearing bookbags",
+        "Blond man crossing street, in white shirt and red t-shirt, carrying a white bag"
+      ],
+      "name" : "Detailed descriptions",
+      "queries" : 200
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.4661777155306567,
+        "R@1" : 0.3333333333333333,
+        "R@10" : 0.6666666666666666,
+        "R@5" : 0.6333333333333333,
+        "ms/query" : 22.897772233333335
+      },
+      "misses" : [
+        "穿粉色外套的小女孩和两个穿同款衣服的姐妹走在路上",
+        "三个建筑工人在墙边的空地上挖坑",
+        "两个戴帽子拄拐杖的男人站在水边的逆光剪影",
+        "牛仔竞技中一头公牛冲向一个男人",
+        "两个穿白衣服的人在粉刷砖墙",
+        "一个小孩从后面抱着更小的孩子",
+        "小男孩坐在女孩腿上指着什么东西",
+        "女孩在河岸上奔跑跳跃",
+        "穿紧身衣的杂技演员被托举起来",
+        "三只棕白色的狗互相咬着玩"
+      ],
+      "name" : "Detailed descriptions, Chinese",
+      "queries" : 30
+    }
+  ],
+  "4 +visual tail" : [
+    {
+      "metrics" : {
+        "MRR" : 0.9583333333333335,
+        "P@10" : 0.5977272727272728,
+        "R@50" : 0.892239686190221,
+        "ms/query" : 16.58487122727273
+      },
+      "misses" : [
+
+      ],
+      "name" : "Objects and scenes",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8158402203856749,
+        "P@10" : 0.4727272727272727,
+        "R@50" : 0.7632825006989447,
+        "ms/query" : 8.945946977272728
+      },
+      "misses" : [
+        "雪地",
+        "湖",
+        "雨伞",
+        "墨镜",
+        "打鼓",
+        "涂鸦"
+      ],
+      "name" : "Objects and scenes, Chinese",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8912878787878789,
+        "P@10" : 0.5727272727272728,
+        "R@50" : 0.8407245346750695,
+        "ms/query" : 5.2502945
+      },
+      "misses" : [
+        "brid",
+        "paintnig",
+        "fountian"
+      ],
+      "name" : "Objects and scenes, typos",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8127007110536522,
+        "R@1" : 0.71,
+        "R@10" : 0.985,
+        "R@5" : 0.955,
+        "ms/query" : 19.845340615
+      },
+      "misses" : [
+        "A man wearing an orange suit with his face painted white is holding a guitar above his shoulder",
+        "Two blond women sit outside as people walk by wearing casual clothing and some wearing bookbags",
+        "Blond man crossing street, in white shirt and red t-shirt, carrying a white bag"
+      ],
+      "name" : "Detailed descriptions",
+      "queries" : 200
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.4732967631497043,
+        "R@1" : 0.3333333333333333,
+        "R@10" : 0.6666666666666666,
+        "R@5" : 0.6333333333333333,
+        "ms/query" : 23.216862600000002
+      },
+      "misses" : [
+        "穿粉色外套的小女孩和两个穿同款衣服的姐妹走在路上",
+        "三个建筑工人在墙边的空地上挖坑",
+        "两个戴帽子拄拐杖的男人站在水边的逆光剪影",
+        "牛仔竞技中一头公牛冲向一个男人",
+        "两个穿白衣服的人在粉刷砖墙",
+        "一个小孩从后面抱着更小的孩子",
+        "小男孩坐在女孩腿上指着什么东西",
+        "女孩在河岸上奔跑跳跃",
+        "穿紧身衣的杂技演员被托举起来",
+        "三只棕白色的狗互相咬着玩"
+      ],
+      "name" : "Detailed descriptions, Chinese",
+      "queries" : 30
+    }
+  ],
+  "5 +expansion (all)" : [
+    {
+      "metrics" : {
+        "MRR" : 0.9734848484848484,
+        "P@10" : 0.6000000000000001,
+        "R@50" : 0.8797799237304585,
+        "ms/query" : 24.989010545454544
+      },
+      "misses" : [
+
+      ],
+      "name" : "Objects and scenes",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8318526170798898,
+        "P@10" : 0.4977272727272728,
+        "R@50" : 0.761001700690872,
+        "ms/query" : 11.93711468181818
+      },
+      "misses" : [
+        "雪地",
+        "湖",
+        "雨伞",
+        "打鼓",
+        "涂鸦"
+      ],
+      "name" : "Objects and scenes, Chinese",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.9064393939393939,
+        "P@10" : 0.5750000000000001,
+        "R@50" : 0.8282647722153071,
+        "ms/query" : 8.861984909090909
+      },
+      "misses" : [
+        "brid",
+        "paintnig",
+        "fountian"
+      ],
+      "name" : "Objects and scenes, typos",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8127007110536522,
+        "R@1" : 0.71,
+        "R@10" : 0.985,
+        "R@5" : 0.955,
+        "ms/query" : 23.004192664999998
+      },
+      "misses" : [
+        "A man wearing an orange suit with his face painted white is holding a guitar above his shoulder",
+        "Two blond women sit outside as people walk by wearing casual clothing and some wearing bookbags",
+        "Blond man crossing street, in white shirt and red t-shirt, carrying a white bag"
+      ],
+      "name" : "Detailed descriptions",
+      "queries" : 200
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.4721856520385932,
+        "R@1" : 0.3333333333333333,
+        "R@10" : 0.6666666666666666,
+        "R@5" : 0.6,
+        "ms/query" : 27.003212533333333
+      },
+      "misses" : [
+        "穿粉色外套的小女孩和两个穿同款衣服的姐妹走在路上",
+        "三个建筑工人在墙边的空地上挖坑",
+        "两个戴帽子拄拐杖的男人站在水边的逆光剪影",
+        "牛仔竞技中一头公牛冲向一个男人",
+        "两个穿白衣服的人在粉刷砖墙",
+        "一个小孩从后面抱着更小的孩子",
+        "小男孩坐在女孩腿上指着什么东西",
+        "女孩在河岸上奔跑跳跃",
+        "穿紧身衣的杂技演员被托举起来",
+        "三只棕白色的狗互相咬着玩"
+      ],
+      "name" : "Detailed descriptions, Chinese",
+      "queries" : 30
+    }
+  ],
+  "6 long-query keywords 0.25" : [
+    {
+      "metrics" : {
+        "MRR" : 0.9734848484848484,
+        "P@10" : 0.6000000000000001,
+        "R@50" : 0.8797799237304585,
+        "ms/query" : 20.760023636363638
+      },
+      "misses" : [
+
+      ],
+      "name" : "Objects and scenes",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8318526170798898,
+        "P@10" : 0.4977272727272728,
+        "R@50" : 0.761001700690872,
+        "ms/query" : 15.697783113636364
+      },
+      "misses" : [
+        "雪地",
+        "湖",
+        "雨伞",
+        "打鼓",
+        "涂鸦"
+      ],
+      "name" : "Objects and scenes, Chinese",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.9064393939393939,
+        "P@10" : 0.5750000000000001,
+        "R@50" : 0.8282647722153071,
+        "ms/query" : 11.573632568181818
+      },
+      "misses" : [
+        "brid",
+        "paintnig",
+        "fountian"
+      ],
+      "name" : "Objects and scenes, typos",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8240339105339105,
+        "R@1" : 0.735,
+        "R@10" : 0.98,
+        "R@5" : 0.95,
+        "ms/query" : 23.0116706
+      },
+      "misses" : [
+        "A man wearing an orange suit with his face painted white is holding a guitar above his shoulder",
+        "Two blond women sit outside as people walk by wearing casual clothing and some wearing bookbags",
+        "In rural outdoors, blond woman sits on roof of yellow BMW vehicle, two people inside",
+        "Blond man crossing street, in white shirt and red t-shirt, carrying a white bag"
+      ],
+      "name" : "Detailed descriptions",
+      "queries" : 200
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.4865868374640305,
+        "R@1" : 0.36666666666666664,
+        "R@10" : 0.6666666666666666,
+        "R@5" : 0.6,
+        "ms/query" : 26.22925143333333
+      },
+      "misses" : [
+        "穿粉色外套的小女孩和两个穿同款衣服的姐妹走在路上",
+        "三个建筑工人在墙边的空地上挖坑",
+        "两个戴帽子拄拐杖的男人站在水边的逆光剪影",
+        "牛仔竞技中一头公牛冲向一个男人",
+        "两个穿白衣服的人在粉刷砖墙",
+        "一个小孩从后面抱着更小的孩子",
+        "小男孩坐在女孩腿上指着什么东西",
+        "女孩在河岸上奔跑跳跃",
+        "穿紧身衣的杂技演员被托举起来",
+        "三只棕白色的狗互相咬着玩"
+      ],
+      "name" : "Detailed descriptions, Chinese",
+      "queries" : 30
+    }
+  ],
+  "7 long-query rerank" : [
+    {
+      "metrics" : {
+        "MRR" : 0.9734848484848484,
+        "P@10" : 0.6000000000000001,
+        "R@50" : 0.8797799237304585,
+        "ms/query" : 20.8880795
+      },
+      "misses" : [
+
+      ],
+      "name" : "Objects and scenes",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8318526170798898,
+        "P@10" : 0.4977272727272728,
+        "R@50" : 0.761001700690872,
+        "ms/query" : 12.298418431818181
+      },
+      "misses" : [
+        "雪地",
+        "湖",
+        "雨伞",
+        "打鼓",
+        "涂鸦"
+      ],
+      "name" : "Objects and scenes, Chinese",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.9064393939393939,
+        "P@10" : 0.5750000000000001,
+        "R@50" : 0.8282647722153071,
+        "ms/query" : 9.323836181818182
+      },
+      "misses" : [
+        "brid",
+        "paintnig",
+        "fountian"
+      ],
+      "name" : "Objects and scenes, typos",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8047881652661063,
+        "R@1" : 0.705,
+        "R@10" : 0.985,
+        "R@5" : 0.955,
+        "ms/query" : 23.51968712
+      },
+      "misses" : [
+        "A man wearing an orange suit with his face painted white is holding a guitar above his shoulder",
+        "Two blond women sit outside as people walk by wearing casual clothing and some wearing bookbags",
+        "Blond man crossing street, in white shirt and red t-shirt, carrying a white bag"
+      ],
+      "name" : "Detailed descriptions",
+      "queries" : 200
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.4720929190793075,
+        "R@1" : 0.3333333333333333,
+        "R@10" : 0.6666666666666666,
+        "R@5" : 0.6,
+        "ms/query" : 26.241512433333334
+      },
+      "misses" : [
+        "穿粉色外套的小女孩和两个穿同款衣服的姐妹走在路上",
+        "三个建筑工人在墙边的空地上挖坑",
+        "两个戴帽子拄拐杖的男人站在水边的逆光剪影",
+        "牛仔竞技中一头公牛冲向一个男人",
+        "两个穿白衣服的人在粉刷砖墙",
+        "一个小孩从后面抱着更小的孩子",
+        "小男孩坐在女孩腿上指着什么东西",
+        "女孩在河岸上奔跑跳跃",
+        "穿紧身衣的杂技演员被托举起来",
+        "三只棕白色的狗互相咬着玩"
+      ],
+      "name" : "Detailed descriptions, Chinese",
+      "queries" : 30
+    }
+  ],
+  "8 visual scores" : [
+    {
+      "metrics" : {
+        "MRR" : 0.9583333333333335,
+        "P@10" : 0.6022727272727274,
+        "R@50" : 0.8838494653000002,
+        "ms/query" : 20.67930309090909
+      },
+      "misses" : [
+
+      ],
+      "name" : "Objects and scenes",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8282369146005508,
+        "P@10" : 0.47727272727272735,
+        "R@50" : 0.7637565216275113,
+        "ms/query" : 16.59147063636364
+      },
+      "misses" : [
+        "雪地",
+        "湖",
+        "雨伞",
+        "墨镜",
+        "打鼓",
+        "涂鸦"
+      ],
+      "name" : "Objects and scenes, Chinese",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8912878787878789,
+        "P@10" : 0.5750000000000001,
+        "R@50" : 0.8323343137848486,
+        "ms/query" : 11.755372204545454
+      },
+      "misses" : [
+        "brid",
+        "paintnig",
+        "fountian"
+      ],
+      "name" : "Objects and scenes, typos",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8399437134502924,
+        "R@1" : 0.765,
+        "R@10" : 0.99,
+        "R@5" : 0.955,
+        "ms/query" : 23.109247085
+      },
+      "misses" : [
+        "Two blond women sit outside as people walk by wearing casual clothing and some wearing bookbags",
+        "Blond man crossing street, in white shirt and red t-shirt, carrying a white bag"
+      ],
+      "name" : "Detailed descriptions",
+      "queries" : 200
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.5422421046540293,
+        "R@1" : 0.4666666666666667,
+        "R@10" : 0.6666666666666666,
+        "R@5" : 0.6,
+        "ms/query" : 26.319558333333337
+      },
+      "misses" : [
+        "穿粉色外套的小女孩和两个穿同款衣服的姐妹走在路上",
+        "三个建筑工人在墙边的空地上挖坑",
+        "两个戴帽子拄拐杖的男人站在水边的逆光剪影",
+        "牛仔竞技中一头公牛冲向一个男人",
+        "两个穿白衣服的人在粉刷砖墙",
+        "一个小孩从后面抱着更小的孩子",
+        "小男孩坐在女孩腿上指着什么东西",
+        "女孩在河岸上奔跑跳跃",
+        "穿紧身衣的杂技演员被托举起来",
+        "三只棕白色的狗互相咬着玩"
+      ],
+      "name" : "Detailed descriptions, Chinese",
+      "queries" : 30
+    }
+  ],
+  "9 visual scores + rerank" : [
+    {
+      "metrics" : {
+        "MRR" : 0.9583333333333335,
+        "P@10" : 0.6022727272727274,
+        "R@50" : 0.8838494653000002,
+        "ms/query" : 21.498998022727275
+      },
+      "misses" : [
+
+      ],
+      "name" : "Objects and scenes",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8282369146005508,
+        "P@10" : 0.47727272727272735,
+        "R@50" : 0.7637565216275113,
+        "ms/query" : 12.241032227272727
+      },
+      "misses" : [
+        "雪地",
+        "湖",
+        "雨伞",
+        "墨镜",
+        "打鼓",
+        "涂鸦"
+      ],
+      "name" : "Objects and scenes, Chinese",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8912878787878789,
+        "P@10" : 0.5750000000000001,
+        "R@50" : 0.8323343137848486,
+        "ms/query" : 9.11708990909091
+      },
+      "misses" : [
+        "brid",
+        "paintnig",
+        "fountian"
+      ],
+      "name" : "Objects and scenes, typos",
+      "queries" : 44
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.8296691176470589,
+        "R@1" : 0.75,
+        "R@10" : 0.99,
+        "R@5" : 0.95,
+        "ms/query" : 23.438781464999998
+      },
+      "misses" : [
+        "Two blond women sit outside as people walk by wearing casual clothing and some wearing bookbags",
+        "Blond man crossing street, in white shirt and red t-shirt, carrying a white bag"
+      ],
+      "name" : "Detailed descriptions",
+      "queries" : 200
+    },
+    {
+      "metrics" : {
+        "MRR" : 0.5251441342820653,
+        "R@1" : 0.43333333333333335,
+        "R@10" : 0.6666666666666666,
+        "R@5" : 0.6,
+        "ms/query" : 27.60391673333333
+      },
+      "misses" : [
+        "穿粉色外套的小女孩和两个穿同款衣服的姐妹走在路上",
+        "三个建筑工人在墙边的空地上挖坑",
+        "两个戴帽子拄拐杖的男人站在水边的逆光剪影",
+        "牛仔竞技中一头公牛冲向一个男人",
+        "两个穿白衣服的人在粉刷砖墙",
+        "一个小孩从后面抱着更小的孩子",
+        "小男孩坐在女孩腿上指着什么东西",
+        "女孩在河岸上奔跑跳跃",
+        "穿紧身衣的杂技演员被托举起来",
+        "三只棕白色的狗互相咬着玩"
+      ],
+      "name" : "Detailed descriptions, Chinese",
+      "queries" : 30
+    }
+  ]
+}

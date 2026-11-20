@@ -6,6 +6,8 @@ import SwiftUI
 struct RootView: View {
     @State private var library = PhotoLibrary()
     @State private var indexStatus = IndexStatus()
+    @State private var describeStatus = DescribeStatus()
+    @Environment(\.scenePhase) private var scenePhase
     @State private var collections = CollectionsModel()
     @State private var assistant = AssistantModel()
     @State private var study = StudyModel()
@@ -67,6 +69,7 @@ struct RootView: View {
         .environment(\.photoZoomNamespace, photoZoom)
         .environment(library)
         .environment(indexStatus)
+        .environment(describeStatus)
         .environment(collections)
         .environment(assistant)
         .environment(study)
@@ -93,6 +96,11 @@ struct RootView: View {
         .task {
             // Testing aid: `-PhophyAsk "question"` asks the assistant on launch.
             let arguments = ProcessInfo.processInfo.arguments
+            // Testing aid: `-PhophyEval` scores search against Documents/eval.json.
+            if SearchEvaluation.isRequested {
+                Task.detached(priority: .utility) { await SearchEvaluation.runWhenIndexed() }
+            }
+            Task.detached(priority: .utility) { await SearchEvaluation.probeDescribers() }
             if let index = arguments.firstIndex(of: "-PhophyAsk"), index + 1 < arguments.count {
                 try? await Task.sleep(for: .seconds(3))
                 send(arguments[index + 1])
@@ -128,9 +136,15 @@ struct RootView: View {
             guard library.hasAccess else { return }
             // Detached so that a later library change cannot cancel work in progress.
             let status = indexStatus
+            let describing = describeStatus
             Task.detached(priority: .utility) {
                 await PhotoIndexer.shared.run(status: status)
+                // Descriptions are the costly layer: only once indexing is done.
+                await DescriptionService.shared.run(status: describing)
             }
+        }
+        .onChange(of: scenePhase) {
+            if scenePhase == .background { BackgroundWork.schedule() }
         }
     }
 
