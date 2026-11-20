@@ -163,7 +163,16 @@ actor PhotoToolbox {
         var ids: [String]
         var weak = false
         if let description {
-            let ranked = await SearchEngine.shared.rank(description, among: candidates, indexedCount: indexedCount, limit: limit)
+            var ranked = await SearchEngine.shared.rank(description, among: candidates, indexedCount: indexedCount, limit: limit)
+            // A weak result: look closer at the best guesses that have no
+            // description yet, then rank again.
+            if ranked.weak || ranked.ids.count < 3 {
+                let fresh = await DescriptionService.shared.describeNow(ranked.ids, limit: DescriptionService.lookCloserCount)
+                if fresh > 0 {
+                    ranked = await SearchEngine.shared.rank(description, among: candidates, indexedCount: indexedCount, limit: limit)
+                    steps.append("Looked closer at \(fresh) photos")
+                }
+            }
             ids = ranked.ids
             weak = ranked.weak
         } else {
@@ -346,13 +355,21 @@ actor PhotoToolbox {
         var dates: [String: Date] = [:]
         fetched.enumerateObjects { asset, _, _ in dates[asset.localIdentifier] = asset.creationDate }
         let places = (try? IndexStore.shared.placeLabels(for: ids)) ?? [:]
+        let documents = (try? IndexStore.shared.documents(for: ids)) ?? [:]
 
         return ids.map { id in
             var parts = [ref(for: id)]
             if let date = dates[id] { parts.append(Self.stamp.string(from: date)) }
             if let place = places[id] { parts.append(place) }
             if let category = categories[id] { parts.append(category.rawValue) }
+            let document = documents[id]
+            if let caption = document?.caption, !caption.isEmpty { parts.append("described: “\(caption)”") }
             if let info = try? IndexStore.shared.info(for: id) {
+                if let tags = document?.tags, !tags.isEmpty, document?.caption.isEmpty ?? true {
+                    // Concept tags are "english / 中文" pairs; the English is enough here.
+                    let english = tags.components(separatedBy: ", ").prefix(4).compactMap { $0.components(separatedBy: " / ").first }
+                    parts.append("looks like: " + english.joined(separator: ", "))
+                }
                 if !info.labels.isEmpty { parts.append("shows: " + info.labels.prefix(4).joined(separator: ", ")) }
                 let text = info.text.replacingOccurrences(of: "\n", with: " ")
                 if !text.isEmpty {

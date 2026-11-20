@@ -177,6 +177,9 @@ struct PhotoViewer: View {
     /// Bumped when the editor closes, so pages show a just-saved edit.
     @State private var editVersion = 0
     @State private var liveEnabled = true
+    /// The heart's state straight after a tap, before Photos reports back.
+    @State private var favoriteTaps: [String: Bool] = [:]
+    @State private var favoriteFailed = false
     @State private var preheated: [PHAsset] = []
     private static let pageGap: CGFloat = 20
     /// Every control in the top and bottom bars is this tall, so the round
@@ -226,11 +229,29 @@ struct PhotoViewer: View {
         .onDisappear {
             library.imageManager.stopCachingImagesForAllAssets()
         }
+        .alert("Couldn't change Favorites", isPresented: $favoriteFailed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Photos didn't allow the change. Check that Phophy has full access to your photos in Settings.")
+        }
         .sheet(isPresented: $showingInfo) {
             if let current { PhotoInfoSheet(asset: current) }
         }
         .fullScreenCover(item: $editing, onDismiss: { editVersion += 1 }) { target in
             PhotoEditorView(asset: target.asset)
+        }
+    }
+
+    /// The heart fills at once; Photos saves in the background, and if it
+    /// refuses, the heart goes back and the viewer says so.
+    private func toggleFavorite(_ asset: PHAsset, to isFavorite: Bool) {
+        let id = asset.localIdentifier
+        favoriteTaps[id] = isFavorite
+        Task {
+            if await !library.setFavorite(isFavorite, for: asset), favoriteTaps[id] == isFavorite {
+                favoriteTaps[id] = nil
+                favoriteFailed = true
+            }
         }
     }
 
@@ -375,14 +396,18 @@ struct PhotoViewer: View {
             if let current {
                 GlassEffectContainer(spacing: 0) {
                     HStack(spacing: 4) {
+                        let isFavorite = favoriteTaps[current.localIdentifier] ?? library.isFavorite(current)
                         Button {
-                            Task { await library.setFavorite(!current.isFavorite, for: current) }
+                            toggleFavorite(current, to: !isFavorite)
                         } label: {
-                            Image(systemName: current.isFavorite ? "heart.fill" : "heart")
+                            Image(systemName: isFavorite ? "heart.fill" : "heart")
                                 .font(.title3)
+                                .contentTransition(.symbolEffect(.replace))
                                 .frame(width: 52, height: Self.barHeight)
+                                .contentShape(.rect)
                         }
-                        .accessibilityLabel(current.isFavorite ? "Remove from favorites" : "Add to favorites")
+                        .sensoryFeedback(.impact(weight: .light), trigger: isFavorite)
+                        .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
 
                         Button {
                             showingInfo = true

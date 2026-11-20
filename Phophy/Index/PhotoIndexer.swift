@@ -128,9 +128,31 @@ actor PhotoIndexer {
                 indexed += 1
             }
             await status.update(indexed: indexed, total: total, isRunning: true)
+            // Every few hundred photos, make the new ones findable by keyword.
+            if (start / batchSize) % 100 == 99 { await updateKeywordIndex(status: status) }
         }
+        await updateKeywordIndex(status: status)
         await status.update(indexed: indexed, total: total, isRunning: false)
         await PlaceResolver.shared.run()
+    }
+
+    /// Tags new photos with concepts and rebuilds their keyword entries.
+    /// Both are cheap (no image is loaded) but still wait their turn.
+    private func updateKeywordIndex(status: IndexStatus) async {
+        await waitForTurn(status: status)
+        await ConceptTagger.shared.tagPending()
+        while !Task.isCancelled {
+            await waitForTurn(status: status)
+            let done = (try? IndexStore.shared.refreshDocuments(limit: 200)) ?? 0
+            if done == 0 { break }
+        }
+    }
+
+    /// Rebuilds keyword entries changed outside indexing (a new description).
+    func refreshKeywordIndex() async {
+        while !Task.isCancelled, ((try? IndexStore.shared.refreshDocuments(limit: 200)) ?? 0) > 0 {
+            await Task.yield()
+        }
     }
 
     /// Returns once the screen has been still for a moment and the iPhone

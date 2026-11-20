@@ -19,7 +19,7 @@ nonisolated final class IndexStore: Sendable {
         }
     }()
 
-    private let db: DatabaseQueue
+    let db: DatabaseQueue
 
     init() throws {
         let folder = try FileManager.default.url(
@@ -73,6 +73,31 @@ nonisolated final class IndexStore: Sendable {
                     region TEXT NOT NULL DEFAULT '',
                     context TEXT NOT NULL DEFAULT '',
                     looked_up REAL NOT NULL
+                );
+                """)
+        }
+        migrator.registerMigration("v4-descriptions-tags") { db in
+            // Word-level keyword index (BM25) next to the trigram one: English
+            // reduced to dictionary forms, Chinese split into words, see
+            // TextNormalizer. Descriptions come from a describer (on-device
+            // model or, if the user turns it on, a cloud service).
+            try db.execute(sql: """
+                ALTER TABLE asset ADD COLUMN tags TEXT NOT NULL DEFAULT '';
+                ALTER TABLE asset ADD COLUMN tag_version INTEGER NOT NULL DEFAULT 0;
+                ALTER TABLE asset ADD COLUMN caption TEXT NOT NULL DEFAULT '';
+                ALTER TABLE asset ADD COLUMN keywords TEXT NOT NULL DEFAULT '';
+                ALTER TABLE asset ADD COLUMN described_by TEXT;
+                ALTER TABLE asset ADD COLUMN doc_version INTEGER NOT NULL DEFAULT 0;
+                CREATE VIRTUAL TABLE doc_fts USING fts5(
+                    local_id UNINDEXED, caption, keywords, tags, ocr, labels,
+                    tokenize='unicode61 remove_diacritics 2'
+                );
+                CREATE VIRTUAL TABLE doc_vocab USING fts5vocab(doc_fts, 'row');
+                CREATE TABLE concept_vector (
+                    model TEXT PRIMARY KEY NOT NULL,
+                    count INTEGER NOT NULL,
+                    dimension INTEGER NOT NULL,
+                    data BLOB NOT NULL
                 );
                 """)
         }
@@ -296,6 +321,7 @@ nonisolated final class IndexStore: Sendable {
                 try db.execute(sql: "DELETE FROM photo_meta WHERE local_id = ?", arguments: [id])
                 try db.execute(sql: "DELETE FROM asset WHERE local_id = ?", arguments: [id])
                 try db.execute(sql: "DELETE FROM asset_fts WHERE local_id = ?", arguments: [id])
+                try db.execute(sql: "DELETE FROM doc_fts WHERE local_id = ?", arguments: [id])
             }
         }
     }

@@ -11,9 +11,10 @@ struct SearchView: View {
     @State private var query = ""
     @State private var results = SearchResults()
     @State private var textAssets: [PHAsset] = []
-    @State private var lookAlikeAssets: [PHAsset] = []
+    @State private var bestAssets: [PHAsset] = []
     @State private var hasSearched = false
     @State private var shownQuery = ""
+    @State private var lookingCloser = false
 
     private struct SearchKey: Equatable {
         let query: String
@@ -23,8 +24,9 @@ struct SearchView: View {
     private struct ContentKey: Hashable {
         let query: String
         let text: [String]
-        let lookAlikes: [String]
+        let best: [String]
         let hasSearched: Bool
+        let lookingCloser: Bool
     }
 
     private static let edges = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
@@ -35,7 +37,7 @@ struct SearchView: View {
                 sections: sections,
                 contentID: ContentKey(
                     query: shownQuery, text: results.textMatches,
-                    lookAlikes: results.lookAlikes, hasSearched: hasSearched
+                    best: results.bestMatches, hasSearched: hasSearched, lookingCloser: lookingCloser
                 ),
                 bottomInset: assistant.isPresented ? 0 : 58
             )
@@ -53,9 +55,29 @@ struct SearchView: View {
                 guard !Task.isCancelled else { return }
                 results = found
                 textAssets = Self.assets(found.textMatches)
-                lookAlikeAssets = Self.assets(found.lookAlikes)
+                bestAssets = Self.assets(found.bestMatches)
                 shownQuery = query
                 hasSearched = !query.trimmingCharacters(in: .whitespaces).isEmpty
+                lookingCloser = false
+
+                // Look closer: when the match is weak or the search asks for
+                // details, describe the best guesses that have no description
+                // yet, then search again. Waits a moment so typing isn't slowed.
+                let words = query.split(separator: " ").count
+                let guesses = found.bestMatches.isEmpty ? found.closest : found.bestMatches
+                guard hasSearched, found.bestMatches.isEmpty || words >= 3, !guesses.isEmpty else { return }
+                try? await Task.sleep(for: .milliseconds(700))
+                guard !Task.isCancelled else { return }
+                lookingCloser = true
+                let fresh = await DescriptionService.shared.describeNow(guesses, limit: DescriptionService.lookCloserCount)
+                guard !Task.isCancelled else { return }
+                lookingCloser = false
+                guard fresh > 0 else { return }
+                let refined = await SearchEngine.shared.search(query, indexedCount: status.indexed)
+                guard !Task.isCancelled else { return }
+                results = refined
+                textAssets = Self.assets(refined.textMatches)
+                bestAssets = Self.assets(refined.bestMatches)
             }
         }
     }
@@ -66,6 +88,14 @@ struct SearchView: View {
                 IndexProgressLine().frame(maxWidth: .infinity, alignment: .leading)
             },
         ]
+        if lookingCloser {
+            sections.append(.header(insets: NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 12, trailing: 20)) {
+                Label("Looking closer at the best guesses…", systemImage: "eye")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            })
+        }
         let query = shownQuery
         if !hasSearched {
             sections.append(.header(insets: Self.edges) {
@@ -81,11 +111,11 @@ struct SearchView: View {
                 ContentUnavailableView.search(text: query).padding(.top, 60)
             })
         } else {
-            if !textAssets.isEmpty {
-                sections += resultSections(title: "Text and labels", assets: textAssets)
+            if !bestAssets.isEmpty {
+                sections += resultSections(title: "Best matches", assets: bestAssets)
             }
-            if !lookAlikeAssets.isEmpty {
-                sections += resultSections(title: "Looks like “\(query)”", assets: lookAlikeAssets)
+            if !textAssets.isEmpty {
+                sections += resultSections(title: "Text in photos", assets: textAssets)
             }
         }
         return sections

@@ -1,0 +1,67 @@
+# Builds the app for the iOS Simulator on every push and pull request, so a
+# change that breaks the build shows up on GitHub before it's merged.
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build for iOS Simulator
+    # macOS 27 on Apple silicon with Xcode 27 (the app uses the iOS 27 SDK).
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use the newest Xcode 27
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_27*.app | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      # MLX compiles Metal shaders, which needs the Metal Toolchain.
+      - name: Install the Metal Toolchain
+        run: xcodebuild -downloadComponent MetalToolchain
+
+      - name: Cache Swift packages
+        uses: actions/cache@v4
+        with:
+          path: build/SourcePackages
+          key: spm-${{ hashFiles('Phophy.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: spm-
+
+      # The MobileCLIP models aren't in git; the app builds without them.
+      # Macro and plugin validation are skipped because the MLX and Hugging
+      # Face packages use macros that Xcode otherwise asks a person to trust.
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project Phophy.xcodeproj \
+            -scheme Phophy \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            -skipMacroValidation \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO > build.log 2>&1 \
+            || { grep -E "error:" build.log | head -50; tail -30 build.log; exit 1; }
+          tail -1 build.log
+
+  eval-scripts:
+    name: Check evaluation scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python scripts compile
+        run: python3 -m py_compile Eval/*.py
+      - name: Test set is valid JSON
+        run: python3 -c "import json; d = json.load(open('Eval/eval.json')); print(sum(len(s['queries']) for s in d['sets']), 'queries')"
