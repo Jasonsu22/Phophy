@@ -113,10 +113,28 @@ final class PhotoLibrary: NSObject, PHPhotoLibraryChangeObserver {
         PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject
     }
 
-    func setFavorite(_ isFavorite: Bool, for asset: PHAsset) async {
-        try? await PHPhotoLibrary.shared().performChanges {
-            PHAssetChangeRequest(for: asset).isFavorite = isFavorite
+    /// Returns false if Photos refused the change.
+    @discardableResult
+    func setFavorite(_ isFavorite: Bool, for asset: PHAsset) async -> Bool {
+        do {
+            try await PHPhotoLibrary.shared().performChanges {
+                PHAssetChangeRequest(for: asset).isFavorite = isFavorite
+            }
+            return true
+        } catch {
+            #if DEBUG
+            print("Favorite failed: \(error)")
+            #endif
+            return false
         }
+    }
+
+    /// Whether a photo is a favourite now. A PHAsset is a snapshot taken
+    /// when it was fetched, so its own `isFavorite` goes stale.
+    func isFavorite(_ asset: PHAsset) -> Bool {
+        _ = revision
+        return PHAsset.fetchAssets(withLocalIdentifiers: [asset.localIdentifier], options: nil)
+            .firstObject?.isFavorite ?? asset.isFavorite
     }
 
     /// Moves photos to Recently Deleted. iOS asks the user to confirm first.
