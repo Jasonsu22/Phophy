@@ -209,10 +209,19 @@ Searches take 10–30 ms on the Mac simulator; the iPhone is still to be timed.
 |---|---|---|
 | Apple's built-in model | Mac simulator | 3.7–5 s warm, 17–19 s for the first few |
 | SmolVLM2 500M | M5 Mac, MLX | 0.93 s median |
+| SmolVLM2 500M | **iPhone 13 Pro Max (A15), iOS 27.0.1** | **1.2–1.5 s** (first photo 6.5 s while the model warms up) |
 | Gemini / OpenAI | not run yet | — |
+
+On the iPhone 13 Pro Max (20 Nov, `-PhophyPhoneBench`, 16,080 photos, 3,487 indexed at the time):
+
+- **Search:** 13–22 ms per query, English, Chinese, typo and long sentence alike.
+- **Model download:** about 1 GB, downloaded and loaded in 62 s on Wi-Fi.
+- **Memory:** 1.2 GB while the model is loaded (49 MB without it).
+- **Describing:** 12 photos in 29 s. Battery didn't move (75% → 75%), but the phone reported "serious" heat; indexing was running at the same time. The real queue pauses at "serious" heat; the test bypassed that.
+- **Quality:** good on real scenes ("A person is cooking a dish in a pot on a stove"), poor on screenshots: SmolVLM2 tends to invent "a person holding a smartphone". Screenshots are already searchable by their text, so they should be skipped.
 
 ### Still to do
 
-- Time SmolVLM2 and Apple's model on the iPhone 13 Pro Max, and check battery during a night of describing.
+- Check battery and heat over a full night of describing on the iPhone. (Apple's model can't be timed on this phone: it has no Apple Intelligence.)
 - Test cloud describing with a real key.
 - In Xcode, approve the MLX and Hugging Face package macros ("Trust & Enable") on the first build.

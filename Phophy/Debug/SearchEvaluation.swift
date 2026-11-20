@@ -2,6 +2,7 @@
 import Foundation
 import FoundationModels
 import Photos
+import UIKit
 
 /// Scores search against a labelled test set (see `Eval/README.md`).
 ///
@@ -143,6 +144,77 @@ nonisolated enum SearchEvaluation {
         for id in ids {
             if let d = try? IndexStore.shared.document(for: id) { log("probe: \(d.caption) | \(d.keywords)") }
         }
+    }
+
+    /// Testing aid: `-PhophyPhoneBench -describer downloaded` times search and
+    /// describing on a real iPhone, on the library that's there.
+    static func benchPhone() async {
+        guard ProcessInfo.processInfo.arguments.contains("-PhophyPhoneBench") else { return }
+        let store = IndexStore.shared
+        let ids = Array((try? store.allIDs()) ?? [])
+        let photoCount = PHAsset.fetchAssets(with: .image, options: nil).count
+        log("bench: \(ids.count) indexed of \(photoCount) photos, \(((try? store.describedCount()) ?? 0)) described, memory \(memoryMB()) MB, \(conditions())")
+
+        // Search: warm up once, then the median of five runs.
+        for query in ["dog", "food", "beach", "screenshot", "狗", "生日蛋糕", "bicyle", "a person standing next to a car at night"] {
+            _ = await SearchEngine.shared.rank(query, among: nil, indexedCount: ids.count, limit: 100)
+            var times: [Double] = []
+            var found = 0
+            for _ in 0..<5 {
+                let started = ContinuousClock.now
+                found = await SearchEngine.shared.rank(query, among: nil, indexedCount: ids.count, limit: 100).ids.count
+                times.append(milliseconds(since: started))
+            }
+            log("bench: search \"\(query)\" \(String(format: "%.0f", times.sorted()[2])) ms, \(found) results")
+        }
+
+        guard #available(iOS 27.0, *) else { log("bench: describing needs iOS 27"); return }
+        let model = AppSettings.downloadableModel
+        if !(await OnDeviceDescriber.isDownloaded(model)) {
+            log("bench: downloading \(model.rawValue)…")
+            let started = ContinuousClock.now
+            do { try await OnDeviceDescriber.download(model) } catch { log("bench: download failed: \(error)"); return }
+            log("bench: downloaded and loaded in \(String(format: "%.0f", milliseconds(since: started) / 1000)) s, memory \(memoryMB()) MB")
+        }
+        let done = (try? store.describedIDs()) ?? [:]
+        let todo = Array(ids.filter { done[$0] == nil }.shuffled().prefix(12))
+        let battery = await batteryLevel()
+        let started = ContinuousClock.now
+        for (n, id) in todo.enumerated() {
+            let one = ContinuousClock.now
+            let ok = await DescriptionService.shared.describeNow([id], limit: 1)
+            log("bench: photo \(n + 1) \(ok == 1 ? "described" : "failed") in \(String(format: "%.0f", milliseconds(since: one))) ms, memory \(memoryMB()) MB, \(conditions())")
+        }
+        let total = milliseconds(since: started) / 1000
+        log("bench: \(todo.count) photos in \(String(format: "%.0f", total)) s, battery \(battery)% → \(await batteryLevel())%")
+        log("bench done")
+    }
+
+    private static func milliseconds(since start: ContinuousClock.Instant) -> Double {
+        let d = ContinuousClock.now - start
+        return Double(d.components.seconds) * 1000 + Double(d.components.attoseconds) / 1e15
+    }
+
+    private static func conditions() -> String {
+        let info = ProcessInfo.processInfo
+        let heat = ["nominal", "fair", "serious", "critical"][info.thermalState.rawValue]
+        return "heat \(heat)\(info.isLowPowerModeEnabled ? ", Low Power Mode" : "")"
+    }
+
+    @MainActor private static func batteryLevel() -> Int {
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        return Int((UIDevice.current.batteryLevel * 100).rounded())
+    }
+
+    private static func memoryMB() -> Int {
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let result = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+            }
+        }
+        return result == KERN_SUCCESS ? Int(info.phys_footprint / 1_048_576) : -1
     }
 
     static func log(_ message: String) {

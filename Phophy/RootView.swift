@@ -101,6 +101,7 @@ struct RootView: View {
                 Task.detached(priority: .utility) { await SearchEvaluation.runWhenIndexed() }
             }
             Task.detached(priority: .utility) { await SearchEvaluation.probeDescribers() }
+            Task.detached(priority: .userInitiated) { await SearchEvaluation.benchPhone() }
             if let index = arguments.firstIndex(of: "-PhophyAsk"), index + 1 < arguments.count {
                 try? await Task.sleep(for: .seconds(3))
                 send(arguments[index + 1])
@@ -140,6 +141,10 @@ struct RootView: View {
             Task.detached(priority: .utility) {
                 await PhotoIndexer.shared.run(status: status)
                 // Descriptions are the costly layer: only once indexing is done.
+                #if DEBUG
+                // The phone test times describing itself; don't compete with it.
+                if ProcessInfo.processInfo.arguments.contains("-PhophyPhoneBench") { return }
+                #endif
                 await DescriptionService.shared.run(status: describing)
             }
         }
