@@ -155,6 +155,11 @@ actor DescriptionService {
                 try? await Task.sleep(for: .seconds(10))
                 continue
             }
+            if await PhotoIndexer.shared.isIndexing() {
+                await status.update(described: described, toDescribe: total, isRunning: true, message: "Waiting for indexing to finish", describer: name)
+                try? await Task.sleep(for: .seconds(5))
+                continue
+            }
             if AppSettings.describeOnlyWhenCharging, !(await Self.isCharging()) {
                 return "Waiting for the charger"
             }

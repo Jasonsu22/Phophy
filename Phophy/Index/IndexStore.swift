@@ -296,10 +296,28 @@ nonisolated final class IndexStore: Sendable {
         }
         try db.write { db in
             try db.execute(
+                // Re-indexing keeps a photo's description unless the photo
+                // itself changed (edited): descriptions cost minutes of
+                // battery or real money, and a new index version alone
+                // doesn't make them wrong. Tags are recomputed either way.
                 sql: """
-                    INSERT OR REPLACE INTO asset
+                    INSERT INTO asset
                         (local_id, modified, ocr, labels, embedding, embedding_model, indexed_at, index_version)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(local_id) DO UPDATE SET
+                        caption = CASE WHEN modified IS excluded.modified THEN caption ELSE '' END,
+                        keywords = CASE WHEN modified IS excluded.modified THEN keywords ELSE '' END,
+                        described_by = CASE WHEN modified IS excluded.modified THEN described_by ELSE NULL END,
+                        modified = excluded.modified,
+                        ocr = excluded.ocr,
+                        labels = excluded.labels,
+                        embedding = excluded.embedding,
+                        embedding_model = excluded.embedding_model,
+                        indexed_at = excluded.indexed_at,
+                        index_version = excluded.index_version,
+                        tags = '',
+                        tag_version = 0,
+                        doc_version = 0
                     """,
                 arguments: [
                     localID, modified?.timeIntervalSince1970, text, labelText,

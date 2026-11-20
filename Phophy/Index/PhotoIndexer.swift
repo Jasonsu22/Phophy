@@ -33,6 +33,10 @@ actor PhotoIndexer {
     private var isRunning = false
     private var runAgain = false
 
+    /// Whether indexing is under way. Describing waits for it: indexing is
+    /// the cheaper layer and covers every photo, so it goes first.
+    func isIndexing() -> Bool { isRunning }
+
     func run(status: IndexStatus) async {
         if isRunning {
             runAgain = true
@@ -94,6 +98,11 @@ actor PhotoIndexer {
         assets.enumerateObjects { asset, _, _ in
             if !done.contains(asset.localIdentifier) { pending.append(asset) }
         }
+
+        // Tag and keyword-index what's already indexed before starting on the
+        // rest: it takes seconds, and the rest can take hours on a big
+        // library (photos waiting on iCloud).
+        await updateKeywordIndex(status: status)
 
         // Images are fetched two at a time, so waiting on iCloud for one
         // photo doesn't hold up the other, without holding many large
