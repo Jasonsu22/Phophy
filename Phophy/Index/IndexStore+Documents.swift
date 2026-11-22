@@ -6,7 +6,8 @@ import GRDB
 nonisolated extension IndexStore {
     /// Bumped when the words stored per photo change shape, so every
     /// photo's keyword entry is rebuilt.
-    nonisolated static let documentVersion = 1
+    /// 2: place names and the month and year a photo was taken are searchable.
+    nonisolated static let documentVersion = 2
 
     /// One photo's searchable text, as a describer or the assistant sees it.
     nonisolated struct Document: Sendable {
@@ -142,7 +143,14 @@ nonisolated extension IndexStore {
         let rows = try db.read { db in
             try Row.fetchAll(
                 db,
-                sql: "SELECT local_id, caption, keywords, tags, ocr, labels FROM asset WHERE doc_version < ? LIMIT ?",
+                sql: """
+                    SELECT a.local_id, a.caption, a.keywords, a.tags, a.ocr, a.labels,
+                           m.taken, p.name, p.city, p.region, p.context
+                    FROM asset a
+                    LEFT JOIN photo_meta m ON m.local_id = a.local_id
+                    LEFT JOIN place p ON p.key = m.place_key
+                    WHERE a.doc_version < ? LIMIT ?
+                    """,
                 arguments: [Self.documentVersion, limit]
             )
         }
@@ -150,7 +158,13 @@ nonisolated extension IndexStore {
         // Normalizing (dictionary forms, Chinese word splitting) happens
         // outside the write transaction.
         let prepared: [(String, [String])] = rows.map { row in
-            let fields: [String] = [row["caption"], row["keywords"], row["tags"], row["ocr"], row["labels"]]
+            // Where and when go in with the labels, so "Tokyo" or "July"
+            // finds photos in the Search tab, not only through the assistant.
+            let place = [row["name"], row["city"], row["region"], row["context"]]
+                .compactMap { $0 as String? }.filter { !$0.isEmpty }
+            let when = (row["taken"] as Double?).map { Self.dateWords(Date(timeIntervalSince1970: $0)) } ?? ""
+            let labels = ([row["labels"] as String? ?? ""] + place + [when]).filter { !$0.isEmpty }.joined(separator: ", ")
+            let fields: [String] = [row["caption"], row["keywords"], row["tags"], row["ocr"], labels]
             return (row["local_id"], fields.map(TextNormalizer.indexText))
         }
         try db.write { db in
@@ -164,6 +178,16 @@ nonisolated extension IndexStore {
             }
         }
         return rows.count
+    }
+
+    /// "July 2026 summer 七月 2026年", in the iPhone's time zone.
+    static func dateWords(_ date: Date) -> String {
+        let calendar = Calendar(identifier: .gregorian)
+        let month = calendar.component(.month, from: date), year = calendar.component(.year, from: date)
+        let names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+        let chinese = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"]
+        let season = ["winter", "winter", "spring", "spring", "spring", "summer", "summer", "summer", "autumn fall", "autumn fall", "autumn fall", "winter"]
+        return "\(names[month - 1]) \(year) \(season[month - 1]) \(chinese[month - 1]) \(year)年"
     }
 
     func pendingDocumentCount() throws -> Int {

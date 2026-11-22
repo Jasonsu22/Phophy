@@ -24,6 +24,12 @@ nonisolated enum TextNormalizer {
         text.unicodeScalars.contains { isCJK($0) }
     }
 
+    /// How much text there is, with a Chinese or Japanese character counted
+    /// as three letters.
+    static func textAmount(_ text: String) -> Int {
+        text.unicodeScalars.reduce(0) { $0 + (isCJK($1) ? 3 : ($1.properties.isWhitespace ? 0 : 1)) }
+    }
+
     static func isCJK(_ scalar: Unicode.Scalar) -> Bool {
         switch scalar.value {
         case 0x3040...0x30FF, 0x3400...0x4DBF, 0x4E00...0x9FFF, 0xF900...0xFAFF, 0xAC00...0xD7AF: true

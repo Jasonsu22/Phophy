@@ -158,6 +158,11 @@ nonisolated final class IndexStore: Sendable {
                 sql: "INSERT OR REPLACE INTO place (key, name, city, region, context, looked_up) VALUES (?, ?, ?, ?, ?, ?)",
                 arguments: [key, name, city, region, context, Date().timeIntervalSince1970]
             )
+            // The photos there get the place name in their keyword entry.
+            try db.execute(
+                sql: "UPDATE asset SET doc_version = 0 WHERE local_id IN (SELECT local_id FROM photo_meta WHERE place_key = ?)",
+                arguments: [key]
+            )
         }
     }
 
@@ -428,12 +433,14 @@ nonisolated final class IndexStore: Sendable {
     }
 
     /// How many characters of text were recognized in each photo.
+    /// Each photo's amount of recognized text, with a Chinese or Japanese
+    /// character counted as three letters (one says about as much as a word).
     func textLengths() throws -> [String: Int] {
         try db.read { db in
             var lengths: [String: Int] = [:]
-            let rows = try Row.fetchCursor(db, sql: "SELECT local_id, length(ocr) AS n FROM asset")
+            let rows = try Row.fetchCursor(db, sql: "SELECT local_id, ocr FROM asset WHERE ocr != ''")
             while let row = try rows.next() {
-                lengths[row["local_id"]] = row["n"]
+                lengths[row["local_id"]] = TextNormalizer.textAmount(row["ocr"])
             }
             return lengths
         }

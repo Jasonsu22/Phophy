@@ -22,6 +22,8 @@ final class StudyModel {
         let fetched = PHAsset.fetchAssets(withLocalIdentifiers: slideIDs, options: nil)
         var photos: [(id: String, date: Date)] = []
         fetched.enumerateObjects { asset, _, _ in
+            // A screenshot of a slide-like page isn't a photo taken in a lecture.
+            guard !asset.mediaSubtypes.contains(.photoScreenshot) else { return }
             photos.append((asset.localIdentifier, asset.creationDate ?? .distantPast))
         }
         sessions = LectureSession.group(photos)

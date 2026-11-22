@@ -13,15 +13,19 @@ nonisolated struct LectureSession: Identifiable, Hashable, Sendable {
     /// Slide photos at most this far apart belong to the same lecture.
     static let maximumGap: TimeInterval = 30 * 60
 
+    /// A lecture has at least this many slide photos; a single photo of a
+    /// slide-like page (a whiteboard, a printed form) isn't one.
+    static let minimumSlides = 2
+
     /// Groups photos (with their dates) into sessions, newest session first.
     static func group(_ photos: [(id: String, date: Date)]) -> [LectureSession] {
         let sorted = photos.sorted { $0.date < $1.date }
         var sessions: [LectureSession] = []
         var current: [(id: String, date: Date)] = []
         func close() {
-            guard let first = current.first, let last = current.last else { return }
+            defer { current = [] }
+            guard current.count >= minimumSlides, let first = current.first, let last = current.last else { return }
             sessions.append(LectureSession(localIDs: current.map(\.id), start: first.date, end: last.date))
-            current = []
         }
         for photo in sorted {
             if let last = current.last, photo.date.timeIntervalSince(last.date) > maximumGap { close() }

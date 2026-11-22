@@ -18,20 +18,24 @@ struct RootView: View {
     /// How far the ask bar sits above the bottom safe area while the tab bar shows.
     private let askBarLift: CGFloat = 62
     private let chatAnimation = Animation.smooth(duration: 0.38)
+    @State private var keyboardShown = false
+    @State private var tab = SearchView.launchQuery == nil ? "library" : "search"
+    /// The keyboard is up for a field other than the ask bar.
+    private var otherKeyboard: Bool { keyboardShown && !askFocused && !assistant.isPresented }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView {
-                Tab("Library", systemImage: "photo.on.rectangle") {
+            TabView(selection: $tab) {
+                Tab("Library", systemImage: "photo.on.rectangle", value: "library") {
                     LibraryView().belowAskBar(chatOpen: assistant.isPresented)
                 }
-                Tab("Collections", systemImage: "square.stack") {
+                Tab("Collections", systemImage: "square.stack", value: "collections") {
                     CollectionsView().belowAskBar(chatOpen: assistant.isPresented)
                 }
-                Tab("Study", systemImage: "text.book.closed") {
+                Tab("Study", systemImage: "text.book.closed", value: "study") {
                     StudyView().belowAskBar(chatOpen: assistant.isPresented)
                 }
-                Tab(role: .search) {
+                Tab(value: "search", role: .search) {
                     SearchView().belowAskBar(chatOpen: assistant.isPresented)
                 }
             }
@@ -55,6 +59,16 @@ struct RootView: View {
                 .padding(.bottom, assistant.isPresented ? 8 : askBarLift)
                 // Closed, the bar must not jump above the keyboard of another field.
                 .ignoresSafeArea(assistant.isPresented ? [] : .keyboard)
+                // While another field (Search) is typed in, the bar steps
+                // aside instead of floating over the results.
+                .opacity(otherKeyboard ? 0 : 1)
+                .allowsHitTesting(!otherKeyboard)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            keyboardShown = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            keyboardShown = false
         }
         .fullScreenCover(item: $viewer.presentation) { presentation in
             PhotoViewer(presentation: presentation)
@@ -102,6 +116,7 @@ struct RootView: View {
             }
             Task.detached(priority: .utility) { await SearchEvaluation.probeDescribers() }
             Task.detached(priority: .userInitiated) { await SearchEvaluation.benchPhone() }
+            Task.detached(priority: .userInitiated) { await SearchEvaluation.probeSearch() }
             if let index = arguments.firstIndex(of: "-PhophyAsk"), index + 1 < arguments.count {
                 try? await Task.sleep(for: .seconds(3))
                 send(arguments[index + 1])

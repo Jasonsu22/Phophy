@@ -40,7 +40,7 @@ actor DescriptionService {
 
     /// Recognized text longer than this means the photo is mostly text, and
     /// is described as a screen or document.
-    nonisolated static let textHeavy = 160
+    nonisolated static let textHeavy = 100
     /// Similarity above which two photos taken close together count as the same shot.
     nonisolated static let duplicateSimilarity: Float = 0.93
 
@@ -229,7 +229,7 @@ actor DescriptionService {
         guard let asset, let image = await loadImage(asset, size: describer.imageSize) else { return false }
         let text = (try? IndexStore.shared.info(for: job.id))?.text ?? ""
         let context = DescribeContext(
-            isScreen: asset.mediaSubtypes.contains(.photoScreenshot) || text.count >= Self.textHeavy,
+            isScreen: asset.mediaSubtypes.contains(.photoScreenshot) || TextNormalizer.textAmount(text) >= Self.textHeavy,
             text: text
         )
         do {

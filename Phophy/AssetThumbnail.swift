@@ -11,6 +11,8 @@ struct AssetThumbnail: View {
     @State private var image: UIImage?
     @State private var requestID: PHImageRequestID?
 
+    private var isTall: Bool { asset.pixelHeight * 10 > asset.pixelWidth * 16 }
+
     var body: some View {
         GeometryReader { proxy in
             let side = max(proxy.size.width, proxy.size.height)
@@ -22,7 +24,8 @@ struct AssetThumbnail: View {
                         .scaledToFill()
                 }
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            // A screenshot or other tall page shows its top, where the title is.
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: isTall ? .top : .center)
             .clipped()
             .contentShape(.rect)
             .overlay(alignment: .bottomTrailing) { videoBadge }

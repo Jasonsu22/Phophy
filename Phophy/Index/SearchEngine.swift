@@ -40,6 +40,16 @@ nonisolated struct SearchOptions: Sendable, Hashable {
     /// winner isn't outvoted by keyword matches on common words. (Short
     /// searches do slightly better without it.)
     var visualScores = true
+    /// For searches of up to three words: extra weight for photos containing
+    /// a rare query word (a place, a name, a code such as "G1234"), which
+    /// says more than how a photo looks. Not for longer searches: a long
+    /// description is full of rare words, and there it cost 6 points of
+    /// recall@1 on the Flickr test. 0 turns it off.
+    var rareWordWeight = 1.5
+    /// Keyword matches also count how close they come to the best match's
+    /// BM25 score. Off: on the Flickr test it didn't pay (MRR 0.97 → 0.95
+    /// on objects, recall@1 0.765 → 0.69 on long descriptions).
+    var keywordScores = false
 
     static let standard = SearchOptions()
     static let previous = SearchOptions(legacy: true)
@@ -67,6 +77,10 @@ actor SearchEngine {
     private var cachedForCount = -1
 
     private var vocabulary: [String: Int] = [:]
+    #if DEBUG
+    /// The lists merged for the last ranking, for the search probe.
+    private(set) var lastLists: [(ids: [String], weight: Double)] = []
+    #endif
     private var vocabularyLoaded = ContinuousClock.now - .seconds(3600)
 
     // MARK: Search tab
@@ -111,17 +125,34 @@ actor SearchEngine {
         // Words.
         let plan = await plan(for: query, options: options)
         var keywordHits: [String] = []
+        var keywordScored: [(id: String, score: Double)] = []
         var longQuery = false
         if options.legacy || !options.keywords {
             keywordHits = ((try? IndexStore.shared.textMatches(query, limit: 500)) ?? []).filter(keep)
             lists.append((keywordHits, 1))
         } else {
-            keywordHits = ((try? IndexStore.shared.keywordMatches(plan.terms, limit: 500)) ?? []).map(\.id).filter(keep)
+            let scored = ((try? IndexStore.shared.keywordMatches(plan.terms, limit: 500)) ?? []).filter { keep($0.id) }
+            keywordHits = scored.map(\.id)
+            keywordScored = scored
             lists.append((keywordHits, plan.terms.count >= 4 ? options.longQueryKeywordWeight : 1))
             longQuery = plan.terms.count >= 4
             if !plan.expansion.isEmpty {
                 let widened = ((try? IndexStore.shared.keywordMatches(plan.expansion, limit: 300)) ?? []).map(\.id).filter(keep)
                 lists.append((widened, 0.4))
+            }
+            if options.rareWordWeight > 0, plan.terms.count < 4 {
+                await loadVocabularyIfStale()
+                let most = max(20, indexedCount / 20)
+                let rare = plan.terms.filter { group in
+                    group.contains { word in
+                        let count = vocabulary[word] ?? 0
+                        return count > 0 && count <= most
+                    }
+                }
+                if !rare.isEmpty {
+                    let hits = ((try? IndexStore.shared.keywordMatches(rare, limit: 100)) ?? []).map(\.id).filter(keep)
+                    lists.append((hits, options.rareWordWeight))
+                }
             }
             // Exact substrings (text in slides, short Chinese words).
             let exact = ((try? IndexStore.shared.textMatches(query, limit: 200)) ?? []).filter(keep)
@@ -146,6 +177,9 @@ actor SearchEngine {
             lists.append((visual.prefix(200).map(\.0), options.visualWeight))
         }
 
+        #if DEBUG
+        lastLists = lists
+        #endif
         var fused: [String: Double] = [:]
         for list in lists {
             for (rank, id) in list.ids.enumerated() { fused[id, default: 0] += list.weight / Double(60 + rank) }
@@ -158,6 +192,14 @@ actor SearchEngine {
             for (id, score) in visual.prefix(200) {
                 let closeness = Double(max(score - floor, 0) / span)
                 fused[id, default: 0] += options.visualWeight * closeness * closeness * closeness / 60
+            }
+        }
+        if options.keywordScores, let top = keywordScored.first?.score, top > 0 {
+            // Up to one first place more, by how close a match comes to the best.
+            let weight = longQuery ? options.longQueryKeywordWeight : 1
+            for (id, score) in keywordScored.prefix(200) {
+                let closeness = max(score, 0) / top
+                fused[id, default: 0] += weight * closeness * closeness * closeness / 60
             }
         }
         let ranked = fused.sorted { $0.value > $1.value }.map(\.key)

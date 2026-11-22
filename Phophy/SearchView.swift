@@ -8,7 +8,19 @@ struct SearchView: View {
     @Environment(IndexStatus.self) private var status
     @Environment(AssistantModel.self) private var assistant
 
-    @State private var query = ""
+    @State private var query = SearchView.launchQuery ?? ""
+
+    /// Testing and demo aid: `-PhophySearchQuery "去上海的火车票"` opens
+    /// Search with this query, for queries a simulator can't type.
+    static var launchQuery: String? {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "-PhophySearchQuery"), index + 1 < arguments.count {
+            return arguments[index + 1]
+        }
+        #endif
+        return nil
+    }
     @State private var results = SearchResults()
     @State private var textAssets: [PHAsset] = []
     @State private var bestAssets: [PHAsset] = []

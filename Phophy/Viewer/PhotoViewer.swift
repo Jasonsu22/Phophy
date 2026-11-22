@@ -1087,12 +1087,32 @@ struct PhotoInfoSheet: View {
     let asset: PHAsset
 
     var body: some View {
-        let info = try? IndexStore.shared.info(for: asset.localIdentifier)
+        let id = asset.localIdentifier
+        let info = try? IndexStore.shared.info(for: id)
+        let document = try? IndexStore.shared.document(for: id)
+        let place = (try? IndexStore.shared.placeLabels(for: [id]))?[id]
+        // Vision's labels if it gave any, else the concept tags (English half).
+        let shows = info?.labels.isEmpty == false ? info!.labels : (document?.tags ?? "")
+            .components(separatedBy: ", ").compactMap { $0.components(separatedBy: " / ").first }.filter { !$0.isEmpty }
         NavigationStack {
             List {
+                if let place {
+                    Section("Where") {
+                        Label(place, systemImage: "mappin.and.ellipse")
+                    }
+                }
                 if let info {
+                    if let document, !document.caption.isEmpty {
+                        Section {
+                            Text(document.caption)
+                        } header: {
+                            Text("Description")
+                        } footer: {
+                            Text(Self.describerName(document.describedBy))
+                        }
+                    }
                     Section("Shows") {
-                        Text(info.labels.isEmpty ? "No labels" : info.labels.joined(separator: " · "))
+                        Text(shows.isEmpty ? "No labels" : shows.joined(separator: " · "))
                     }
                     Section("Text in photo") {
                         Text(info.text.isEmpty ? "No text found" : info.text)
@@ -1106,6 +1126,16 @@ struct PhotoInfoSheet: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.medium, .large])
+    }
+
+    private static func describerName(_ id: String?) -> String {
+        switch id {
+        case "apple": "Written by Apple Intelligence on this iPhone"
+        case "smolVLM", "fastVLM": "Written by a model on this iPhone"
+        case let id? where id.hasPrefix("gemini"): "Written by Google Gemini"
+        case let id? where id.hasPrefix("openai"): "Written by OpenAI"
+        default: "Written by AI"
+        }
     }
 }
 

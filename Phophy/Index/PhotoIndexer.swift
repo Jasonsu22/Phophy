@@ -143,6 +143,8 @@ actor PhotoIndexer {
         await updateKeywordIndex(status: status)
         await status.update(indexed: indexed, total: total, isRunning: false)
         await PlaceResolver.shared.run()
+        // Place names just looked up go into the keyword entries.
+        await refreshKeywordIndex()
     }
 
     /// Tags new photos with concepts and rebuilds their keyword entries.

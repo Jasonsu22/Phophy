@@ -15,7 +15,9 @@ actor ConceptTagger {
     static let shared = ConceptTagger()
 
     /// Bumped when the tagging rule changes, so photos are tagged again.
-    nonisolated static let version = 1
+    /// 4: back to tagging every photo (dropping tags from text-heavy photos
+    /// also dropped useful ones such as "receipt").
+    nonisolated static let version = 4
 
     nonisolated struct Concept: Sendable {
         let english: String

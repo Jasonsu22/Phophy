@@ -560,11 +560,11 @@ private struct DescriptionSettings: View {
     private var footer: String {
         switch choice {
         case .gemini, .openai:
-            return "Privacy: small copies of your photos are uploaded to \(choice == .gemini ? "Google" : "OpenAI") to be described. Their terms apply, and Phophy can't control or delete what they keep. Text-heavy photos and near-duplicates are skipped to save cost."
+            return "Privacy: small copies of your photos are uploaded to \(choice == .gemini ? "Google" : "OpenAI") to be described. Their terms apply, and Phophy can't control or delete what they keep. Near-duplicates are described once to save cost."
         case .off:
             return "Without descriptions, search still uses text in photos, labels, concept tags and visual similarity."
         default:
-            return "Descriptions are written on your iPhone and never leave it. They let search find details such as \u{201C}red umbrella\u{201D} or \u{201C}girl with a kite\u{201D}. Text-heavy photos and near-duplicates are skipped, and work pauses while you use the app."
+            return "Descriptions are written on your iPhone and never leave it. They let search find details such as \u{201C}red umbrella\u{201D} or \u{201C}girl with a kite\u{201D}, and find a screenshot by what it is, such as \u{201C}train ticket\u{201D}. Near-duplicates are described once, and work pauses while you use the app."
         }
     }
 

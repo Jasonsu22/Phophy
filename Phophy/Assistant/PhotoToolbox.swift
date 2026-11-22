@@ -87,10 +87,19 @@ actor PhotoToolbox {
     ) async -> String {
         searchesThisTurn += 1
         var description = description?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
-        let place = place?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        var place = place?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         var category = category?.nilIfEmpty
         // Models often repeat the place as the description; it adds nothing.
         if let d = description, let place, d.lowercased() == place.lowercased() { description = nil }
+        // Small models put shop names in the place field ("Muji"). A "place"
+        // no photo was taken at is searched as words instead (receipts and
+        // signs carry the name in their text).
+        var placeAsWords: String?
+        if let name = place, ((try? IndexStore.shared.places(matching: name, limit: 1)) ?? []).isEmpty {
+            description = [description, name].compactMap { $0 }.joined(separator: " ")
+            placeAsWords = name
+            place = nil
+        }
         let media = media?.nilIfEmpty
         let limit = clamped(limit)
 
@@ -114,9 +123,12 @@ actor PhotoToolbox {
             // misjudge dates ("two years ago" read as "since two years
             // ago"). Before giving up, loosen the filters a step at a time
             // and say so in the result.
-            if candidates?.isEmpty == true, category != nil {
-                let retry = filtered(from: from, to: to, place: place, media: media, category: nil, favoritesOnly: favoritesOnly)
-                if !retry.isEmpty { candidates = retry; relaxed.append("dropped the category \(category!)"); category = nil }
+            if candidates?.isEmpty == true, let guessed = category {
+                // A category that matched nothing stays dropped for the retries
+                // below too: small models add one the user never asked for.
+                category = nil
+                relaxed.append("dropped the category \(guessed)")
+                candidates = filtered(from: from, to: to, place: place, media: media, category: nil, favoritesOnly: favoritesOnly)
             }
             if candidates?.isEmpty == true, from != nil || to != nil {
                 let widen: TimeInterval = 183 * 86_400
@@ -180,6 +192,9 @@ actor PhotoToolbox {
         }
 
         var header: [String] = []
+        if let placeAsWords {
+            header.append("No photos were taken at a place called \(placeAsWords), so it was searched as words in the photos.")
+        }
         if !relaxed.isEmpty {
             header.append("Nothing matched exactly, so the search " + relaxed.joined(separator: " and ") + ". Tell the user this.")
         }
@@ -357,8 +372,11 @@ actor PhotoToolbox {
         let places = (try? IndexStore.shared.placeLabels(for: ids)) ?? [:]
         let documents = (try? IndexStore.shared.documents(for: ids)) ?? [:]
 
-        return ids.map { id in
+        return ids.enumerated().map { position, id in
             var parts = [ref(for: id)]
+            // The best two matches carry much more of their text, so a total
+            // at the bottom of a receipt or a seat on a ticket can be read.
+            let textLength = position < 2 ? max(snippetLength * 5, 300) : snippetLength
             if let date = dates[id] { parts.append(Self.stamp.string(from: date)) }
             if let place = places[id] { parts.append(place) }
             if let category = categories[id] { parts.append(category.rawValue) }
@@ -373,7 +391,7 @@ actor PhotoToolbox {
                 if !info.labels.isEmpty { parts.append("shows: " + info.labels.prefix(4).joined(separator: ", ")) }
                 let text = info.text.replacingOccurrences(of: "\n", with: " ")
                 if !text.isEmpty {
-                    let snippet = text.count > snippetLength ? text.prefix(snippetLength) + "…" : Substring(text)
+                    let snippet = text.count > textLength ? text.prefix(textLength) + "…" : Substring(text)
                     parts.append("text: “\(snippet)”")
                 }
             }
@@ -415,6 +433,11 @@ nonisolated enum AssistantPrompt {
             what it shows and the text recognized in it. Use the tools to look things up instead of \
             guessing, and say so when nothing matches.
 
+            The recognized text lets you answer questions about what is written in photos: prices \
+            and totals on receipts, times and seats on tickets, dates in letters, messages in \
+            screenshots. For such a question, find the photo, then read the answer from its text. \
+            Never say you can't access something before you have searched for it.
+
             Use find_photos once with every detail the user gave: the place, a date range, a category, \
             and a short English description of what the photo shows or the words in it. Leave out \
             details the user didn't give: no category unless they named one, no description if they \
@@ -424,8 +447,9 @@ nonisolated enum AssistantPrompt {
             Never run more than three searches for one question; then answer with what you found.
 
             Whenever your answer is about particular photos, call show_photos with their refs so the \
-            user sees them. Never write refs like p1 in your reply: the user can't see them. To group photos, call propose_album; the user confirms with a button, so \
-            never claim an album was created.
+            user sees them. Never write refs like p1 in your reply: the user can't see them. When the user asks for an album, call propose_album right away with \
+            the photos you found, without asking first: the user confirms with a button, so never \
+            claim an album was created.
 
             Answer in the user's language, in one to three short sentences. Today is \(date).
             """
