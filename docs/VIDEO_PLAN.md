@@ -43,7 +43,7 @@ About 7 minutes, recorded in the iOS simulator ("Phophy Demo", iPhone 18 Pro Max
 
 1. `python3 Demo/video/make_cards.py Demo/video/out/cards Demo/video/out/cards/architecture.svg.png` draws the cards.
 2. Screen clips are in `Demo/video/out/raw/NN.mov`, recorded with `Demo/video/record.sh start NN` / `stop`. `NN-end.png` is a screenshot of the scene's final screen, added as a still because the recorder drops the last frames.
-3. `python3 Demo/video/assemble.py` builds the video.
+3. `python3 Demo/video/assemble.py` builds the video, plus a reference copy with each line on screen (`phophy-demo-reference.mp4`), subtitles (`phophy-demo.srt`) and a recording sheet (`RECORDING_SHEET.md`) in the same folder.
 
 **To use your own voices:** record each scene's line from `Demo/video/script.json` as `Demo/video/out/voice/NN.m4a` (any of m4a, wav, mp3), delete the matching `NN.aiff`, and run step 3 again. Scene lengths follow the new recordings.
 

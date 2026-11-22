@@ -118,14 +118,96 @@ def render(scene):
     return out
 
 
+def stamp(seconds):
+    m, sec = divmod(seconds, 60)
+    return f"{int(m)}:{sec:04.1f}"
+
+
+def srt_time(seconds):
+    ms = int(round(seconds * 1000))
+    h, ms = divmod(ms, 3_600_000)
+    m, ms = divmod(ms, 60_000)
+    sec, ms = divmod(ms, 1000)
+    return f"{h:02d}:{m:02d}:{sec:02d},{ms:03d}"
+
+
+def wrap(text, fnt, width, draw):
+    lines, line = [], ""
+    for word in text.split():
+        test = (line + " " + word).strip()
+        if draw.textlength(test, font=fnt) > width and line:
+            lines.append(line)
+            line = word
+        else:
+            line = test
+    return lines + [line] if line else lines
+
+
+def banner(scene, text, start, speech):
+    """The scene's line across the bottom, for reading along while recording."""
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    body = font(40)
+    lines = wrap(text, body, W - 320, d)
+    top = H - 70 - 54 * len(lines) - 60
+    d.rounded_rectangle((60, top, W - 60, H - 40), 28, fill=(0, 0, 0, 200))
+    d.text((100, top + 22), f"SCENE {scene}  ·  speak at {stamp(start)}  ·  about {speech:.0f} s",
+           font=font(28, True), fill=(120, 230, 220))
+    d.multiline_text((100, top + 70), "\n".join(lines), font=body, fill="white", spacing=14)
+    path = OUT / "build" / f"banner-{scene:02d}.png"
+    img.save(path)
+    return path
+
+
+def reference(parts, rows):
+    """A copy of the video with each line on screen, plus subtitles and a sheet."""
+    srt, sheet, refs = [], [], []
+    clock = 0.0
+    by_scene = {row["scene"]: row for row in rows}
+    for n, (scene, part) in enumerate(parts, 1):
+        row = by_scene[scene]
+        voice = voice_file(scene)
+        speech = duration(voice) if voice else 0
+        start, length = clock + 0.4, duration(part)
+        srt.append(f"{n}\n{srt_time(start)} --> {srt_time(start + speech)}\n{row['voice']}\n")
+        sheet.append((scene, start, speech, length, row))
+        ref = OUT / "build" / f"ref-{scene:02d}.mp4"
+        run("ffmpeg", "-y", "-i", str(part), "-i", str(banner(scene, row["voice"], start, speech)),
+            "-filter_complex", "[0:v][1:v]overlay=0:0[v]", "-map", "[v]", "-map", "0:a",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "copy", str(ref))
+        refs.append(ref)
+        clock += length
+    (OUT / "phophy-demo.srt").write_text("\n".join(srt))
+    listing = OUT / "build" / "refs.txt"
+    listing.write_text("".join(f"file '{p.resolve()}'\n" for p in refs))
+    run("ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy",
+        "-movflags", "+faststart", str(OUT / "phophy-demo-reference.mp4"))
+
+    lines = [
+        "# Recording sheet",
+        "",
+        "Record one file per scene, named as in the File column, into `Demo/video/out/voice/`",
+        "(m4a, wav or mp3; delete the matching `.aiff`), then run `python3 Demo/video/assemble.py`.",
+        "Each scene stretches to fit your recording, so you don't need to match the AI timing exactly;",
+        "the Time column is a guide. Play `phophy-demo-reference.mp4` to hear the pace and see what's on screen.",
+        "",
+        "| Scene | Starts | AI length | Scene length | File | On screen | Line |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for scene, start, speech, length, row in sheet:
+        lines.append(f"| {scene} | {stamp(start)} | {speech:.1f} s | {length:.1f} s | `{scene:02d}.m4a` | {row['screen']} | {row['voice']} |")
+    (OUT / "RECORDING_SHEET.md").write_text("\n".join(lines) + "\n")
+
+
 def main():
     (OUT / "build").mkdir(parents=True, exist_ok=True)
     scenes = [row["scene"] for row in json.loads((ROOT / "script.json").read_text())]
-    parts = []
+    parts, numbered = [], []
     for scene in scenes:
         part = render(scene)
         if part:
             parts.append(part)
+            numbered.append((scene, part))
             print(f"scene {scene:2d}: {duration(part):5.1f} s")
         else:
             print(f"scene {scene:2d}: missing, skipped")
@@ -134,6 +216,8 @@ def main():
     final = OUT / "phophy-demo.mp4"
     run("ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", "-movflags", "+faststart", str(final))
     print(f"{final}: {duration(final):.0f} s")
+    reference(numbered, json.loads((ROOT / "script.json").read_text()))
+    print(f"{OUT / 'phophy-demo-reference.mp4'}, phophy-demo.srt and RECORDING_SHEET.md written")
 
 
 if __name__ == "__main__":
