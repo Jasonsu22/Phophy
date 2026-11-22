@@ -498,9 +498,21 @@ private struct DescriptionSettings: View {
     private var model: DownloadableModel { DownloadableModel(rawValue: modelID) ?? .smolVLM }
     private var keyAccount: String { choice == .gemini ? ImageProvider.gemini.keyAccount : ImageProvider.openai.keyAccount }
 
+    /// "apple" → "Apple Intelligence", "gemini:gemini-2.5-flash-lite" → "Google Gemini".
+    static func describerName(_ id: String) -> String {
+        switch id {
+        case "apple": "Apple Intelligence"
+        case "smolVLM": "SmolVLM2 on this iPhone"
+        case "fastVLM": "FastVLM on this iPhone"
+        case let id where id.hasPrefix("gemini"): "Google Gemini"
+        case let id where id.hasPrefix("openai"): "OpenAI"
+        default: id
+        }
+    }
+
     var body: some View {
         SettingsSection(title: "Photo descriptions", footer: footer) {
-            SettingsRow(icon: "text.below.photo", title: "Described photos", subtitle: status.message ?? status.describer.map { "By \($0)" }) {
+            SettingsRow(icon: "text.below.photo", title: "Described photos", subtitle: status.message ?? status.describer.map { "By " + Self.describerName($0) }) {
                 Text("\(status.described, format: .number) of \(max(status.toDescribe, status.described), format: .number)")
                     .monospacedDigit()
                     .foregroundStyle(.secondary)

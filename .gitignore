@@ -8,3 +8,6 @@ xcuserdata/
 .env
 Secrets.xcconfig
 docs/readme-preview/
+
+# Demo video renders
+Demo/video/out/
