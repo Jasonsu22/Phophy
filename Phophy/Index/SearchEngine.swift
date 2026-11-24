@@ -143,8 +143,12 @@ actor SearchEngine {
             if options.rareWordWeight > 0, plan.terms.count < 4 {
                 await loadVocabularyIfStale()
                 let most = max(20, indexedCount / 20)
+                // Names, places and codes, not actions: a rare verb ("doing")
+                // says nothing about which photo is meant.
+                let verbs = TextNormalizer.verbs(in: query)
                 let rare = plan.terms.filter { group in
                     group.contains { word in
+                        guard !verbs.contains(word) else { return false }
                         let count = vocabulary[word] ?? 0
                         return count > 0 && count <= most
                     }

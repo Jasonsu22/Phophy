@@ -302,7 +302,8 @@ nonisolated final class IndexStore: Sendable {
         try db.write { db in
             try db.execute(
                 // Re-indexing keeps a photo's description unless the photo
-                // itself changed (edited): descriptions cost minutes of
+                // itself changed (edited), and always keeps one the user
+                // wrote: descriptions cost minutes of
                 // battery or real money, and a new index version alone
                 // doesn't make them wrong. Tags are recomputed either way.
                 sql: """
@@ -310,9 +311,9 @@ nonisolated final class IndexStore: Sendable {
                         (local_id, modified, ocr, labels, embedding, embedding_model, indexed_at, index_version)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(local_id) DO UPDATE SET
-                        caption = CASE WHEN modified IS excluded.modified THEN caption ELSE '' END,
-                        keywords = CASE WHEN modified IS excluded.modified THEN keywords ELSE '' END,
-                        described_by = CASE WHEN modified IS excluded.modified THEN described_by ELSE NULL END,
+                        caption = CASE WHEN modified IS excluded.modified OR described_by = 'user' THEN caption ELSE '' END,
+                        keywords = CASE WHEN modified IS excluded.modified OR described_by = 'user' THEN keywords ELSE '' END,
+                        described_by = CASE WHEN modified IS excluded.modified OR described_by = 'user' THEN described_by ELSE NULL END,
                         modified = excluded.modified,
                         ocr = excluded.ocr,
                         labels = excluded.labels,

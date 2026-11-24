@@ -501,6 +501,7 @@ private struct DescriptionSettings: View {
     /// "apple" → "Apple Intelligence", "gemini:gemini-2.5-flash-lite" → "Google Gemini".
     static func describerName(_ id: String) -> String {
         switch id {
+        case IndexStore.userDescriber: "you"
         case "apple": "Apple Intelligence"
         case "smolVLM": "SmolVLM2 on this iPhone"
         case "fastVLM": "FastVLM on this iPhone"

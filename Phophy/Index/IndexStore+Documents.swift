@@ -66,6 +66,10 @@ nonisolated extension IndexStore {
 
     // MARK: Descriptions
 
+    /// `described_by` for a description the user wrote or edited. It is never
+    /// replaced or cleared by a describer.
+    static let userDescriber = "user"
+
     func saveDescription(localID: String, caption: String, keywords: String, describedBy: String) throws {
         try db.write { db in
             try db.execute(
@@ -123,7 +127,10 @@ nonisolated extension IndexStore {
             if let describer {
                 try db.execute(sql: "UPDATE asset SET caption = '', keywords = '', described_by = NULL, doc_version = 0 WHERE described_by = ?", arguments: [describer])
             } else {
-                try db.execute(sql: "UPDATE asset SET caption = '', keywords = '', described_by = NULL, doc_version = 0 WHERE described_by IS NOT NULL")
+                try db.execute(
+                    sql: "UPDATE asset SET caption = '', keywords = '', described_by = NULL, doc_version = 0 WHERE described_by IS NOT NULL AND described_by != ?",
+                    arguments: [Self.userDescriber]
+                )
             }
         }
     }
