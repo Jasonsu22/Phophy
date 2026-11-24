@@ -86,6 +86,7 @@ private struct OpensInViewer: ViewModifier {
 
     func body(content: Content) -> some View {
         let button = Button {
+            guard !GridPinch.isRecent else { return }
             viewer.open(source(), at: index)
         } label: {
             content.contentShape(.rect)

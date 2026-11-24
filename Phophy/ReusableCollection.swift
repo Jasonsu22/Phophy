@@ -64,6 +64,9 @@ struct ReusableCollection: View {
     /// Open scrolled to the end (the newest photo, as in Photos).
     var startsAtEnd = false
     var bottomInset: CGFloat = 0
+    /// Pinch to show more or fewer photos across, as in Photos. The choice
+    /// is remembered under this key; nil turns pinching off.
+    var zoomKey: String? = nil
 
     // Cells are hosted outside this view's SwiftUI tree, so what they read
     // from the environment is passed to them.
@@ -78,7 +81,7 @@ struct ReusableCollection: View {
     var body: some View {
         CollectionRepresentable(
             sections: sections, axis: axis, contentID: contentID, startsAtEnd: startsAtEnd,
-            bottomInset: bottomInset, imageManager: library?.imageManager, decorate: decorate
+            bottomInset: bottomInset, zoomKey: zoomKey, imageManager: library?.imageManager, decorate: decorate
         )
     }
 
@@ -100,6 +103,7 @@ private struct CollectionRepresentable: UIViewRepresentable {
     let contentID: AnyHashable
     let startsAtEnd: Bool
     let bottomInset: CGFloat
+    let zoomKey: String?
     let imageManager: PHCachingImageManager?
     let decorate: (AnyView) -> AnyView
 
@@ -129,6 +133,13 @@ private struct CollectionRepresentable: UIViewRepresentable {
         view.contentInset.bottom = bottomInset
         view.verticalScrollIndicatorInsets.bottom = bottomInset
         coordinator.shownContentID = contentID
+        if let zoomKey, axis == .vertical {
+            let saved = UserDefaults.standard.integer(forKey: zoomKey)
+            if Coordinator.zoomSteps.contains(saved) { coordinator.columns = saved }
+            let pinch = UIPinchGestureRecognizer(target: coordinator, action: #selector(Coordinator.pinched(_:)))
+            pinch.delegate = coordinator
+            view.addGestureRecognizer(pinch)
+        }
         return view
     }
 
@@ -150,12 +161,65 @@ private struct CollectionRepresentable: UIViewRepresentable {
         }
     }
 
-    final class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDataSourcePrefetching {
+    final class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDataSourcePrefetching, UIGestureRecognizerDelegate {
         static let reuseID = "cell"
         var parent: CollectionRepresentable
         var shownContentID: AnyHashable?
+        /// Columns chosen by pinching; nil keeps the section's own.
+        var columns: Int?
+        static let zoomSteps = [1, 3, 5, 7, 11]
+        private var pinchHandled = false
 
         init(parent: CollectionRepresentable) { self.parent = parent }
+
+        /// One step per pinch, like Photos: pinch out for bigger photos,
+        /// pinch in for more. The photo under the fingers stays in view.
+        @objc func pinched(_ gesture: UIPinchGestureRecognizer) {
+            guard let view = gesture.view as? UICollectionView else { return }
+            // A finger lifted at the end of a pinch must not open the photo under it.
+            GridPinch.lastActivity = .now
+            switch gesture.state {
+            case .began:
+                pinchHandled = false
+            case .changed:
+                guard !pinchHandled, gesture.scale > 1.25 || gesture.scale < 0.8 else { return }
+                let current = columns ?? defaultColumns ?? 4
+                let steps = Self.zoomSteps
+                let index = steps.firstIndex { $0 >= current } ?? steps.count - 1
+                let next = gesture.scale > 1
+                    ? steps[max(index - 1, 0)]
+                    : steps[min((steps[index] == current ? index + 1 : index), steps.count - 1)]
+                guard next != current else { return }
+                pinchHandled = true
+                let anchor = view.indexPathForItem(at: gesture.location(in: view))
+                columns = next
+                if let key = parent.zoomKey { UserDefaults.standard.set(next, forKey: key) }
+                UIView.animate(withDuration: 0.32, delay: 0, usingSpringWithDamping: 0.88, initialSpringVelocity: 0) {
+                    view.collectionViewLayout.invalidateLayout()
+                    view.layoutIfNeeded()
+                    if let anchor { view.scrollToItem(at: anchor, at: .centeredVertically, animated: false) }
+                    // Never leave empty space past the first or last row.
+                    let inset = view.adjustedContentInset
+                    let maxY = max(view.contentSize.height + inset.bottom - view.bounds.height, -inset.top)
+                    view.contentOffset.y = min(max(view.contentOffset.y, -inset.top), maxY)
+                }
+                // Bigger tiles need sharper thumbnails.
+                view.reconfigureItems(at: view.indexPathsForVisibleItems)
+            default:
+                break
+            }
+        }
+
+        // The photos' tap buttons keep their touches; the pinch runs alongside.
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                               shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
+
+        private var defaultColumns: Int? {
+            for section in parent.sections {
+                if case let .grid(columns, _) = section.layout { return columns }
+            }
+            return nil
+        }
 
         func layoutSection(_ index: Int, environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection? {
             guard index < parent.sections.count else { return nil }
@@ -165,7 +229,7 @@ private struct CollectionRepresentable: UIViewRepresentable {
             case let .grid(columns, spacing):
                 let width = environment.container.effectiveContentSize.width
                     - section.insets.leading - section.insets.trailing
-                let count = max(columns, 1)
+                let count = max(self.columns ?? columns, 1)
                 let side = ((width - spacing * CGFloat(count - 1)) / CGFloat(count)).rounded(.down)
                 let item = NSCollectionLayoutItem(layoutSize: .init(
                     widthDimension: .absolute(side), heightDimension: .absolute(side)))
@@ -239,6 +303,12 @@ private struct CollectionRepresentable: UIViewRepresentable {
             }
         }
     }
+}
+
+/// When a grid was last pinched, so a photo tap that ends a pinch is ignored.
+@MainActor enum GridPinch {
+    static var lastActivity = Date.distantPast
+    static var isRecent: Bool { Date.now.timeIntervalSince(lastActivity) < 0.4 }
 }
 
 final class ReusableCollectionView: UICollectionView {

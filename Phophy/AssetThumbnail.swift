@@ -30,6 +30,8 @@ struct AssetThumbnail: View {
             .contentShape(.rect)
             .overlay(alignment: .bottomTrailing) { videoBadge }
             .onAppear { load(side: side) }
+            // Grid zoomed in: load a sharper copy for the bigger tile.
+            .onChange(of: side) { load(side: side) }
             .onDisappear { cancel() }
             // Another photo in a reused cell, or this photo edited (an edit
             // keeps the ID, so the library's edit mark tells).

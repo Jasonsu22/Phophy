@@ -18,6 +18,26 @@ struct AssistantPanel: View {
     ]
 
     var body: some View {
+        ZStack {
+            conversation
+                .opacity(assistant.openedResults == nil ? 1 : 0)
+            if let opened = assistant.openedResults {
+                ResultsAlbum(results: opened) {
+                    withAnimation(.smooth(duration: 0.3)) { assistant.openedResults = nil }
+                }
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .animation(.smooth(duration: 0.3), value: assistant.openedResults)
+    }
+
+    /// The user's question an answer belongs to, for titling its results.
+    private func question(before message: AssistantModel.Message) -> String {
+        guard let i = assistant.messages.firstIndex(where: { $0.id == message.id }) else { return "Results" }
+        return assistant.messages[..<i].last(where: { $0.role == .user })?.text ?? "Results"
+    }
+
+    private var conversation: some View {
         VStack(spacing: 0) {
             header
                 .sheet(isPresented: $showingHistory) {
@@ -31,7 +51,7 @@ struct AssistantPanel: View {
                                 .transition(.opacity.combined(with: .offset(y: 12)))
                         }
                         ForEach(assistant.messages) { message in
-                            MessageView(message: message)
+                            MessageView(message: message, question: question(before: message))
                                 .id(message.id)
                                 .transition(.opacity.combined(with: .offset(y: 16)))
                         }
@@ -224,6 +244,7 @@ private struct BackendBadge: View {
 
 private struct MessageView: View {
     let message: AssistantModel.Message
+    var question = "Results"
 
     var body: some View {
         switch message.role {
@@ -272,7 +293,7 @@ private struct MessageView: View {
                 }
 
                 if !message.photoIDs.isEmpty {
-                    MatchesStrip(shown: message.photoIDs, more: message.moreIDs ?? [])
+                    MatchesStrip(shown: message.photoIDs, more: message.moreIDs ?? [], title: question)
                 }
                 ForEach(message.albums) { proposal in
                     AlbumProposalCard(proposal: proposal)
@@ -283,30 +304,77 @@ private struct MessageView: View {
     }
 }
 
-/// The photos the assistant picked, with "Show all" for everything its
-/// search found (it only reads the top few, the user can see them all).
+/// The photos the assistant picked, with "Show all" opening everything its
+/// search found as a grid (it only reads the top few, the user sees them all).
 private struct MatchesStrip: View {
     let shown: [String]
     let more: [String]
-    @State private var showsAll = false
+    let title: String
+    @Environment(AssistantModel.self) private var assistant
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            PhotoStrip(localIDs: showsAll ? more : shown)
+            PhotoStrip(localIDs: shown)
             if more.count > shown.count {
                 Button {
-                    withAnimation(.smooth) { showsAll.toggle() }
+                    withAnimation(.smooth(duration: 0.3)) {
+                        assistant.openedResults = .init(title: title, ids: more)
+                    }
                 } label: {
-                    Label(
-                        showsAll ? "Show only the best" : "Show all \(more.count) results",
-                        systemImage: showsAll ? "chevron.up" : "square.grid.2x2"
-                    )
-                    .font(.subheadline.weight(.semibold))
+                    Label("Show all \(more.count) results", systemImage: "square.grid.2x2")
+                        .font(.subheadline.weight(.semibold))
                 }
                 .buttonStyle(.borderless)
                 .padding(.leading, 6)
             }
         }
+    }
+}
+
+/// Every result of one answer as a photo grid, best match first, like an album.
+private struct ResultsAlbum: View {
+    let results: AssistantModel.OpenedResults
+    let onBack: () -> Void
+    @Environment(PhotoLibrary.self) private var library
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Button(action: onBack) {
+                    Image(systemName: "chevron.left")
+                        .frame(width: 30, height: 30)
+                }
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
+                .accessibilityLabel("Back to chat")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(results.title)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Text("\(assets.count) photos, best match first · pinch to zoom")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            ReusableCollection(
+                sections: [.photos(.assets(assets), layout: .grid(columns: 3, spacing: 2))],
+                contentID: results.ids,
+                startsAtEnd: false,
+                bottomInset: 96,
+                zoomKey: "gridColumns.results"
+            )
+        }
+    }
+
+    private var assets: [PHAsset] {
+        _ = library.revision
+        let fetched = PHAsset.fetchAssets(withLocalIdentifiers: results.ids, options: nil)
+        var byID: [String: PHAsset] = [:]
+        fetched.enumerateObjects { asset, _, _ in byID[asset.localIdentifier] = asset }
+        return results.ids.compactMap { byID[$0] }
     }
 }
 

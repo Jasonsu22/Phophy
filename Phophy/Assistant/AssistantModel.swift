@@ -39,6 +39,13 @@ final class AssistantModel {
     private(set) var isPresented = false
     /// What's typed in the ask bar; it's the same field open or closed.
     var draft = ""
+
+    /// All the results of one answer, opened as a full grid over the chat.
+    struct OpenedResults: Equatable {
+        let title: String
+        let ids: [String]
+    }
+    var openedResults: OpenedResults?
     private(set) var messages: [Message] = []
     private(set) var isWorking = false
     private(set) var backend: AIBackend = .resolve()
@@ -140,9 +147,14 @@ final class AssistantModel {
                 if reply.photoIDs.isEmpty {
                     reply.photoIDs = results.photoIDs
                 }
+                // The answer's picks, then the search for exactly what was
+                // typed (ranked by match), then anything else the assistant
+                // found. Its own searches may be filter-only (newest first),
+                // so they never go ahead of the ranked results.
                 var seen = Set<String>()
-                let all = (reply.photoIDs + (reply.moreIDs ?? []) + (results.moreIDs ?? results.photoIDs))
+                let all = Array((reply.photoIDs + (results.moreIDs ?? results.photoIDs) + (reply.moreIDs ?? []))
                     .filter { seen.insert($0).inserted }
+                    .prefix(60))
                 reply.moreIDs = all.count > reply.photoIDs.count ? all : nil
                 messages.insert(reply, at: i)
             } else {
