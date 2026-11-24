@@ -108,9 +108,9 @@ struct AssistantPanel: View {
 
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Ask about your photos")
+            Text("Search or ask")
                 .font(.title2.bold())
-            Text("Find photos by what's in them, by date, or by the words written on them.")
+            Text("Type what you're looking for, like \u{201C}dog on the beach\u{201D}, or ask a question, like \u{201C}how much did I spend at Muji?\u{201D} Matching photos appear at once; the answer follows.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 8) {
@@ -154,10 +154,10 @@ struct AskBar: View {
                 .lineLimit(1...4)
                 .focused(isFocused)
                 .submitLabel(.send)
-                .accessibilityLabel("Ask about your photos")
+                .accessibilityLabel("Search or ask about your photos")
                 .overlay(alignment: .leading) {
                     if assistant.draft.isEmpty {
-                        Text("Ask about your photos")
+                        Text("Search or ask about your photos")
                             .foregroundStyle(.secondary)
                             .allowsHitTesting(false)
                             .accessibilityHidden(true)
@@ -237,17 +237,25 @@ private struct MessageView: View {
             }
         case .assistant:
             VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top, spacing: 8) {
-                    if message.isError {
-                        Image(systemName: "exclamationmark.circle")
-                            .accessibilityHidden(true)
+                if message.text.isEmpty {
+                    // Search results shown at once, before the answer is written.
+                    Label("Found in your photos", systemImage: "magnifyingglass")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.leading, 6)
+                } else {
+                    HStack(alignment: .top, spacing: 8) {
+                        if message.isError {
+                            Image(systemName: "exclamationmark.circle")
+                                .accessibilityHidden(true)
+                        }
+                        Text(message.text)
+                            .textSelection(.enabled)
                     }
-                    Text(message.text)
-                        .textSelection(.enabled)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .glassEffect(.regular, in: .rect(cornerRadius: 22))
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .glassEffect(.regular, in: .rect(cornerRadius: 22))
 
                 if let steps = message.steps, !steps.isEmpty {
                     VStack(alignment: .leading, spacing: 2) {
@@ -264,13 +272,40 @@ private struct MessageView: View {
                 }
 
                 if !message.photoIDs.isEmpty {
-                    PhotoStrip(localIDs: message.photoIDs)
+                    MatchesStrip(shown: message.photoIDs, more: message.moreIDs ?? [])
                 }
                 ForEach(message.albums) { proposal in
                     AlbumProposalCard(proposal: proposal)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+/// The photos the assistant picked, with "Show all" for everything its
+/// search found (it only reads the top few, the user can see them all).
+private struct MatchesStrip: View {
+    let shown: [String]
+    let more: [String]
+    @State private var showsAll = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            PhotoStrip(localIDs: showsAll ? more : shown)
+            if more.count > shown.count {
+                Button {
+                    withAnimation(.smooth) { showsAll.toggle() }
+                } label: {
+                    Label(
+                        showsAll ? "Show only the best" : "Show all \(more.count) results",
+                        systemImage: showsAll ? "chevron.up" : "square.grid.2x2"
+                    )
+                    .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.borderless)
+                .padding(.leading, 6)
+            }
         }
     }
 }

@@ -31,7 +31,13 @@ actor PhotoToolbox {
     private var searchesThisTurn = 0
     /// What the last search or date lookup this turn returned.
     private var lastResultIDs: [String] = []
+    /// Everything this turn's searches found, best first: the model reads
+    /// only the top few (its context is small), the user can see them all.
+    private var allMatchIDs: [String] = []
     private var proposals: [AlbumProposal] = []
+
+    /// How many results a search keeps for "Show more" under the reply.
+    private static let moreLimit = 60
 
     init(snippetLength: Int, categories: [String: PhotoCategory]) {
         self.snippetLength = snippetLength
@@ -44,12 +50,14 @@ actor PhotoToolbox {
     /// Small models sometimes name photos in their reply ("p1, p2") instead
     /// of calling show_photos; those photos are shown too, and the refs,
     /// which mean nothing to the user, are taken out of the text.
-    func present(reply: String) -> (text: String, photoIDs: [String], albums: [AlbumProposal], steps: [String]) {
+    func present(reply: String) -> (text: String, photoIDs: [String], moreIDs: [String], albums: [AlbumProposal], steps: [String]) {
         let steps = self.steps
+        let allMatches = allMatchIDs
         defer {
             shownIDs = []
             proposals = []
             lastResultIDs = []
+            allMatchIDs = []
             self.steps = []
             searchesThisTurn = 0
         }
@@ -59,7 +67,10 @@ actor PhotoToolbox {
         var ids = (shownIDs + mentioned).filter { seen.insert($0).inserted }
         // Last resort: the model looked photos up but showed none of them.
         if ids.isEmpty { ids = Array(lastResultIDs.prefix(12)) }
-        return (Self.removingRefs(from: reply), ids, proposals, steps)
+        // The shown photos first, then the rest of what the searches found.
+        let shown = Set(ids)
+        let more = ids.isEmpty ? [] : ids + allMatches.filter { !shown.contains($0) }
+        return (Self.removingRefs(from: reply), ids, more.count > ids.count ? more : [], proposals, steps)
     }
 
     /// Drops ref tokens and the punctuation left around them, line by line.
@@ -175,20 +186,23 @@ actor PhotoToolbox {
         var ids: [String]
         var weak = false
         if let description {
-            var ranked = await SearchEngine.shared.rank(description, among: candidates, indexedCount: indexedCount, limit: limit)
+            var ranked = await SearchEngine.shared.rank(description, among: candidates, indexedCount: indexedCount, limit: max(limit, Self.moreLimit))
             // A weak result: look closer at the best guesses that have no
             // description yet, then rank again.
             if ranked.weak || ranked.ids.count < 3 {
                 let fresh = await DescriptionService.shared.describeNow(ranked.ids, limit: DescriptionService.lookCloserCount)
                 if fresh > 0 {
-                    ranked = await SearchEngine.shared.rank(description, among: candidates, indexedCount: indexedCount, limit: limit)
+                    ranked = await SearchEngine.shared.rank(description, among: candidates, indexedCount: indexedCount, limit: max(limit, Self.moreLimit))
                     steps.append("Looked closer at \(fresh) photos")
                 }
             }
-            ids = ranked.ids
+            ids = Array(ranked.ids.prefix(limit))
             weak = ranked.weak
+            if !ranked.weak { addMatches(ranked.ids) }
         } else {
-            ids = Array((candidates ?? []).prefix(limit))
+            let all = candidates ?? []
+            ids = Array(all.prefix(limit))
+            addMatches(Array(all.prefix(Self.moreLimit)))
         }
 
         var header: [String] = []
@@ -355,6 +369,11 @@ actor PhotoToolbox {
     // MARK: Helpers
 
     private func clamped(_ limit: Int) -> Int { min(max(limit, 1), 30) }
+
+    private func addMatches(_ ids: [String]) {
+        let known = Set(allMatchIDs)
+        allMatchIDs += ids.filter { !known.contains($0) }
+    }
 
     private func ref(for id: String) -> String {
         if let ref = refByID[id] { return ref }

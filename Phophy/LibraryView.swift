@@ -5,7 +5,6 @@ import SwiftUI
 struct LibraryView: View {
     @Environment(PhotoLibrary.self) private var library
     @Environment(\.openURL) private var openURL
-    @State private var isShowingSettings = false
     @Environment(AssistantModel.self) private var assistant
     @Environment(StudyModel.self) private var study
 
@@ -27,9 +26,6 @@ struct LibraryView: View {
             .background { AmbientBackground() }
             .toolbar(.hidden, for: .navigationBar)
             .photoDestinations()
-        }
-        .sheet(isPresented: $isShowingSettings) {
-            SettingsView()
         }
     }
 
@@ -99,17 +95,6 @@ struct LibraryView: View {
                     .buttonStyle(.glass)
                     .buttonBorderShape(.circle)
                     .accessibilityLabel("Open assistant")
-
-                    Button {
-                        isShowingSettings = true
-                    } label: {
-                        Image(systemName: "gearshape")
-                            .font(.title3)
-                            .frame(width: 30, height: 30)
-                    }
-                    .buttonStyle(.glass)
-                    .buttonBorderShape(.circle)
-                    .accessibilityLabel("Settings")
                 }
             }
         }

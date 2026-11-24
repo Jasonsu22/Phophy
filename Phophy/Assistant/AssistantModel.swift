@@ -11,6 +11,9 @@ final class AssistantModel {
         let role: Role
         var text: String
         var photoIDs: [String] = []
+        /// The shown photos plus the rest of what the search found, for
+        /// "Show all"; nil when there's nothing more.
+        var moreIDs: [String]? = nil
         var albums: [AlbumProposal] = []
         var isError = false
         /// What the assistant did to answer, e.g. "Searched “waterfall” · 3 found".
@@ -118,6 +121,35 @@ final class AssistantModel {
             record()
         }
 
+        // Search and asking are one: the photos that match appear at once
+        // (a local search takes milliseconds), the answer follows.
+        let instant = await SearchEngine.shared.search(text, indexedCount: indexedCount).bestMatches
+        let resultsID = UUID()
+        if !instant.isEmpty {
+            messages.append(Message(
+                id: resultsID, role: .assistant, text: "",
+                photoIDs: Array(instant.prefix(12)), moreIDs: instant.count > 12 ? Array(instant.prefix(60)) : nil
+            ))
+        }
+        /// Replaces the instant results with the answer, keeping the results
+        /// under it (the answer's own photos first).
+        func answer(_ reply: Message) {
+            var reply = reply
+            if let i = messages.firstIndex(where: { $0.id == resultsID }) {
+                let results = messages.remove(at: i)
+                if reply.photoIDs.isEmpty {
+                    reply.photoIDs = results.photoIDs
+                }
+                var seen = Set<String>()
+                let all = (reply.photoIDs + (reply.moreIDs ?? []) + (results.moreIDs ?? results.photoIDs))
+                    .filter { seen.insert($0).inserted }
+                reply.moreIDs = all.count > reply.photoIDs.count ? all : nil
+                messages.insert(reply, at: i)
+            } else {
+                messages.append(reply)
+            }
+        }
+
         if messages.count == 1 { backend = .resolve() }
         let toolbox = toolbox ?? PhotoToolbox(
             snippetLength: backend == .appleIntelligence ? 60 : 160,
@@ -134,10 +166,11 @@ final class AssistantModel {
             case .cloud:
                 chat = try self.chat ?? CloudAssistant.make(config: .current(), toolbox: toolbox)
             case .off:
-                messages.append(Message(
+                answer(Message(
                     role: .assistant,
-                    text: "The assistant is off. Turn on Apple Intelligence or cloud AI in Settings.",
-                    isError: true
+                    text: instant.isEmpty
+                        ? "Nothing matched. For answers to questions, turn on Apple Intelligence or cloud AI in Settings."
+                        : "Here's what matched. For answers to questions, turn on Apple Intelligence or cloud AI in Settings."
                 ))
                 return
             }
@@ -150,10 +183,13 @@ final class AssistantModel {
             let reply = try await chat.send(prompt)
             let shown = await toolbox.present(reply: reply)
             let text = shown.text.isEmpty ? "Here they are." : shown.text
-            messages.append(Message(role: .assistant, text: text, photoIDs: shown.photoIDs, albums: shown.albums, steps: shown.steps))
+            answer(Message(
+                role: .assistant, text: text, photoIDs: shown.photoIDs,
+                moreIDs: shown.moreIDs.isEmpty ? nil : shown.moreIDs, albums: shown.albums, steps: shown.steps
+            ))
         } catch {
             _ = await toolbox.present(reply: "")
-            messages.append(Message(role: .assistant, text: error.localizedDescription, isError: true))
+            answer(Message(role: .assistant, text: error.localizedDescription, isError: true))
         }
     }
 }

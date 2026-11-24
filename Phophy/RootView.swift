@@ -19,7 +19,7 @@ struct RootView: View {
     private let askBarLift: CGFloat = 62
     private let chatAnimation = Animation.smooth(duration: 0.38)
     @State private var keyboardShown = false
-    @State private var tab = SearchView.launchQuery == nil ? "library" : "search"
+    @State private var tab = "library"
     /// The keyboard is up for a field other than the ask bar.
     private var otherKeyboard: Bool { keyboardShown && !askFocused && !assistant.isPresented }
 
@@ -35,8 +35,8 @@ struct RootView: View {
                 Tab("Study", systemImage: "text.book.closed", value: "study") {
                     StudyView().belowAskBar(chatOpen: assistant.isPresented)
                 }
-                Tab(value: "search", role: .search) {
-                    SearchView().belowAskBar(chatOpen: assistant.isPresented)
+                Tab("Settings", systemImage: "gearshape", value: "settings") {
+                    SettingsView().belowAskBar(chatOpen: assistant.isPresented)
                 }
             }
             .tint(.white)

@@ -2,7 +2,6 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(IndexStatus.self) private var indexStatus
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
     @AppStorage(AppSettings.Key.useAppleIntelligence) private var useAppleIntelligence = true
@@ -57,12 +56,8 @@ struct SettingsView: View {
             .tint(Color(hex: 0x14B8C6))
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                        .fontWeight(.semibold)
-                }
-            }
+            // Room for the floating ask bar and the tab bar.
+            .contentMargins(.bottom, 80, for: .scrollContent)
         }
         .presentationBackground(.clear)
         .onAppear(perform: loadProviderFields)
