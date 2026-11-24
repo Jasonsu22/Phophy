@@ -54,6 +54,12 @@ struct RootView: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .bottom)))
             }
 
+            if !assistant.isPresented {
+                AIEditStatusPill()
+                    .padding(.bottom, askBarLift + 66)
+                    .ignoresSafeArea(.keyboard)
+            }
+
             AskBar(isFocused: $askFocused, onSend: send)
                 .padding(.horizontal, assistant.isPresented ? 12 : 20)
                 .padding(.bottom, assistant.isPresented ? 8 : askBarLift)

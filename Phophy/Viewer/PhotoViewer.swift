@@ -222,6 +222,10 @@ struct PhotoViewer: View {
                 bottomBar.transition(.opacity)
             }
         }
+        .overlay(alignment: .bottom) {
+            // An AI edit still running after the editor closed.
+            AIEditStatusPill().padding(.bottom, 110)
+        }
         .statusBarHidden(chromeHidden)
         .environment(\.colorScheme, .dark)
         .onChange(of: position) {

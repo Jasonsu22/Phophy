@@ -44,6 +44,9 @@ final class PhotoEditorModel {
     /// One-line feedback after a typed request or a failed step.
     var message: String?
     private(set) var canUndoGenerated = false
+    /// When the running AI edit started, for the progress timer.
+    private(set) var aiStarted: Date?
+    @ObservationIgnored private var aiJob: UUID?
     private(set) var hasSavedEdits = false
 
     @ObservationIgnored private var input: PHContentEditingInput?
@@ -209,8 +212,17 @@ final class PhotoEditorModel {
         let boxed = Unchecked(base)
         let source = await Task.detached { EditRendering.cgImage(boxed.value).map { UIImage(cgImage: $0) } }.value
         guard let source else { return }
+        // The work runs outside this screen, so it survives the editor closing.
+        let job = await AIEditJobs.shared.start(
+            source: source, sourceID: asset.localIdentifier, instruction: instruction, service: service
+        )
+        aiJob = job
+        aiStarted = .now
+        defer { aiJob = nil; aiStarted = nil }
         do {
-            let result = try await service.edit(source, instruction: instruction)
+            guard let result = await AIEditJobs.shared.result(of: job) else {
+                throw ImageEditError.service(await AIEditJobs.shared.error(of: job) ?? "The edit was stopped.")
+            }
             guard let cg = result.cgImage ?? CIImage(image: result).flatMap(EditRendering.cgImage) else {
                 throw ImageEditError.noImage
             }
@@ -225,6 +237,13 @@ final class PhotoEditorModel {
         } catch {
             message = error.localizedDescription
         }
+    }
+
+    /// The editor is closing: an AI edit still running carries on and is
+    /// saved as a new photo when it's done.
+    func leave() {
+        guard let aiJob else { return }
+        Task { @MainActor in AIEditJobs.shared.detach(aiJob) }
     }
 
     func undoGenerated() {
