@@ -74,11 +74,13 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
 - The simulator was in Chinese, so Apple Maps returned Chinese place names (香港大學) and "Where did I go skiing?" could never match "Zermatt". Switched the test simulator to English with the Hong Kong region, as on the lead's, and rebuilt the index: place names are now English (The University of Hong Kong, Central, Mong Kok). **Run E7 with an English simulator.**
 - Second Apple Intelligence run after the language change: same model error, 0/20, discarded. See Environment.
 
+- Opened [Jasonsu22/Phophy#2](https://github.com/Jasonsu22/Phophy/pull/2) (E11 + E7 + this log) into `photo-descriptions`, as three commits.
+
 ## Next steps
 
 1. Finish the iOS simulator download; build the demo library (`Demo/build_library.py`) and add it to a simulator.
 2. Run E7 and E11 on Claude Haiku 5.5 and GPT-5 mini (and Apple Intelligence if the Mac supports it); put the tables below.
-3. Open a PR to `photo-descriptions` (or `main`, once the lead merges it) for review.
+3. ~~Open a PR for review.~~ Done: [Jasonsu22/Phophy#2](https://github.com/Jasonsu22/Phophy/pull/2) into `photo-descriptions`. Waiting for the lead's review, and asking the lead to run the Apple Intelligence group on macOS 27.
 4. E3: compare (a) no handling, (b) the assistant rewrites the query in English, (c) on-device translation (Apple's Translation framework) before the CLIP text encoder, on the two Chinese query sets in `Eval/eval.json`.
 
 ## Results
