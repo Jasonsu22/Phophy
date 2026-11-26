@@ -35,6 +35,8 @@ actor PhotoToolbox {
     /// only the top few (its context is small), the user can see them all.
     private var allMatchIDs: [String] = []
     private var proposals: [AlbumProposal] = []
+    /// Tools called since the last `takeToolLog()` or reply, in order (E7).
+    private var toolLog: [String] = []
 
     /// How many results a search keeps for "Show more" under the reply.
     private static let moreLimit = 60
@@ -45,6 +47,13 @@ actor PhotoToolbox {
     }
 
     func setIndexedCount(_ count: Int) { indexedCount = count }
+
+    /// The tools called this turn, for the assistant evaluation. Read it
+    /// before `present(reply:)`, which starts the next turn.
+    func takeToolLog() -> [String] {
+        defer { toolLog = [] }
+        return toolLog
+    }
 
     /// Photos and albums to show with the reply, collected during one turn.
     /// Small models sometimes name photos in their reply ("p1, p2") instead
@@ -60,6 +69,7 @@ actor PhotoToolbox {
             allMatchIDs = []
             self.steps = []
             searchesThisTurn = 0
+            toolLog = []
         }
         let pattern = /\bp(\d+)\b/
         let mentioned = reply.matches(of: pattern).compactMap { idByRef["p\($0.1)"] }
@@ -96,6 +106,7 @@ actor PhotoToolbox {
         description: String?, place: String?, start: String?, end: String?,
         category: String?, favoritesOnly: Bool, media: String?, limit: Int
     ) async -> String {
+        toolLog.append("find_photos")
         searchesThisTurn += 1
         var description = description?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         var place = place?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
@@ -239,6 +250,7 @@ actor PhotoToolbox {
 
     /// Where photos were taken, with counts and date spans.
     func listPlaces(matching query: String?) -> String {
+        toolLog.append("list_places")
         let places = (try? IndexStore.shared.places(matching: query?.nilIfEmpty, limit: 25)) ?? []
         let coverage = try? IndexStore.shared.coverage()
         steps.append(query.map { "Looked up places like “\($0)”" } ?? "Looked up places")
@@ -290,6 +302,7 @@ actor PhotoToolbox {
     }
 
     func listCollections() -> String {
+        toolLog.append("list_collections")
         var counts: [PhotoCategory: Int] = [:]
         for category in categories.values { counts[category, default: 0] += 1 }
         let screenshots = PHAsset.fetchAssets(with: Self.screenshotOptions).count
@@ -304,6 +317,7 @@ actor PhotoToolbox {
     }
 
     func show(refs: [String], caption: String?) -> String {
+        toolLog.append("show_photos")
         let ids = refs.compactMap { idByRef[$0] }
         guard !ids.isEmpty else { return "Error: none of those refs are known. Use refs from a search first." }
         shownIDs += ids
@@ -311,6 +325,7 @@ actor PhotoToolbox {
     }
 
     func proposeAlbum(title: String, refs: [String]) -> String {
+        toolLog.append("propose_album")
         let ids = refs.compactMap { idByRef[$0] }
         let name = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !ids.isEmpty, !name.isEmpty else { return "Error: an album needs a title and known refs." }
