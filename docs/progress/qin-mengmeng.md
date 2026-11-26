@@ -15,7 +15,7 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
 |---|---|---|---|
 | [Jasonsu22/Phophy#2](https://github.com/Jasonsu22/Phophy/pull/2) | `b-e11-e7-assistant-eval` → `photo-descriptions` | E11 cost per answer, E7 task evaluation, this log | Waiting for the lead's review |
 | [Jasonsu22/Phophy#3](https://github.com/Jasonsu22/Phophy/pull/3) | `b-e3-chinese-queries` → `b-e11-e7-assistant-eval` | E3 Chinese-query experiment and results | Stacked on #2: merge #2 first, then retarget this PR to `photo-descriptions` |
-| E4 PR (link below, once open) | `b-e4-ocr-text-vectors` → `b-e3-chinese-queries` | E4 OCR text vectors experiment and results | Stacked on #3: merge #2, then #3, then this one |
+| [Jasonsu22/Phophy#4](https://github.com/Jasonsu22/Phophy/pull/4) | `b-e4-ocr-text-vectors` → `b-e3-chinese-queries` | E4 OCR text vectors experiment and results | Stacked on #3: merge #2, then #3, then this one |
 
 ### Waiting on others
 
@@ -141,6 +141,7 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
   - `NLContextualEmbedding` with mean pooling ranked correctly, so E4 uses it.
 - `-PhophyE4` runner (`Phophy/Debug/OCRTextEvaluation.swift`), with a Mac fallback (`Eval/e4_embed.swift`), since the simulator can't load the embedding models. `Eval/run_e4.sh` does all of it.
 - Results: in the table below and in `Eval/E4_OCR_EMBEDDINGS.md`. Two full runs gave identical numbers once ties were broken by photo ID.
+- Opened [Jasonsu22/Phophy#4](https://github.com/Jasonsu22/Phophy/pull/4), stacked on #3.
 
 ## Next steps
 
