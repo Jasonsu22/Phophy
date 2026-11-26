@@ -1,0 +1,1203 @@
+{
+  "library" : "Flickr30k 1K test",
+  "machine_english" : "Apple Translation (zh-Hans → en) and Apple Foundation Models, macOS Version 26.6 (Build 25G72)",
+  "sets" : [
+    {
+      "kind" : "multi",
+      "name" : "Objects and scenes, Chinese",
+      "queries" : [
+        {
+          "apple_rewrite" : "dog",
+          "apple_translation" : "dog",
+          "human_en" : "dog",
+          "relevant" : [
+            "1009434119.jpg",
+            "1341077576.jpg",
+            "1489286545.jpg",
+            "1526325728.jpg",
+            "1659358141.jpg",
+            "2052202553.jpg",
+            "2066271441.jpg",
+            "2115631346.jpg",
+            "2165461920.jpg",
+            "2190227737.jpg",
+            "2259203920.jpg",
+            "2283966256.jpg",
+            "2367139509.jpg",
+            "2368266191.jpg",
+            "2378544134.jpg",
+            "2391269207.jpg",
+            "2392625002.jpg",
+            "2407470303.jpg",
+            "2436398074.jpg",
+            "2451114871.jpg",
+            "246231741.jpg",
+            "2466171114.jpg",
+            "247704641.jpg",
+            "2504764590.jpg",
+            "251586160.jpg",
+            "2695961935.jpg",
+            "2696866120.jpg",
+            "270263570.jpg",
+            "2714703706.jpg",
+            "2738077433.jpg",
+            "2751602672.jpg",
+            "2755362721.jpg",
+            "2789350645.jpg",
+            "2816259113.jpg",
+            "2832487464.jpg",
+            "2844747252.jpg",
+            "2854959952.jpg",
+            "2867026654.jpg",
+            "2953861572.jpg",
+            "3064716525.jpg",
+            "3149894951.jpg",
+            "3150380412.jpg",
+            "317383917.jpg",
+            "319185571.jpg",
+            "3206999917.jpg",
+            "3277162496.jpg",
+            "3283368342.jpg",
+            "3348384389.jpg",
+            "3354474353.jpg",
+            "3368671163.jpg",
+            "3387661249.jpg",
+            "3418504074.jpg",
+            "3449846784.jpg",
+            "3473534758.jpg",
+            "3474406285.jpg",
+            "3514194772.jpg",
+            "3525403875.jpg",
+            "3560125106.jpg",
+            "3571193625.jpg",
+            "3589267801.jpg",
+            "3593392955.jpg",
+            "3613264553.jpg",
+            "366548880.jpg",
+            "3671851846.jpg",
+            "411175971.jpg",
+            "411216802.jpg",
+            "430173345.jpg",
+            "435054077.jpg",
+            "441212506.jpg",
+            "4459992117.jpg",
+            "4717627685.jpg",
+            "475816542.jpg",
+            "476760133.jpg",
+            "477204750.jpg",
+            "481632457.jpg",
+            "4826547083.jpg",
+            "4953536921.jpg",
+            "6099093979.jpg",
+            "6887015851.jpg",
+            "756521713.jpg",
+            "861661418.jpg"
+          ],
+          "zh" : "狗"
+        },
+        {
+          "apple_rewrite" : "bicycle",
+          "apple_translation" : "bicycle",
+          "human_en" : "bicycle",
+          "relevant" : [
+            "1071201387.jpg",
+            "1250181412.jpg",
+            "146906547.jpg",
+            "1664475761.jpg",
+            "2064792226.jpg",
+            "2330765551.jpg",
+            "2470317702.jpg",
+            "2504007911.jpg",
+            "2873252292.jpg",
+            "2963672852.jpg",
+            "3106782647.jpg",
+            "3243094580.jpg",
+            "3487979741.jpg",
+            "3495349745.jpg",
+            "3543294190.jpg",
+            "3564489441.jpg",
+            "3665179773.jpg",
+            "3717309680.jpg",
+            "3721082512.jpg",
+            "3739742770.jpg",
+            "4592269543.jpg",
+            "4700788144.jpg",
+            "4731694958.jpg",
+            "4780620826.jpg",
+            "479807465.jpg",
+            "4914029409.jpg",
+            "4914732942.jpg",
+            "4923272678.jpg",
+            "4930533574.jpg",
+            "4931839897.jpg",
+            "533508800.jpg",
+            "5365075444.jpg",
+            "5506399373.jpg",
+            "6693936663.jpg",
+            "7890007278.jpg",
+            "7988586396.jpg",
+            "8016751611.jpg",
+            "8220955383.jpg",
+            "94024624.jpg"
+          ],
+          "zh" : "自行车"
+        },
+        {
+          "apple_rewrite" : "海滩",
+          "apple_translation" : "beach",
+          "human_en" : "beach",
+          "relevant" : [
+            "1104087374.jpg",
+            "1351500610.jpg",
+            "139245992.jpg",
+            "1414911626.jpg",
+            "1526325728.jpg",
+            "2169788484.jpg",
+            "2407470303.jpg",
+            "2421367904.jpg",
+            "2953861572.jpg",
+            "3107059919.jpg",
+            "319185571.jpg",
+            "35437191.jpg",
+            "3660516586.jpg",
+            "3721102409.jpg",
+            "3996949550.jpg",
+            "411175971.jpg",
+            "4256162530.jpg",
+            "449236667.jpg",
+            "4650623132.jpg",
+            "4736841029.jpg",
+            "4814933116.jpg",
+            "4862041366.jpg",
+            "4953536921.jpg",
+            "7034076961.jpg",
+            "7694340978.jpg",
+            "97234558.jpg"
+          ],
+          "zh" : "海滩"
+        },
+        {
+          "apple_rewrite" : "Snowland",
+          "apple_translation" : "Snowfield",
+          "human_en" : "snow",
+          "relevant" : [
+            "102617084.jpg",
+            "1043819504.jpg",
+            "202174004.jpg",
+            "2115631346.jpg",
+            "2255633616.jpg",
+            "2392625002.jpg",
+            "317383917.jpg",
+            "3206999917.jpg",
+            "3231575742.jpg",
+            "3324049172.jpg",
+            "3354474353.jpg",
+            "3418504074.jpg",
+            "3432586199.jpg",
+            "366548880.jpg",
+            "407008823.jpg",
+            "4337180031.jpg",
+            "4442323516.jpg",
+            "514222285.jpg",
+            "5238681042.jpg",
+            "5323049335.jpg",
+            "6699112713.jpg"
+          ],
+          "zh" : "雪地"
+        },
+        {
+          "apple_rewrite" : "吉他",
+          "apple_translation" : "guitar",
+          "human_en" : "guitar",
+          "relevant" : [
+            "1579198375.jpg",
+            "1579206585.jpg",
+            "16151663.jpg",
+            "2553089098.jpg",
+            "2762599124.jpg",
+            "2802158972.jpg",
+            "3021953768.jpg",
+            "322516292.jpg",
+            "394707439.jpg",
+            "4202061400.jpg",
+            "4351734575.jpg",
+            "4539608494.jpg",
+            "4567455846.jpg",
+            "4691655601.jpg",
+            "4727540499.jpg",
+            "502529086.jpg",
+            "5244864049.jpg",
+            "5986222648.jpg",
+            "6041486114.jpg",
+            "7438195398.jpg"
+          ],
+          "zh" : "吉他"
+        },
+        {
+          "apple_rewrite" : "Football",
+          "apple_translation" : "football",
+          "human_en" : "soccer",
+          "relevant" : [
+            "1921102799.jpg",
+            "2424620984.jpg",
+            "289638061.jpg",
+            "2900242501.jpg",
+            "2978735290.jpg",
+            "2987121689.jpg",
+            "3009047603.jpg",
+            "3222702477.jpg",
+            "3227675485.jpg",
+            "3660516586.jpg",
+            "3970114165.jpg",
+            "4065328632.jpg",
+            "450697885.jpg",
+            "462879289.jpg",
+            "475816542.jpg",
+            "5369771639.jpg",
+            "6224066807.jpg",
+            "6275000713.jpg",
+            "6312211170.jpg",
+            "6453399365.jpg",
+            "7099368287.jpg",
+            "7130336193.jpg"
+          ],
+          "zh" : "足球"
+        },
+        {
+          "apple_rewrite" : "棒球",
+          "apple_translation" : "baseball",
+          "human_en" : "baseball",
+          "relevant" : [
+            "1043910339.jpg",
+            "2447284966.jpg",
+            "3514278386.jpg",
+            "4517838680.jpg",
+            "4689169924.jpg",
+            "702083815.jpg",
+            "821071719.jpg",
+            "85519095.jpg"
+          ],
+          "zh" : "棒球"
+        },
+        {
+          "apple_rewrite" : "Basketball",
+          "apple_translation" : "basketball",
+          "human_en" : "basketball",
+          "relevant" : [
+            "2926595608.jpg",
+            "3178300150.jpg",
+            "6474645169.jpg",
+            "8132535710.jpg",
+            "8234387593.jpg"
+          ],
+          "zh" : "篮球"
+        },
+        {
+          "apple_rewrite" : "The description for the photo search \"山\" is: 山",
+          "apple_translation" : "mountain",
+          "human_en" : "mountain",
+          "relevant" : [
+            "111497985.jpg",
+            "1250181412.jpg",
+            "1255504166.jpg",
+            "202174004.jpg",
+            "2873252292.jpg",
+            "330325191.jpg",
+            "3721082512.jpg",
+            "407008823.jpg",
+            "4798837062.jpg",
+            "4931839897.jpg",
+            "7890007278.jpg"
+          ],
+          "zh" : "山"
+        },
+        {
+          "apple_rewrite" : "Kitchen",
+          "apple_translation" : "kitchen",
+          "human_en" : "kitchen",
+          "relevant" : [
+            "1082250005.jpg",
+            "130063845.jpg",
+            "1368082221.jpg",
+            "3079340229.jpg",
+            "3421480658.jpg",
+            "3884010975.jpg",
+            "4587837067.jpg",
+            "5126446040.jpg",
+            "5491874786.jpg",
+            "5510073103.jpg"
+          ],
+          "zh" : "厨房"
+        },
+        {
+          "apple_rewrite" : "餐厅",
+          "apple_translation" : "restaurant",
+          "human_en" : "restaurant",
+          "relevant" : [
+            "1082250005.jpg",
+            "1798209205.jpg",
+            "180209719.jpg",
+            "2041867793.jpg",
+            "238177432.jpg",
+            "272045297.jpg",
+            "2900560501.jpg",
+            "3884010975.jpg",
+            "39341489.jpg",
+            "42348693.jpg",
+            "4427860005.jpg",
+            "4756089619.jpg"
+          ],
+          "zh" : "餐厅"
+        },
+        {
+          "apple_rewrite" : "建筑工人",
+          "apple_translation" : "builder",
+          "human_en" : "construction worker",
+          "relevant" : [
+            "196521598.jpg",
+            "2537755800.jpg",
+            "2565302802.jpg",
+            "4257593776.jpg",
+            "4560420776.jpg",
+            "4745356451.jpg",
+            "47770444.jpg",
+            "5730226613.jpg"
+          ],
+          "zh" : "建筑工人"
+        },
+        {
+          "apple_rewrite" : "Baby",
+          "apple_translation" : "infant",
+          "human_en" : "baby",
+          "relevant" : [
+            "107969134.jpg",
+            "136581487.jpg",
+            "1881494074.jpg",
+            "2119380659.jpg",
+            "2165724565.jpg",
+            "2338791560.jpg",
+            "302289651.jpg",
+            "3135317718.jpg",
+            "3642604708.jpg",
+            "3690358949.jpg",
+            "384806138.jpg",
+            "442983801.jpg",
+            "4567311889.jpg",
+            "4858175898.jpg",
+            "7348289414.jpg"
+          ],
+          "zh" : "婴儿"
+        },
+        {
+          "apple_rewrite" : "Stage",
+          "apple_translation" : "stage",
+          "human_en" : "stage",
+          "relevant" : [
+            "1579206585.jpg",
+            "21166859.jpg",
+            "2802158972.jpg",
+            "2867460039.jpg",
+            "4351734575.jpg",
+            "5244864049.jpg",
+            "5745120660.jpg",
+            "5986222648.jpg",
+            "6041486114.jpg",
+            "7438195398.jpg"
+          ],
+          "zh" : "舞台"
+        },
+        {
+          "apple_rewrite" : "汽车",
+          "apple_translation" : "car",
+          "human_en" : "car",
+          "relevant" : [
+            "211026975.jpg",
+            "2188599628.jpg",
+            "2255633616.jpg",
+            "2722957422.jpg",
+            "277119391.jpg",
+            "300577375.jpg",
+            "3039200576.jpg",
+            "3722006169.jpg",
+            "3722504168.jpg",
+            "4161829222.jpg",
+            "4180952377.jpg",
+            "4603095253.jpg",
+            "5984974054.jpg",
+            "6489895665.jpg",
+            "6927762908.jpg",
+            "7330749240.jpg",
+            "8183107966.jpg"
+          ],
+          "zh" : "汽车"
+        },
+        {
+          "apple_rewrite" : "Lake",
+          "apple_translation" : "lake",
+          "human_en" : "lake",
+          "relevant" : [
+            "1159381599.jpg",
+            "172092464.jpg",
+            "2725508159.jpg",
+            "3701291852.jpg",
+            "4637951374.jpg",
+            "4735200580.jpg",
+            "529101401.jpg"
+          ],
+          "zh" : "湖"
+        },
+        {
+          "apple_rewrite" : "A traditional Japanese boat is depicted in the image. It has a wooden hull, a raised bow, and a single mast. The boat is painted in a light blue color and has a white stripe running along its side. The background of the image is a dark blue sky with a few clouds",
+          "apple_translation" : "boat",
+          "human_en" : "boat",
+          "relevant" : [
+            "2088705195.jpg",
+            "2421367904.jpg",
+            "2566294211.jpg",
+            "2613889835.jpg",
+            "2671167487.jpg",
+            "2725508159.jpg",
+            "3773310720.jpg",
+            "4671795847.jpg",
+            "4788967636.jpg",
+            "5522182662.jpg",
+            "697490420.jpg",
+            "7037413229.jpg"
+          ],
+          "zh" : "船"
+        },
+        {
+          "apple_rewrite" : "马",
+          "apple_translation" : "horse",
+          "human_en" : "horse",
+          "relevant" : [
+            "2521788750.jpg",
+            "3298457064.jpg",
+            "3387661249.jpg",
+            "3558267192.jpg",
+            "388837010.jpg",
+            "45543081.jpg",
+            "474581065.jpg",
+            "4859764297.jpg",
+            "4931239366.jpg",
+            "4931319718.jpg",
+            "508793006.jpg",
+            "5584269779.jpg",
+            "6818129694.jpg",
+            "6918264972.jpg",
+            "862560775.jpg"
+          ],
+          "zh" : "马"
+        },
+        {
+          "apple_rewrite" : "Swimming",
+          "apple_translation" : "swim",
+          "human_en" : "swimming",
+          "relevant" : [
+            "1351500610.jpg",
+            "16437914.jpg",
+            "2066271441.jpg",
+            "2689001252.jpg",
+            "2819466992.jpg",
+            "3430607596.jpg",
+            "3724738804.jpg",
+            "4637951374.jpg",
+            "4814933116.jpg",
+            "4862041366.jpg",
+            "6853360659.jpg",
+            "697490420.jpg"
+          ],
+          "zh" : "游泳"
+        },
+        {
+          "apple_rewrite" : "skateboard",
+          "apple_translation" : "skateboard",
+          "human_en" : "skateboard",
+          "relevant" : [
+            "2795866891.jpg",
+            "2891961886.jpg",
+            "2902844125.jpg",
+            "2934022873.jpg",
+            "3341077091.jpg",
+            "3618908551.jpg",
+            "4494095559.jpg",
+            "4612060755.jpg",
+            "5229996710.jpg",
+            "6317293855.jpg",
+            "7187734520.jpg",
+            "7292785488.jpg"
+          ],
+          "zh" : "滑板"
+        },
+        {
+          "apple_rewrite" : "The user searched for \"婚礼\" in the photo search tool.\n\nThe description of the photo is:\n\nA bride and groom are standing in front of a wedding venue, with a bride wearing a white dress and a groom wearing a suit. There are flowers and decorations around the venue, and a camera is taking pictures of the couple",
+          "apple_translation" : "wedding",
+          "human_en" : "wedding",
+          "relevant" : [
+            "2549933281.jpg",
+            "2773744784.jpg",
+            "3052436578.jpg",
+            "3712574653.jpg"
+          ],
+          "zh" : "婚礼"
+        },
+        {
+          "apple_rewrite" : "Rain Umbrella",
+          "apple_translation" : "umbrella",
+          "human_en" : "umbrella",
+          "relevant" : [
+            "1258913059.jpg",
+            "2497343616.jpg",
+            "2762599124.jpg",
+            "280007961.jpg",
+            "2989764675.jpg",
+            "3192267612.jpg",
+            "463551598.jpg",
+            "4928592495.jpg",
+            "7131011211.jpg"
+          ],
+          "zh" : "雨伞"
+        },
+        {
+          "apple_rewrite" : "The photo shows a group of people",
+          "apple_translation" : "crowd",
+          "human_en" : "crowd",
+          "relevant" : [
+            "1397344877.jpg",
+            "166283675.jpg",
+            "21166859.jpg",
+            "2497343616.jpg",
+            "2508851882.jpg",
+            "275175200.jpg",
+            "2768933636.jpg",
+            "2867460039.jpg",
+            "2937461473.jpg",
+            "3028145992.jpg",
+            "3259992164.jpg",
+            "3583105294.jpg",
+            "3999246475.jpg",
+            "4148908583.jpg",
+            "4158826243.jpg",
+            "4687557453.jpg",
+            "4733026480.jpg",
+            "4937639267.jpg",
+            "5823310445.jpg",
+            "58803866.jpg",
+            "6041486114.jpg",
+            "6818129694.jpg"
+          ],
+          "zh" : "人群"
+        },
+        {
+          "apple_rewrite" : "The user searched for \"墨镜\" which translates to \"sunglasses\" in English",
+          "apple_translation" : "sunglasses",
+          "human_en" : "sunglasses",
+          "relevant" : [
+            "1104087374.jpg",
+            "1408554531.jpg",
+            "226481576.jpg",
+            "302289651.jpg",
+            "4039846249.jpg",
+            "4448853264.jpg",
+            "4483766693.jpg",
+            "4516267602.jpg",
+            "4563143284.jpg",
+            "5622966650.jpg",
+            "83493458.jpg"
+          ],
+          "zh" : "墨镜"
+        },
+        {
+          "apple_rewrite" : "Market",
+          "apple_translation" : "marketplace",
+          "human_en" : "market",
+          "relevant" : [
+            "1287704027.jpg",
+            "3532476966.jpg",
+            "3790208395.jpg",
+            "4031513473.jpg",
+            "4284980126.jpg",
+            "4725026501.jpg",
+            "4752799475.jpg",
+            "4892698507.jpg",
+            "7003919692.jpg"
+          ],
+          "zh" : "市场"
+        },
+        {
+          "apple_rewrite" : "Long chair",
+          "apple_translation" : "settee",
+          "human_en" : "bench",
+          "relevant" : [
+            "1489286545.jpg",
+            "151970521.jpg",
+            "2313085243.jpg",
+            "2469878877.jpg",
+            "247619370.jpg",
+            "2891943949.jpg",
+            "3527184455.jpg",
+            "3539612893.jpg",
+            "441817653.jpg",
+            "4464247181.jpg",
+            "4523132391.jpg",
+            "4639459528.jpg",
+            "4805425261.jpg",
+            "4846324908.jpg",
+            "4911020894.jpg",
+            "4953536921.jpg"
+          ],
+          "zh" : "长椅"
+        },
+        {
+          "apple_rewrite" : "The user searched for a microphone",
+          "apple_translation" : "microphone",
+          "human_en" : "microphone",
+          "relevant" : [
+            "1579198375.jpg",
+            "3031792444.jpg",
+            "3631530817.jpg",
+            "4202061400.jpg",
+            "428979011.jpg",
+            "4615770260.jpg",
+            "5747873823.jpg"
+          ],
+          "zh" : "麦克风"
+        },
+        {
+          "apple_rewrite" : "The description is: 打鼓",
+          "apple_translation" : "feel uncertain",
+          "human_en" : "drums",
+          "relevant" : [
+            "1675332284.jpg",
+            "2679382388.jpg",
+            "3083847439.jpg",
+            "3155400369.jpg",
+            "4813957025.jpg",
+            "5747873823.jpg",
+            "58803866.jpg"
+          ],
+          "zh" : "打鼓"
+        },
+        {
+          "apple_rewrite" : "桥",
+          "apple_translation" : "bridge",
+          "human_en" : "bridge",
+          "relevant" : [
+            "1281282435.jpg",
+            "247704641.jpg",
+            "4696109052.jpg",
+            "4731694958.jpg",
+            "77587237.jpg"
+          ],
+          "zh" : "桥"
+        },
+        {
+          "apple_rewrite" : "Rock climbing",
+          "apple_translation" : "rock climbing",
+          "human_en" : "rock climbing",
+          "relevant" : [
+            "111497985.jpg",
+            "202174004.jpg",
+            "2738077433.jpg",
+            "3078844565.jpg",
+            "3148193539.jpg",
+            "3246281818.jpg",
+            "3554391279.jpg",
+            "416992999.jpg",
+            "428485639.jpg",
+            "4707189762.jpg",
+            "4730076543.jpg",
+            "4808471657.jpg"
+          ],
+          "zh" : "攀岩"
+        },
+        {
+          "apple_rewrite" : "Here is a description of the photo: \n\nA cat is sitting on the ground, looking straight ahead. The cat has a fluffy white coat and big blue eyes. It is sitting on a dirt ground, and there are some rocks and plants around it",
+          "apple_translation" : "cat",
+          "human_en" : "cat",
+          "relevant" : [
+            "3421480658.jpg",
+            "4089787993.jpg",
+            "4443087396.jpg",
+            "4567311889.jpg",
+            "771048251.jpg"
+          ],
+          "zh" : "猫"
+        },
+        {
+          "apple_rewrite" : "The description is: 鸟",
+          "apple_translation" : "bird",
+          "human_en" : "bird",
+          "relevant" : [
+            "1414911626.jpg",
+            "3128856481.jpg",
+            "327955368.jpg",
+            "3294830188.jpg",
+            "4631909374.jpg",
+            "86256551.jpg"
+          ],
+          "zh" : "鸟"
+        },
+        {
+          "apple_rewrite" : "火车",
+          "apple_translation" : "train",
+          "human_en" : "train",
+          "relevant" : [
+            "1332208215.jpg",
+            "164969525.jpg",
+            "211026975.jpg",
+            "231935782.jpg",
+            "2975845158.jpg",
+            "3341077091.jpg",
+            "354017707.jpg",
+            "4520820052.jpg",
+            "4679111230.jpg",
+            "4762011238.jpg",
+            "4786476156.jpg",
+            "4796827555.jpg",
+            "5984974054.jpg"
+          ],
+          "zh" : "火车"
+        },
+        {
+          "apple_rewrite" : "画画",
+          "apple_translation" : "drawing",
+          "human_en" : "painting",
+          "relevant" : [
+            "1258913059.jpg",
+            "1681253990.jpg",
+            "261627889.jpg",
+            "533508800.jpg",
+            "7900347098.jpg"
+          ],
+          "zh" : "画画"
+        },
+        {
+          "apple_rewrite" : "Motorcycle",
+          "apple_translation" : "motorcycle",
+          "human_en" : "motorcycle",
+          "relevant" : [
+            "2472980433.jpg",
+            "3646927481.jpg",
+            "3717309680.jpg",
+            "4139974800.jpg",
+            "4153147942.jpg",
+            "4700788144.jpg",
+            "4821487527.jpg",
+            "4830409466.jpg",
+            "616564448.jpg"
+          ],
+          "zh" : "摩托车"
+        },
+        {
+          "apple_rewrite" : "网球",
+          "apple_translation" : "tennis",
+          "human_en" : "tennis",
+          "relevant" : [
+            "23018702.jpg",
+            "3245460937.jpg",
+            "3344531479.jpg",
+            "3425756814.jpg",
+            "3525403875.jpg",
+            "3591283677.jpg",
+            "3928395936.jpg",
+            "441212506.jpg",
+            "6556870225.jpg",
+            "7468663062.jpg"
+          ],
+          "zh" : "网球"
+        },
+        {
+          "apple_rewrite" : "Sure, here is a description for the photo search:\n\n\"The photo shows a person surfing on a wave. They are wearing a wetsuit and are standing on a surfboard. The background is blurred, but it appears to be a beach with sand and water. The person is looking towards the camera, and their arms are outstretched. The wave is large and powerful, and the person is standing on it with ease",
+          "apple_translation" : "surfing",
+          "human_en" : "surfing",
+          "relevant" : [
+            "2978409165.jpg",
+            "3050114829.jpg",
+            "7052724381.jpg"
+          ],
+          "zh" : "冲浪"
+        },
+        {
+          "apple_rewrite" : "涂鸦",
+          "apple_translation" : "scrawl",
+          "human_en" : "graffiti",
+          "relevant" : [
+            "4800006797.jpg",
+            "4890769146.jpg",
+            "4928592495.jpg",
+            "4979311570.jpg",
+            "533508800.jpg"
+          ],
+          "zh" : "涂鸦"
+        },
+        {
+          "apple_rewrite" : "Police",
+          "apple_translation" : "police",
+          "human_en" : "police",
+          "relevant" : [
+            "226481576.jpg",
+            "300577375.jpg",
+            "3064443326.jpg",
+            "3432637363.jpg",
+            "3966071063.jpg",
+            "3969232921.jpg",
+            "4821487527.jpg"
+          ],
+          "zh" : "警察"
+        },
+        {
+          "apple_rewrite" : "滑雪",
+          "apple_translation" : "ski",
+          "human_en" : "skiing",
+          "relevant" : [
+            "3231575742.jpg",
+            "514222285.jpg",
+            "6699112713.jpg",
+            "7333716086.jpg"
+          ],
+          "zh" : "滑雪"
+        },
+        {
+          "apple_rewrite" : "跳舞",
+          "apple_translation" : "dance",
+          "human_en" : "dancing",
+          "relevant" : [
+            "1229536824.jpg",
+            "164969525.jpg",
+            "2282260240.jpg",
+            "3039095384.jpg",
+            "3259992164.jpg",
+            "3565598162.jpg",
+            "4373983146.jpg",
+            "4692834620.jpg",
+            "5163992452.jpg",
+            "5829317322.jpg",
+            "5829827359.jpg",
+            "6056788662.jpg"
+          ],
+          "zh" : "跳舞"
+        },
+        {
+          "apple_rewrite" : "喷泉",
+          "apple_translation" : "fountain",
+          "human_en" : "fountain",
+          "relevant" : [
+            "3192267612.jpg",
+            "4655102365.jpg",
+            "4805078127.jpg",
+            "4850814517.jpg",
+            "538825260.jpg",
+            "76485985.jpg"
+          ],
+          "zh" : "喷泉"
+        },
+        {
+          "apple_rewrite" : "牛仔竞技",
+          "apple_translation" : "Cowboy competition",
+          "human_en" : "rodeo",
+          "relevant" : [
+            "2521788750.jpg",
+            "3243653344.jpg",
+            "3352135319.jpg",
+            "3479233432.jpg",
+            "3558267192.jpg",
+            "3914087743.jpg",
+            "4931239366.jpg",
+            "6818129694.jpg",
+            "6956989138.jpg",
+            "7446693604.jpg"
+          ],
+          "zh" : "牛仔竞技"
+        },
+        {
+          "apple_rewrite" : "Wine",
+          "apple_translation" : "wine",
+          "human_en" : "wine",
+          "relevant" : [
+            "1798209205.jpg",
+            "2422589651.jpg",
+            "286084055.jpg"
+          ],
+          "zh" : "葡萄酒"
+        }
+      ]
+    },
+    {
+      "kind" : "single",
+      "name" : "Detailed descriptions, Chinese",
+      "queries" : [
+        {
+          "apple_rewrite" : "A man with red hair and dirty dreadlocks sitting on a wooden guitar",
+          "apple_translation" : "A man with red hair and dirty braids is sitting and playing the ukulele.",
+          "human_en" : "A red-haired man with dreadlocks is sitting playing and acoustic guitar",
+          "relevant" : [
+            "3021953768.jpg"
+          ],
+          "zh" : "一个红头发留着脏辫的男人坐着弹木吉他"
+        },
+        {
+          "apple_rewrite" : "A orange kitten bites a child's nose",
+          "apple_translation" : "A little orange kitten bit the blonde child's nose.",
+          "human_en" : "A blond child is being bitten on the nose by a little orange kitten",
+          "relevant" : [
+            "771048251.jpg"
+          ],
+          "zh" : "一只橘色小猫咬了金发小孩的鼻子"
+        },
+        {
+          "apple_rewrite" : "A man and a woman riding a bicycle through a desert with mountains in the background",
+          "apple_translation" : "A man and a woman rode bicycles through the wilderness, with rolling hills and blue sky in the distance.",
+          "human_en" : "A man and a woman ride bicycles away from the camera as they traverse a remote area toward undulating hills, with blue sky in the background",
+          "relevant" : [
+            "2330765551.jpg"
+          ],
+          "zh" : "一男一女骑自行车穿过荒野，远处是起伏的山丘和蓝天"
+        },
+        {
+          "apple_rewrite" : "Man wearing a black jacket standing in front of a brick building",
+          "apple_translation" : "The man in a black jacket stood in front of the brick shop.",
+          "human_en" : "A man is standing in front of a brick storefront wearing a black jacket",
+          "relevant" : [
+            "3293751640.jpg"
+          ],
+          "zh" : "穿黑夹克的男人站在砖砌店面前"
+        },
+        {
+          "apple_rewrite" : "Here is the description of the photo:\n\nA girl wearing a pink sweater is walking with two sisters who are wearing the same pink sweater",
+          "apple_translation" : "A little girl in a pink coat and two sisters in the same clothes are walking on the road.",
+          "human_en" : "A young girl in a pink jacket walks with two sisters in matching outfits in public",
+          "relevant" : [
+            "4604969760.jpg"
+          ],
+          "zh" : "穿粉色外套的小女孩和两个穿同款衣服的姐妹走在路上"
+        },
+        {
+          "apple_rewrite" : "An elderly man wearing blue jeans is throwing a red ball on the beach",
+          "apple_translation" : "The old man in jeans threw a red ball on the beach.",
+          "human_en" : "An older gentleman, dressed in jeans and a long-sleeved shirt, tosses a small red ball on the beach",
+          "relevant" : [
+            "139245992.jpg"
+          ],
+          "zh" : "穿牛仔裤的老人在海滩上扔一个红色小球"
+        },
+        {
+          "apple_rewrite" : "A young girl wearing swimming goggles is playing in a swimming pool",
+          "apple_translation" : "The little girl wearing swimming goggles on her forehead is playing in the pool.",
+          "human_en" : "A young girl with goggles strapped to her forehead enjoys the cool pool water",
+          "relevant" : [
+            "16437914.jpg"
+          ],
+          "zh" : "额头上戴着泳镜的小女孩在泳池里玩水"
+        },
+        {
+          "apple_rewrite" : "A man wearing a white shirt is standing in front of a microphone and playing a white guitar",
+          "apple_translation" : "A man in a white shirt plays a white guitar in front of the microphone.",
+          "human_en" : "A man in a white shirt playing a white guitar standing in front of a microphone with the light casting a somewhat reddish hue on his shirt",
+          "relevant" : [
+            "5244864049.jpg"
+          ],
+          "zh" : "穿白衬衫的男人对着麦克风弹白色吉他"
+        },
+        {
+          "apple_rewrite" : "A group of people performing a synchronized martial arts routine on the street",
+          "apple_translation" : "A group of people are performing neat martial arts on the street.",
+          "human_en" : "A number of people are doing a synchronized martial arts performance in the street",
+          "relevant" : [
+            "395125320.jpg"
+          ],
+          "zh" : "一群人在街上表演整齐的武术"
+        },
+        {
+          "apple_rewrite" : "Three construction workers are digging a hole in an empty area next to a wall",
+          "apple_translation" : "Three construction workers dug a hole in the open space next to the wall.",
+          "human_en" : "Three construction workers are digging a whole next to a wall in a field",
+          "relevant" : [
+            "1874530310.jpg"
+          ],
+          "zh" : "三个建筑工人在墙边的空地上挖坑"
+        },
+        {
+          "apple_rewrite" : "People are standing around a stone fountain, with one of the stones being a statue",
+          "apple_translation" : "On rainy days, many people stand by the fountain with stone statues with umbrellas.",
+          "human_en" : "On a rainy day, near a river, many people are standing with umbrellas and raincoats near a fountain that features a central stone statue while others stand in line",
+          "relevant" : [
+            "3192267612.jpg"
+          ],
+          "zh" : "雨天很多人打着伞站在有石像的喷泉旁"
+        },
+        {
+          "apple_rewrite" : "Three children playing on gym equipment in a park",
+          "apple_translation" : "Three children are playing with fitness equipment in the park.",
+          "human_en" : "A little boy and two older kids are playing on gym equipment in a park with benches and trees",
+          "relevant" : [
+            "4282819676.jpg"
+          ],
+          "zh" : "公园里三个孩子在玩健身器材"
+        },
+        {
+          "apple_rewrite" : "Two men wearing hats and walking with crutches standing on the water's edge in a backlit photo",
+          "apple_translation" : "The backlit silhouette of two men wearing hats and walking sticks standing by the water.",
+          "human_en" : "Two men wearing hats and holding canes are standing silhouetted against a large body of water with sunlight reflecting off the water and a tree to the side",
+          "relevant" : [
+            "14559446.jpg"
+          ],
+          "zh" : "两个戴帽子拄拐杖的男人站在水边的逆光剪影"
+        },
+        {
+          "apple_rewrite" : "A bull charges at a man in a cowboy competition",
+          "apple_translation" : "A bull charged at a man in a cowboy competition.",
+          "human_en" : "A large bull targets a man, inches away, in a rodeo with his horns, while a rodeo clown runs to help",
+          "relevant" : [
+            "6956989138.jpg"
+          ],
+          "zh" : "牛仔竞技中一头公牛冲向一个男人"
+        },
+        {
+          "apple_rewrite" : "A woman with tattoos wearing boots is lifting her leg",
+          "apple_translation" : "A tattooed woman wearing boots raised her legs.",
+          "human_en" : "A woman is propping her leg up revealing cleavage, a great tatoo, and some kicking boots",
+          "relevant" : [
+            "374124237.jpg"
+          ],
+          "zh" : "一个有纹身穿靴子的女人抬起腿"
+        },
+        {
+          "apple_rewrite" : "Two people wearing white clothes are painting a brick wall",
+          "apple_translation" : "Two people in white clothes are painting the brick wall.",
+          "human_en" : "Two people wearing all white are painting a brick wall",
+          "relevant" : [
+            "261627889.jpg"
+          ],
+          "zh" : "两个穿白衣服的人在粉刷砖墙"
+        },
+        {
+          "apple_rewrite" : "穿黑T恤的女孩在厨房里拿着一个小披萨",
+          "apple_translation" : "The girl in a black T-shirt is holding a small pizza in the kitchen.",
+          "human_en" : "A girl wearing a black t-shirt is holding a small pizza in a kitchen setting",
+          "relevant" : [
+            "130063845.jpg"
+          ],
+          "zh" : "穿黑T恤的女孩在厨房里拿着一个小披萨"
+        },
+        {
+          "apple_rewrite" : "A blonde woman sitting in a dimly lit restaurant, pouring red wine from a bottle",
+          "apple_translation" : "The blonde woman pours wine in the dim restaurant.",
+          "human_en" : "A blond woman pours a glass of wine in a dim restaurant",
+          "relevant" : [
+            "1798209205.jpg"
+          ],
+          "zh" : "金发女人在昏暗的餐厅里倒葡萄酒"
+        },
+        {
+          "apple_rewrite" : "One child is hugging another child from behind",
+          "apple_translation" : "A child is holding a smaller child from behind.",
+          "human_en" : "A very young child is sitting behind an even younger child with her hands around him",
+          "relevant" : [
+            "3478547247.jpg"
+          ],
+          "zh" : "一个小孩从后面抱着更小的孩子"
+        },
+        {
+          "apple_rewrite" : "Here is the description: One black and white dog playing an orange ball in the snow",
+          "apple_translation" : "A black and white dog is playing with an orange ball in the snow.",
+          "human_en" : "A black and white dog is playing with an orange ball in the snow",
+          "relevant" : [
+            "3418504074.jpg"
+          ],
+          "zh" : "一只黑白相间的狗在雪地里玩橙色的球"
+        },
+        {
+          "apple_rewrite" : "The photo shows a woman wearing a green dress sitting on a broken green and yellow chair",
+          "apple_translation" : "The woman in the green skirt sat on a shabby green and yellow chair.",
+          "human_en" : "A woman in a green dress sitting in a broken green and yellow chair",
+          "relevant" : [
+            "157955034.jpg"
+          ],
+          "zh" : "穿绿裙子的女人坐在一把破旧的绿黄色椅子上"
+        },
+        {
+          "apple_rewrite" : "A small boy sits on a girl's leg, pointing at something",
+          "apple_translation" : "The little boy sat on the girl's lap and pointed at something.",
+          "human_en" : "A young boy points out something interesting to the girl holding him in her lap near the front door",
+          "relevant" : [
+            "273603643.jpg"
+          ],
+          "zh" : "小男孩坐在女孩腿上指着什么东西"
+        },
+        {
+          "apple_rewrite" : "Girl running and jumping on the riverbank",
+          "apple_translation" : "The girl is running and jumping on the riverbank.",
+          "human_en" : "A girl leaps through the air while running on the riverbank",
+          "relevant" : [
+            "1809758121.jpg"
+          ],
+          "zh" : "女孩在河岸上奔跑跳跃"
+        },
+        {
+          "apple_rewrite" : "The user searched for a photo of a young woman wearing gothic-style clothing at a comic convention",
+          "apple_translation" : "A young woman wearing a Gothic Lolita costume attending a comic convention.",
+          "human_en" : "A young woman dressed up gothic lolita style for a convention event",
+          "relevant" : [
+            "4062550863.jpg"
+          ],
+          "zh" : "穿哥特洛丽塔服装参加漫展的年轻女人"
+        },
+        {
+          "apple_rewrite" : "A man wearing a headscarf and two police officers standing in front of a white tent",
+          "apple_translation" : "The man wearing a headscarf and two policemen stood in front of the white tent.",
+          "human_en" : "Turbaned man and two police officers stand in front of a white canopy and a pile of garbage bags",
+          "relevant" : [
+            "3432637363.jpg"
+          ],
+          "zh" : "戴头巾的男人和两个警察站在白色帐篷前"
+        },
+        {
+          "apple_rewrite" : "Here is the description: \n\n* A tight-fitting performer is being lifted up",
+          "apple_translation" : "The acrobat in tight clothes was lifted up.",
+          "human_en" : "Three people dressed in blue, white and black leotards are being held up by the hands of a set of two people each on the ground dressed in the same outfit as people look on",
+          "relevant" : [
+            "1459582913.jpg"
+          ],
+          "zh" : "穿紧身衣的杂技演员被托举起来"
+        },
+        {
+          "apple_rewrite" : "A man riding a bicycle past a wall with a peace sign painted on it",
+          "apple_translation" : "A man rode a bicycle past a wall covered with graffiti with peace signs.",
+          "human_en" : "A man rides a bicycle through an inner-city neighborhood next to a wall containing a graffiti picture of a big hand showing the peace sign",
+          "relevant" : [
+            "533508800.jpg"
+          ],
+          "zh" : "男人骑自行车经过画着和平手势涂鸦的墙"
+        },
+        {
+          "apple_rewrite" : "Three white and brown dogs are playing with each other",
+          "apple_translation" : "Three brown and white dogs are playing by biting each other.",
+          "human_en" : "Three dogs in different shades of brown and white biting and licking each other",
+          "relevant" : [
+            "411216802.jpg"
+          ],
+          "zh" : "三只棕白色的狗互相咬着玩"
+        },
+        {
+          "apple_rewrite" : "Short black-haired woman holding a baby in pink clothes with a pacifier",
+          "apple_translation" : "A woman with short black hair is holding a baby wearing pink clothes and sucking a pacifier.",
+          "human_en" : "A woman with short black hair in a blue t-shirt holds a baby in pink clothes with a pacifier",
+          "relevant" : [
+            "2165724565.jpg"
+          ],
+          "zh" : "短黑发的女人抱着穿粉色衣服含奶嘴的婴儿"
+        },
+        {
+          "apple_rewrite" : "People are gathered under a white tent, sitting at a table",
+          "apple_translation" : "People gathered under the white tent and sat at the table.",
+          "human_en" : "People gather under a white tent while some sit at tables",
+          "relevant" : [
+            "2678668581.jpg"
+          ],
+          "zh" : "人们聚在白色帐篷下坐在桌边"
+        }
+      ]
+    }
+  ]
+}

@@ -124,6 +124,10 @@ struct RootView: View {
             if AgentEvaluation.isRequested {
                 Task { await AgentEvaluation.runWhenIndexed() }
             }
+            // Testing aid: `-PhophyE3` compares ways to search in Chinese (E3).
+            if ChineseQueryEvaluation.isRequested {
+                Task { await ChineseQueryEvaluation.runWhenIndexed() }
+            }
             Task.detached(priority: .utility) { await SearchEvaluation.probeDescribers() }
             Task.detached(priority: .userInitiated) { await SearchEvaluation.benchPhone() }
             Task.detached(priority: .userInitiated) { await SearchEvaluation.probeSearch() }
