@@ -14,7 +14,7 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
 | PR | Branch → base | Contents | State |
 |---|---|---|---|
 | [Jasonsu22/Phophy#2](https://github.com/Jasonsu22/Phophy/pull/2) | `b-e11-e7-assistant-eval` → `photo-descriptions` | E11 cost per answer, E7 task evaluation, this log | Waiting for the lead's review |
-| E3 PR (link below, once open) | `b-e3-chinese-queries` → `b-e11-e7-assistant-eval` | E3 Chinese-query experiment and results | Stacked on #2: merge #2 first, then retarget this PR to `photo-descriptions` |
+| [Jasonsu22/Phophy#3](https://github.com/Jasonsu22/Phophy/pull/3) | `b-e3-chinese-queries` → `b-e11-e7-assistant-eval` | E3 Chinese-query experiment and results | Stacked on #2: merge #2 first, then retarget this PR to `photo-descriptions` |
 
 ### Waiting on others
 
@@ -126,7 +126,7 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
   - a Foundation Models rewrite using the assistant's instruction. The rewrite needed the content-transformation guardrails; with the defaults, one query was refused.
 - Added `SearchOptions.chineseConcepts` (to measure "no handling") and the `-PhophyE3` runner (`Phophy/Debug/ChineseQueryEvaluation.swift`, `Eval/run_e3.sh`).
 - Indexed the 1,006 Flickr30k test photos on "Phophy Flickr" (English, no descriptions) and ran E3. Results are below and in `Eval/E3_CHINESE.md`.
-- Committed on `b-e3-chinese-queries`; PR opened (see Pull requests).
+- Committed on `b-e3-chinese-queries`; opened [Jasonsu22/Phophy#3](https://github.com/Jasonsu22/Phophy/pull/3), stacked on #2.
 
 ## Next steps
 
