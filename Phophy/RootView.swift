@@ -120,6 +120,10 @@ struct RootView: View {
             if SearchEvaluation.isRequested {
                 Task.detached(priority: .utility) { await SearchEvaluation.runWhenIndexed() }
             }
+            // Testing aid: `-PhophyAgentEval` runs Documents/agent_tasks.json (E7).
+            if AgentEvaluation.isRequested {
+                Task { await AgentEvaluation.runWhenIndexed() }
+            }
             Task.detached(priority: .utility) { await SearchEvaluation.probeDescribers() }
             Task.detached(priority: .userInitiated) { await SearchEvaluation.benchPhone() }
             Task.detached(priority: .userInitiated) { await SearchEvaluation.probeSearch() }

@@ -192,12 +192,18 @@ final class AssistantModel {
                 prompt = "Earlier in this conversation:\n\(context)\n\nNew question: \(text)"
                 carryOver = nil
             }
-            let reply = try await chat.send(prompt)
+            // Every cloud round of this answer adds its tokens here (E11).
+            let usage = UsageTally(label: "assistant")
+            let reply = try await UsageMeter.$current.withValue(usage) {
+                try await chat.send(prompt)
+            }
             let shown = await toolbox.present(reply: reply)
             let text = shown.text.isEmpty ? "Here they are." : shown.text
+            var steps = shown.steps
+            if let cost = await usage.summaryLine() { steps.append(cost) }
             answer(Message(
                 role: .assistant, text: text, photoIDs: shown.photoIDs,
-                moreIDs: shown.moreIDs.isEmpty ? nil : shown.moreIDs, albums: shown.albums, steps: shown.steps
+                moreIDs: shown.moreIDs.isEmpty ? nil : shown.moreIDs, albums: shown.albums, steps: steps
             ))
         } catch {
             _ = await toolbox.present(reply: "")

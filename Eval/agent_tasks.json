@@ -1,0 +1,22 @@
+[
+  {"id": "en-muji-total", "lang": "en", "kind": "read", "ask": "How much did I spend at Muji?", "answer_any": ["702"], "shows_any": ["receipt_muji.jpg"]},
+  {"id": "en-train-time", "lang": "en", "kind": "read", "ask": "When does my train to Shanghai leave?", "answer_any": ["8:15"], "shows_any": ["screen_train.png"]},
+  {"id": "en-wifi-password", "lang": "en", "kind": "read", "ask": "What's my home Wi-Fi password?", "answer_any": ["harbour-lights-2026"], "shows_any": ["doc_wifi.jpg"]},
+  {"id": "en-rent", "lang": "en", "kind": "read", "ask": "How much is my monthly rent?", "answer_any": ["14500"], "shows_any": ["doc_lease.jpg"]},
+  {"id": "en-boarding-gate", "lang": "en", "kind": "read", "ask": "Which gate did my flight to Tokyo board at?", "answer_any": ["gate23", "gate:23"], "shows_any": ["screen_boarding.png"]},
+  {"id": "en-dinner-booking", "lang": "en", "kind": "read", "ask": "Which restaurant did we book for dinner after the demo?", "answer_any": ["haidilao"], "shows_any": ["screen_chat.png"]},
+  {"id": "en-ml-deadline", "lang": "en", "kind": "read", "ask": "When is the Machine Learning assignment 2 due?", "answer_any": ["27november", "27nov", "november27", "nov27", "27/11", "11-27"]},
+  {"id": "en-starbucks", "lang": "en", "kind": "read", "ask": "What did I pay at Starbucks?", "answer_any": ["73"], "shows_any": ["receipt_starbucks.jpg"]},
+  {"id": "en-midterm-date", "lang": "en", "kind": "read", "ask": "When is the Computer Networks midterm?", "answer_any": ["20november", "20nov", "november20", "nov20", "20/11", "11-20"]},
+  {"id": "en-whiteboard", "lang": "en", "kind": "find", "ask": "Find the whiteboard with the network diagram from our group project", "shows_any": ["whiteboard.jpg"]},
+  {"id": "en-offer-letter", "lang": "en", "kind": "find", "ask": "Show me my HKU admission offer letter", "shows_any": ["doc_offer.jpg"]},
+  {"id": "en-skiing-place", "lang": "en", "kind": "library", "ask": "Where did I go skiing?", "answer_any": ["zermatt"]},
+  {"id": "en-screenshot-count", "lang": "en", "kind": "library", "ask": "How many screenshots do I have?", "answer_any": ["6screenshot", "six"]},
+  {"id": "en-tokyo-album", "lang": "en", "kind": "organise", "ask": "Put my photos from the Tokyo trip in an album", "album": true},
+  {"id": "zh-muji-total", "lang": "zh", "kind": "read", "ask": "我在无印良品花了多少钱？", "answer_any": ["702"], "shows_any": ["receipt_muji.jpg"]},
+  {"id": "zh-train-time", "lang": "zh", "kind": "read", "ask": "去上海的火车几点出发？", "answer_any": ["8:15"], "shows_any": ["screen_train.png"]},
+  {"id": "zh-headphones-price", "lang": "zh", "kind": "read", "ask": "我买的降噪耳机花了多少钱？", "answer_any": ["1299"], "shows_any": ["screen_order.png"]},
+  {"id": "zh-chachaanteng-bill", "lang": "zh", "kind": "read", "ask": "我们在澳洲牛奶公司吃饭一共花了多少？", "answer_any": ["112"], "shows_any": ["receipt_chachaanteng.jpg"]},
+  {"id": "zh-database-slides", "lang": "zh", "kind": "find", "ask": "找一下数据库课的幻灯片", "shows_any": ["slide_*"]},
+  {"id": "zh-tokyo-album", "lang": "zh", "kind": "organise", "ask": "把东京旅行的照片做成一个相册", "album": true}
+]
