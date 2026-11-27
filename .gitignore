@@ -27,3 +27,6 @@ Demo/video/tts/
 Eval/photos/
 Eval/e4-photos/
 Demo/library/
+
+# Private material for course submission (names, student IDs): never commit
+private/
