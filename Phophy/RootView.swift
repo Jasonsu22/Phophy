@@ -128,6 +128,10 @@ struct RootView: View {
             if ChineseQueryEvaluation.isRequested {
                 Task { await ChineseQueryEvaluation.runWhenIndexed() }
             }
+            // Testing aid: `-PhophyE4` measures vectors of the text in photos (E4).
+            if OCRTextEvaluation.isRequested {
+                Task { await OCRTextEvaluation.runWhenIndexed() }
+            }
             Task.detached(priority: .utility) { await SearchEvaluation.probeDescribers() }
             Task.detached(priority: .userInitiated) { await SearchEvaluation.benchPhone() }
             Task.detached(priority: .userInitiated) { await SearchEvaluation.probeSearch() }

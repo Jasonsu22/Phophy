@@ -15,6 +15,7 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
 |---|---|---|---|
 | [Jasonsu22/Phophy#2](https://github.com/Jasonsu22/Phophy/pull/2) | `b-e11-e7-assistant-eval` → `photo-descriptions` | E11 cost per answer, E7 task evaluation, this log | Waiting for the lead's review |
 | [Jasonsu22/Phophy#3](https://github.com/Jasonsu22/Phophy/pull/3) | `b-e3-chinese-queries` → `b-e11-e7-assistant-eval` | E3 Chinese-query experiment and results | Stacked on #2: merge #2 first, then retarget this PR to `photo-descriptions` |
+| [Jasonsu22/Phophy#4](https://github.com/Jasonsu22/Phophy/pull/4) | `b-e4-ocr-text-vectors` → `b-e3-chinese-queries` | E4 OCR text vectors experiment and results | Stacked on #3: merge #2, then #3, then this one |
 
 ### Waiting on others
 
@@ -29,7 +30,7 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
 
 ### How to pick this up on another Mac
 
-1. Clone the repository and check out `b-e3-chinese-queries`, which contains everything above.
+1. Clone the repository and check out `b-e4-ocr-text-vectors`, which contains everything above.
 2. Download the MobileCLIP S0 models (PLAN.md, "MobileCLIP models").
 3. Download the Flickr30k 1K test split into a folder outside git: `test_1k_flickr.csv` and `images_flickr_1k_test.zip` from Hugging Face, `nlphuji/flickr_1k_test_image_text_retrieval`.
 4. Build the demo library: `python3 Demo/build_library.py CAPTIONS.tsv IMAGES_DIR OUT_DIR`. CAPTIONS.tsv has one line per photo, `filename|caption`, made from the CSV's `raw` column.
@@ -41,13 +42,15 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
    | Simulator | Holds | Used for |
    |---|---|---|
    | "Phophy Eval" | the demo library | E7 / E11 |
-   | "Phophy Flickr" | the 1,000 Flickr30k photos | E1 / E3 / E4 |
+   | "Phophy Flickr" | the 1,000 Flickr30k photos | E1 / E3 |
+   | "Phophy Text" | a clone of "Phophy Flickr" plus the 100 E4 text photos (`python3 Eval/e4_build_text_photos.py OUT_DIR`) | E4 |
 
 6. Build the Debug app:
    `xcodebuild build -project Phophy.xcodeproj -scheme Phophy -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath build -skipMacroValidation -skipPackagePluginValidation CODE_SIGNING_ALLOWED=NO`
 7. Run the experiments:
    - `Eval/run_agent_eval.sh <sim> anthropic|openai|apple` for E7 and E11;
    - `Eval/run_e3.sh <sim>` for E3;
+   - `Eval/run_e4.sh <sim>` for E4 (it also computes the text vectors on the Mac, since the simulator can't load Apple's embedding models);
    - `Eval/run_eval.sh <sim>` for E1.
 
 ## Deadlines
@@ -66,10 +69,10 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
 | E3 Chinese queries | ✅ First round done: on-device translation is best (full sentences R@5 0.600 → 0.867, equal to human English). Open: the Claude condition (needs a key) and translation + dictionary combined | `Eval/E3_CHINESE.md`, `Eval/results-e3.json`, `Phophy/Debug/ChineseQueryEvaluation.swift` |
 | E11 cloud cost logging | 🟡 Code done (PR #2); no numbers until a key is set | `Phophy/Assistant/UsageMeter.swift` |
 | E7 assistant tasks per backend | 🟡 Tools done (PR #2). Apple Intelligence: lead to run. Cloud: needs a key | `Eval/AGENT_EVAL.md`, `Phophy/Debug/AgentEvaluation.swift` |
-| E4 OCR text embeddings | ⏳ Data assessed (see below); not started | |
+| E4 OCR text embeddings | ✅ First round done: fusing text vectors with search lifts R@10 0.50 → 0.74 and MRR 0.306 → 0.421 (Chinese MRR 0.208 → 0.519). Next: agree an index column with the lead and Track A, then ship | `Eval/E4_OCR_EMBEDDINGS.md`, `Eval/results-e4.json`, `Phophy/Debug/OCRTextEvaluation.swift` |
 | Bugs #7, #8, #9, #13 (TEAM_PLAN.md) | ⏳ Not started (#8 is what E3 measures) | |
 
-### E4 readiness (assessed 27 Nov)
+### E4 readiness (assessed 27 Nov; done 27 Nov, see Results)
 
 - **Flickr30k is no use for E4.** Only 55 of its photos have 20 or more characters of text, mostly signs and T-shirts.
 - **The demo library has usable data.** It has 39 photos with text, 26 of them text-heavy: 18 lecture slides (networks, machine learning, and a database course in Chinese), 4 receipts, 3 documents, 6 screenshots and a whiteboard. OCR quality is good. The data is synthetic, so nobody's real photos are needed.
@@ -89,6 +92,8 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
 - [x] Flickr30k 1K test photos in `~/NLP/data/flickr1k`; demo library in `~/NLP/data/demo-library` (158 files); both outside git
 - [x] "Phophy Eval" simulator (iPhone Duo, iOS 27.2, English): demo library indexed, 162 photos
 - [x] "Phophy Flickr" simulator (iPhone Duo, iOS 27.2, English): Flickr30k indexed, 1,006 photos
+- [x] "Phophy Text" simulator: a clone of "Phophy Flickr" plus 100 E4 text photos (1,106 photos), indexed
+- [ ] Apple's `NLContextualEmbedding` in the simulator: fails with "Embedding model requires compilation". Works on the Mac, so `run_e4.sh` computes the E4 vectors there.
 - [ ] iPhone 18 Pro Max simulator (the lead's demo device). The general iOS 27.2 runtime (24B8117) was mounted twice when two downloads ran at once and shows as malformed; restarting the simulator service didn't help, so a Mac restart should. Only the iPhone Duo runtime (24B91016s) works for now. This doesn't change E1/E3/E4/E7/E11 numbers; it matters only for video footage.
 - [ ] Apple Intelligence in the simulator: **blocked on this Mac.** Apple Intelligence is on, but every request fails with `Model Catalog error (UnifiedAssetFramework 5000, no underlying assets)`, in a Chinese and in an English simulator. Likely cause: the Mac runs macOS 26.6, while the iOS 27.2 simulator's Foundation Models need the macOS 27 model assets (the lead's Mac and CI run macOS 27). The same Apple frameworks do work on the Mac itself, which is how E3's conditions b and c were produced.
 - [ ] API keys for Claude and OpenAI saved in the simulator's Settings (never in git)
@@ -128,11 +133,21 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
 - Indexed the 1,006 Flickr30k test photos on "Phophy Flickr" (English, no descriptions) and ran E3. Results are below and in `Eval/E3_CHINESE.md`.
 - Committed on `b-e3-chinese-queries`; opened [Jasonsu22/Phophy#3](https://github.com/Jasonsu22/Phophy/pull/3), stacked on #2.
 
+### 27 Nov 2026 (late night): E4
+
+- Generated 100 text photos with known content (`Eval/e4_build_text_photos.py`): 72 slides from 10 English NLP lectures and 2 Chinese ones, 12 documents, 10 screenshots and 6 receipts. Wrote 50 paraphrase queries (35 English, 15 Chinese) and translated the Chinese ones on the Mac.
+- Probed Apple's text vectors on the Mac:
+  - `NLEmbedding.sentenceEmbedding` ranked the wrong document first;
+  - `NLContextualEmbedding` with mean pooling ranked correctly, so E4 uses it.
+- `-PhophyE4` runner (`Phophy/Debug/OCRTextEvaluation.swift`), with a Mac fallback (`Eval/e4_embed.swift`), since the simulator can't load the embedding models. `Eval/run_e4.sh` does all of it.
+- Results: in the table below and in `Eval/E4_OCR_EMBEDDINGS.md`. Two full runs gave identical numbers once ties were broken by photo ID.
+- Opened [Jasonsu22/Phophy#4](https://github.com/Jasonsu22/Phophy/pull/4), stacked on #3.
+
 ## Next steps
 
 1. Get a Claude API key. Then run E7 and E11 on Claude Haiku 5.5, and E3 condition b2.
 2. E3 follow-up: try translation for the visual model together with the Chinese words and dictionary for keywords. If it holds, ship on-device translation for Chinese searches in `SearchEngine`, falling back to the dictionary when the languages aren't installed.
-3. E4: generate about 100 more text photos and draft 30–50 paraphrase queries for the team to check; then run the experiment inside the evaluation runner.
+3. E4 follow-up: agree an index column for text vectors with the lead and Track A; check the vectors on a real iPhone; ask the team for a held-out query set before fixing the weight at 2.
 4. Bug #13 (cap the chat history file).
 5. Report sections: methods for E3, E7 and E11 can be written now.
 
@@ -147,6 +162,15 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
 | b. Apple on-device model rewrite | 0.800 | 0.754 | 0.473 | 0.775 |
 | **c. Apple on-device translation** | **0.867** | **0.785** | **0.495** | **0.871** |
 | Upper bound: human English | 0.867 | 0.849 | 0.545 | 0.951 |
+
+### E4: text vectors (27 Nov, 1,106 photos, 50 paraphrase queries)
+
+| Condition | R@5 | R@10 | MRR | Chinese MRR |
+|---|---|---|---|---|
+| App search today | 0.420 | 0.500 | 0.306 | 0.208 |
+| Text vectors only | 0.480 | 0.740 | 0.346 | 0.465 |
+| App + text vectors | 0.520 | 0.640 | 0.406 | 0.422 |
+| **App + text vectors ×2, translation for vectors only** | **0.580** | **0.740** | **0.421** | **0.519** |
 
 ### E7: assistant tasks
 

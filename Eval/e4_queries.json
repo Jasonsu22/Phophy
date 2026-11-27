@@ -1,0 +1,378 @@
+{
+  "about" : "E4 test set: searches for text-heavy photos (Eval/e4_build_text_photos.py) worded differently from the text in the photo. relevant lists every photo that answers the search.",
+  "queries" : [
+    {
+      "lang" : "en",
+      "q" : "how rare words get split into smaller pieces",
+      "relevant" : [
+        "e4_tok_2.jpg",
+        "e4_tok_3.jpg",
+        "e4_tok_5.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "predicting the neighbours of a word from the word itself",
+      "relevant" : [
+        "e4_emb_2.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "words that mean different things in different sentences",
+      "relevant" : [
+        "e4_emb_6.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "why early information fades when training on long sequences",
+      "relevant" : [
+        "e4_rnn_3.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "memory cell that decides what to keep and what to throw away",
+      "relevant" : [
+        "e4_rnn_4.jpg",
+        "e4_rnn_5.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "dividing attention scores by the square root of the dimension",
+      "relevant" : [
+        "e4_attn_2.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "how a transformer knows the order of words",
+      "relevant" : [
+        "e4_attn_4.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "fill in the blank pretraining objective",
+      "relevant" : [
+        "e4_pre_1.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "cheap fine-tuning that trains only a tiny add-on",
+      "relevant" : [
+        "e4_pre_4.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "how much data a model of a given size should see",
+      "relevant" : [
+        "e4_pre_5.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "always choosing the single most likely next word",
+      "relevant" : [
+        "e4_dec_1.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "sampling from the words that cover 90 percent of the probability",
+      "relevant" : [
+        "e4_dec_4.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "making generated text more creative or more conservative",
+      "relevant" : [
+        "e4_dec_5.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "stopping the model from saying the same thing over and over",
+      "relevant" : [
+        "e4_dec_6.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "score for translation quality",
+      "relevant" : [
+        "e4_evl_1.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "how much two labellers agree beyond luck",
+      "relevant" : [
+        "e4_evl_5.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "benchmark questions that ended up in the training data",
+      "relevant" : [
+        "e4_evl_6.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "learning which of two answers people like better",
+      "relevant" : [
+        "e4_aln_2.jpg",
+        "e4_aln_4.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "aligning a model without reinforcement learning",
+      "relevant" : [
+        "e4_aln_4.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "the model making up facts and fake references",
+      "relevant" : [
+        "e4_aln_6.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "cutting long files into small passages for search",
+      "relevant" : [
+        "e4_rag_3.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "a second model that reorders the search results",
+      "relevant" : [
+        "e4_rag_4.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "asking the model to show its working step by step",
+      "relevant" : [
+        "e4_prm_2.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "malicious instructions hidden inside a web page",
+      "relevant" : [
+        "e4_prm_5.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "when is the NLP project report due",
+      "relevant" : [
+        "e4_prm_6.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "fine for returning library books late",
+      "relevant" : [
+        "e4_doc_library.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "how to quit my gym contract early",
+      "relevant" : [
+        "e4_doc_gym.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "when does my summer job start",
+      "relevant" : [
+        "e4_doc_internship.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "can I play music late at night in my building",
+      "relevant" : [
+        "e4_doc_house_rules.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "how long is my computer covered for repairs",
+      "relevant" : [
+        "e4_doc_warranty.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "is my plane to Japan late",
+      "relevant" : [
+        "e4_screen_flight_delay.png"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "storm warning, are classes cancelled",
+      "relevant" : [
+        "e4_screen_weather.png"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "what did I get for takeaway dinner",
+      "relevant" : [
+        "e4_screen_food_order.png"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "how much was the flu medicine",
+      "relevant" : [
+        "e4_receipt_pharmacy.jpg"
+      ]
+    },
+    {
+      "lang" : "en",
+      "q" : "the NLP textbook I bought",
+      "relevant" : [
+        "e4_receipt_bookstore.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "子词切分是怎么做的",
+      "q_en" : "How to split subwords?",
+      "relevant" : [
+        "e4_tok_2.jpg",
+        "e4_tok_3.jpg",
+        "e4_tok_5.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "注意力分数为什么要除以根号维度",
+      "q_en" : "Why is the attention score divided by the square root dimension?",
+      "relevant" : [
+        "e4_attn_2.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "模型一本正经地胡说八道",
+      "q_en" : "The model is talking nonsense seriously.",
+      "relevant" : [
+        "e4_aln_6.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "让生成的文字更随机一点",
+      "q_en" : "Make the generated text more random.",
+      "relevant" : [
+        "e4_dec_5.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "为什么要先检索文档再回答",
+      "q_en" : "Why do you need to retrieve the document before answering?",
+      "relevant" : [
+        "e4_rag_1.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "程序互相等待对方释放资源卡住了",
+      "q_en" : "The programs are waiting for each other to release the resource, which is stuck.",
+      "relevant" : [
+        "e4_os_3.jpg",
+        "e4_os_4.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "分配资源前先判断安不安全",
+      "q_en" : "Judge whether it is safe before allocating resources.",
+      "relevant" : [
+        "e4_os_4.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "内存满了该把哪一页换出去",
+      "q_en" : "The memory is full. Which page should be replaced?",
+      "relevant" : [
+        "e4_os_6.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "记录每个词出现在哪些文档里的数据结构",
+      "q_en" : "The data structure that records which documents each word appears in",
+      "relevant" : [
+        "e4_ir_1.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "怎么衡量一个词对文档有多重要",
+      "q_en" : "How to measure how important a word is to a document?",
+      "relevant" : [
+        "e4_ir_2.jpg",
+        "e4_ir_3.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "查得准和查得全",
+      "q_en" : "Accurate and comprehensive search",
+      "relevant" : [
+        "e4_ir_5.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "把几个搜索结果列表合成一个",
+      "q_en" : "Combine several search result lists into one.",
+      "relevant" : [
+        "e4_ir_6.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "图书逾期要罚多少钱",
+      "q_en" : "How much will I be fined for overdue books?",
+      "relevant" : [
+        "e4_doc_library.jpg"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "台风来了还要不要上课",
+      "q_en" : "Is there still class when the typhoon is coming?",
+      "relevant" : [
+        "e4_screen_weather.png"
+      ]
+    },
+    {
+      "lang" : "zh",
+      "q" : "西红柿鸡蛋怎么做",
+      "q_en" : "How to make tomato and egg?",
+      "relevant" : [
+        "e4_doc_recipe.jpg"
+      ]
+    }
+  ]
+}
