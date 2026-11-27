@@ -1,82 +1,114 @@
 [
  {
   "scene": 1,
-  "screen": "Title card: \"Phophy: find anything in your photos, on your iPhone\". Team 26",
-  "voice": "This is Phophy, an iPhone app that understands your photo library, built by Team 26."
+  "name": "Title",
+  "starts": 0,
+  "seconds": 5,
+  "screen": "Title: Phophy",
+  "voice": "This is Phophy: an iPhone app that understands your photos."
  },
  {
   "scene": 2,
-  "screen": "Problem card: thousands of photos, receipts, slides, screenshots",
-  "voice": "A phone holds thousands of photos. Finding the receipt from last week or the slide about TCP means minutes of scrolling, and sending everything to a cloud AI costs money and gives your photos away."
+  "name": "Scenario 1: scrolling",
+  "starts": 4.5,
+  "seconds": 10.5,
+  "screen": "Scrolling the whole library; a clock counts the minutes",
+  "voice": "Last month you photographed a whiteboard. You remember what was on it, but it's buried under hundreds of newer photos. You scroll, and give up."
  },
  {
   "scene": 3,
-  "screen": "How it works card (architecture)",
-  "voice": "Phophy reads every photo once, on the phone: the text in it, what it shows, and an embedding. A small AI model writes a short description. Search combines all of that. Nothing leaves the phone unless you choose a cloud model."
+  "name": "Scenario 1: found",
+  "starts": 14.5,
+  "seconds": 10.5,
+  "screen": "Typing \"whiteboard from last month\"; photos, the answer, the photo opened",
+  "voice": "With Phophy, just type what you remember: whiteboard from last month. The matching photos appear at once, and the answer tells you when and where it was taken."
  },
  {
   "scene": 4,
-  "screen": "App: Library, scroll Recents, open a receipt, info sheet (where, description, text)",
-  "voice": "Here's the library. Open a photo and Phophy shows what it knows: where it was taken, a description written on the phone, and every word on the receipt."
+  "name": "Scenario 2: the slides",
+  "starts": 24.5,
+  "seconds": 8.5,
+  "screen": "Seven slide photos dealt out, then swept into a pile",
+  "voice": "Second scenario. In today's lecture you photographed seven slides. Like most of us, you will never open them again."
  },
  {
   "scene": 5,
-  "screen": "Search: \"dog on the beach\" → \"Tokyo\" → \"bicyle\" (typo) → \"狗\"",
-  "voice": "Search understands what you mean. A scene, a place, even a typo or a Chinese word. Each answer takes about 20 milliseconds."
+  "name": "Scenario 2: ask",
+  "starts": 32.5,
+  "seconds": 9.0,
+  "screen": "Asking \"Summarise the slides from today's lecture\"",
+  "voice": "Ask Phophy to summarise the slides from today's lecture. It picks out today's slides and sums them up."
  },
  {
   "scene": 6,
-  "screen": "Search: \"G1234\", \"receipt from Muji\", \"whiteboard with the network diagram\"",
-  "voice": "It also finds words written in photos, and photos described in a sentence, like the whiteboard from our group project."
+  "name": "Scenario 2: notes",
+  "starts": 41.0,
+  "seconds": 15.7,
+  "screen": "Make notes; summary; key points; a flashcard turned over",
+  "voice": "Or tap Make notes. On the phone, Phophy writes a summary, lists the key points with their slide numbers, and makes flashcards, so the photos you took actually get reviewed."
  },
  {
   "scene": 7,
-  "screen": "Collections: categories, then Similar photos",
-  "voice": "Collections sorts the library for you: slides, receipts, documents, pets, screenshots. And it finds bursts of near-identical shots, suggesting which one to keep."
+  "name": "Ask: receipt",
+  "starts": 56.2,
+  "seconds": 7.4,
+  "screen": "\"How much did I spend at Muji?\" answered HK$702",
+  "voice": "It also answers from what's inside a photo. How much did I spend at Muji? It reads the receipt."
  },
  {
   "scene": 8,
-  "screen": "Study: three lectures → open TCP lecture → Make notes → summary, key points, flashcards",
-  "voice": "Students photograph lecture slides and never look at them again. Phophy groups them by lecture, and in a few seconds turns them into a summary, key points and flashcards, using only the text on the slides."
+  "name": "Edit",
+  "starts": 63.1,
+  "seconds": 9.2,
+  "screen": "Editor: \"warmer and more vivid\", done on the iPhone",
+  "voice": "To edit, describe the change. Simple edits run on the phone; bigger ones can go to an AI image service you choose."
  },
  {
   "scene": 9,
-  "screen": "Assistant: \"How much did I spend at Muji?\" → HK$702",
-  "voice": "You can also just ask. The assistant searches your photos with tools and reads the answer from the receipt."
+  "name": "Collections",
+  "starts": 71.8,
+  "seconds": 11.9,
+  "screen": "Collections, then Similar photos",
+  "voice": "Collections sorts the library for you: slides, receipts, documents, people, pets. It also finds near-identical shots and suggests which one to keep."
  },
  {
   "scene": 10,
-  "screen": "Assistant: \"When does my train to Shanghai leave?\" → 08:15",
-  "voice": "When does my train leave? It finds the booking screenshot and reads the time."
+  "name": "Place and time",
+  "starts": 83.2,
+  "seconds": 8.7,
+  "screen": "\"Tokyo in May\"; the answer; all results as an album",
+  "voice": "Search understands places and dates in plain words, like Tokyo in May, and opens every result as an album."
  },
  {
   "scene": 11,
-  "screen": "Assistant: \"Put my photos from the Tokyo trip in an album\" → Save album",
-  "voice": "And it can organise: here it gathers the Tokyo trip into an album, which you confirm with one tap."
+  "name": "Privacy",
+  "starts": 91.4,
+  "seconds": 7.4,
+  "screen": "Settings: Apple Intelligence and cloud AI switches",
+  "voice": "All of this runs on the phone by default. Cloud AI is only used if you turn it on."
  },
  {
   "scene": 12,
-  "screen": "Editor: open a beach photo, type \"warmer and brighter\", Done",
-  "voice": "Edits work the same way: describe the change, and it runs on the phone for free."
+  "name": "Results",
+  "starts": 98.3,
+  "seconds": 16.5,
+  "screen": "Search before and after, four bars",
+  "voice": "We measured search on the Flickr30k benchmark. Against our first version, Chinese searches rose from 2 to 51 percent, misspelled ones from 13 to 59, and objects found from 51 to 89 percent."
  },
  {
   "scene": 13,
-  "screen": "Settings: who describes photos, the cloud warning alert",
-  "voice": "Everything runs on the phone by default, with Apple Intelligence or a small open model for older iPhones. If you choose a cloud model, Phophy warns you first that your photos leave the device."
+  "name": "iPhone speed",
+  "starts": 114.3,
+  "seconds": 8,
+  "screen": "Under 25 ms per search; 1.5 s per description; 0 uploads",
+  "voice": "On a real iPhone 13 Pro Max, a search takes under 25 milliseconds, and no photo is uploaded."
  },
  {
   "scene": 14,
-  "screen": "Results card: search before and after",
-  "voice": "We measured search on a standard benchmark, Flickr30k. Compared with our first version, Chinese searches went from 2% to 51% correct in the top ten, misspelled searches from 13% to 59%, and objects found in the top 50 from 51% to 89%, while long descriptions stayed as accurate as before."
- },
- {
-  "scene": 15,
-  "screen": "Results card: speed on an iPhone 13 Pro Max",
-  "voice": "On a real iPhone 13 Pro Max, without Apple Intelligence, search takes under 25 milliseconds and the on-device model describes a photo in about one and a half seconds."
- },
- {
-  "scene": 16,
-  "screen": "Team card: four members and their parts",
-  "voice": "Phophy was built by Su Chuanzhou, Yin Fengling, Qin Mengmeng and Wang Zhengyao. Thank you for watching."
+  "name": "Thanks",
+  "starts": 121.8,
+  "seconds": 6,
+  "screen": "Team card",
+  "voice": "Phophy, by Team 26. Thank you for watching."
  }
 ]

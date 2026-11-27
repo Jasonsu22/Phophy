@@ -1,39 +1,41 @@
 import React from "react";
 import { AbsoluteFill, Sequence, staticFile, useVideoConfig } from "remotion";
 import { Audio } from "@remotion/media";
-import { TransitionSeries, springTiming } from "@remotion/transitions";
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import { Background } from "./ui";
+import clips from "./clips.json";
 import {
-  AskAlbumScene, AskMujiScene, AskTrainScene, CollectionsScene, EditScene, HowScene, LibraryScene,
-  PhoneSpeedScene, PrivacyScene, ProblemScene, ResultsScene, SearchMeaningScene, SearchTextScene,
-  StudyScene, ThanksScene, TitleScene,
+  AskLectureScene, CollectionsScene, EditScene, FindScene, HuntScene, LectureIntroScene, MujiScene, NotesScene,
+  PhoneSpeedScene, PlaceScene, PrivacyScene, ResultsScene, ThanksScene, TitleScene,
 } from "./scenes";
 
-/** Scene lengths in seconds; each scene's narration starts 0.4 s in. */
+/**
+ * Scene lengths in seconds. A scene with a recording lasts as long as its clip.
+ * Each scene's narration (public/voice/NN.m4a, from make_voice.py) starts 0.45 s in.
+ */
 export const SCENES: { name: string; seconds: number; Scene: React.FC }[] = [
-  { name: "Title", seconds: 7, Scene: TitleScene },
-  { name: "Problem", seconds: 12.5, Scene: ProblemScene },
-  { name: "How it works", seconds: 15, Scene: HowScene },
-  { name: "Library", seconds: 11, Scene: LibraryScene },
-  { name: "Search by meaning", seconds: 13.5, Scene: SearchMeaningScene },
-  { name: "Words in photos", seconds: 12, Scene: SearchTextScene },
-  { name: "Collections", seconds: 12.5, Scene: CollectionsScene },
-  { name: "Study", seconds: 14.5, Scene: StudyScene },
-  { name: "Ask: Muji", seconds: 7.5, Scene: AskMujiScene },
-  { name: "Ask: train", seconds: 7, Scene: AskTrainScene },
-  { name: "Ask: album", seconds: 9, Scene: AskAlbumScene },
-  { name: "Edit", seconds: 7, Scene: EditScene },
-  { name: "Privacy", seconds: 13, Scene: PrivacyScene },
-  { name: "Results", seconds: 23, Scene: ResultsScene },
-  { name: "iPhone speed", seconds: 12, Scene: PhoneSpeedScene },
-  { name: "Thanks", seconds: 8.5, Scene: ThanksScene },
+  { name: "Title", seconds: 5, Scene: TitleScene },
+  { name: "Scenario 1: scrolling", seconds: 10.5, Scene: HuntScene },
+  { name: "Scenario 1: found", seconds: clips.find, Scene: FindScene },
+  { name: "Scenario 2: the slides", seconds: 8.5, Scene: LectureIntroScene },
+  { name: "Scenario 2: ask", seconds: clips["ask-lecture"], Scene: AskLectureScene },
+  { name: "Scenario 2: notes", seconds: clips.notes, Scene: NotesScene },
+  { name: "Ask: receipt", seconds: clips.muji, Scene: MujiScene },
+  { name: "Edit", seconds: clips.edit, Scene: EditScene },
+  { name: "Collections", seconds: clips.collections, Scene: CollectionsScene },
+  { name: "Place and time", seconds: clips.place, Scene: PlaceScene },
+  { name: "Privacy", seconds: clips.settings, Scene: PrivacyScene },
+  { name: "Results", seconds: 16.5, Scene: ResultsScene },
+  { name: "iPhone speed", seconds: 8, Scene: PhoneSpeedScene },
+  { name: "Thanks", seconds: 6, Scene: ThanksScene },
 ];
 
-export const TRANSITION = 15;
+/** Seconds two scenes overlap while one fades into the next. */
+export const TRANSITION = 0.5;
 
 export const totalFrames = (fps: number) =>
-  SCENES.reduce((sum, s) => sum + Math.round(s.seconds * fps), 0) - TRANSITION * (SCENES.length - 1);
+  SCENES.reduce((sum, s) => sum + Math.round(s.seconds * fps), 0) - Math.round(TRANSITION * fps) * (SCENES.length - 1);
 
 export const PhophyVideo: React.FC = () => {
   const { fps } = useVideoConfig();
@@ -42,12 +44,11 @@ export const PhophyVideo: React.FC = () => {
       <Background />
       <TransitionSeries>
         {SCENES.flatMap(({ name, seconds, Scene }, i) => {
-          const n = String(i + 1).padStart(2, "0");
           const items = [
             <TransitionSeries.Sequence key={name} name={name} durationInFrames={Math.round(seconds * fps)}>
               <Scene />
-              <Sequence from={Math.round(0.4 * fps)} name={`Voice ${n}`}>
-                <Audio src={staticFile(`voice/${n}.m4a`)} />
+              <Sequence from={Math.round(0.45 * fps)} name={`Voice ${String(i + 1).padStart(2, "0")}`}>
+                <Audio src={staticFile(`voice/${String(i + 1).padStart(2, "0")}.m4a`)} />
               </Sequence>
             </TransitionSeries.Sequence>,
           ];
@@ -56,7 +57,7 @@ export const PhophyVideo: React.FC = () => {
               <TransitionSeries.Transition
                 key={`${name}-fade`}
                 presentation={fade()}
-                timing={springTiming({ config: { damping: 200 }, durationInFrames: TRANSITION })}
+                timing={linearTiming({ durationInFrames: Math.round(TRANSITION * fps) })}
               />,
             );
           }

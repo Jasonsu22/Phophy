@@ -11,3 +11,19 @@ docs/readme-preview/
 
 # Demo video renders
 Demo/video/out/
+
+# Test pictures and screen recordings used by the demo video. They stay on
+# this Mac; rebuild them with Demo/build_library.py, Demo/add_todays_lecture.py
+# and Demo/video/cut_clips.py.
+Demo/video/remotion/public/grid/
+Demo/video/remotion/public/slides/
+Demo/video/remotion/public/clips/
+Demo/video/remotion/public/talk/
+
+# The local voice model and its Python environment (350 MB; see Demo/video/make_talk.py)
+Demo/video/tts/
+
+# Test photo libraries built for the evaluations
+Eval/photos/
+Eval/e4-photos/
+Demo/library/

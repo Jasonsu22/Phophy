@@ -1,0 +1,364 @@
+{
+ "total": 289.1,
+ "transition": 0.5,
+ "lead": 0.45,
+ "pages": [
+  {
+   "n": 1,
+   "id": "title",
+   "text": "This is Phophy: an iPhone app that understands your photos. We are Team 26.",
+   "speech": 5.14,
+   "speed": 1.0,
+   "seconds": 6.2,
+   "words": 14,
+   "fits": true,
+   "cues": {},
+   "starts": 0.0
+  },
+  {
+   "n": 2,
+   "id": "scenario1",
+   "text": "Take a look at this situation. On a ski trip last winter, you took a great photo of a friend. All you remember now is snow, a white hat and a big smile. You scroll, and scroll, and give up.",
+   "speech": 11.56,
+   "speed": 1.0,
+   "seconds": 12.7,
+   "words": 40,
+   "fits": true,
+   "cues": {
+    "remember": 6.16,
+    "snow": 7.51,
+    "hat": 8.05,
+    "smile": 8.69,
+    "scroll": 9.21,
+    "giveup": 11.1
+   },
+   "starts": 5.7
+  },
+  {
+   "n": 3,
+   "id": "scenario2",
+   "text": "Or let's say you're in a lecture. You photograph seven slides from your seat and, like most of us, you never open them again.",
+   "speech": 6.83,
+   "speed": 1.0,
+   "seconds": 7.9,
+   "words": 24,
+   "fits": true,
+   "cues": {
+    "slides": 2.48,
+    "never": 5.99
+   },
+   "starts": 17.9
+  },
+  {
+   "n": 4,
+   "id": "why",
+   "text": "So why is this so hard? Built-in search works by date, place and a fixed set of labels, not by description. And sending every photo to a cloud model is slow, costly, and gives your private photos away.",
+   "speech": 12.91,
+   "speed": 1.0,
+   "seconds": 14.0,
+   "words": 38,
+   "fits": true,
+   "cues": {
+    "builtin": 2.35,
+    "labels": 4.76,
+    "not": 6.02,
+    "cloud": 7.64,
+    "slow": 9.79,
+    "costly": 10.26,
+    "private": 11.11
+   },
+   "starts": 25.3
+  },
+  {
+   "n": 5,
+   "id": "goal",
+   "text": "So here is our goal: an app that understands every photo on the phone itself, so you can find, ask, study and edit in plain language, in English or Chinese.",
+   "speech": 10.26,
+   "speed": 1.0,
+   "seconds": 11.4,
+   "words": 30,
+   "fits": true,
+   "cues": {
+    "find": 5.98,
+    "ask": 6.55,
+    "study": 7.12,
+    "edit": 7.69,
+    "langs": 9.32
+   },
+   "starts": 38.8
+  },
+  {
+   "n": 6,
+   "id": "tiers",
+   "text": "How does it work? The key idea is tiered processing. Each photo is read once, on the phone, by the cheapest tools that work: metadata, text recognition, an embedding, and a small language model. The cloud comes last, and only if you allow it.",
+   "speech": 15.08,
+   "speed": 1.0,
+   "seconds": 16.2,
+   "words": 44,
+   "fits": true,
+   "cues": {
+    "once": 5.1,
+    "t0": 7.92,
+    "t1": 8.64,
+    "t2": 9.51,
+    "t3": 10.78,
+    "t4": 13.02
+   },
+   "starts": 49.7
+  },
+  {
+   "n": 7,
+   "id": "index",
+   "text": "Let's follow that ski photo. The indexer notes when and where it was taken, reads any text in it, tags it in English and Chinese, computes a Mobile Clip embedding, and has an on-device model write a one-line description. All of that goes into a local database.",
+   "speech": 16.43,
+   "speed": 1.0,
+   "seconds": 17.5,
+   "words": 46,
+   "fits": true,
+   "cues": {
+    "when": 3.38,
+    "text": 5.28,
+    "tags": 6.73,
+    "emb": 9.01,
+    "desc": 11.26,
+    "db": 14.76
+   },
+   "starts": 65.4
+  },
+  {
+   "n": 8,
+   "id": "hybrid",
+   "text": "Now you search. Two rankings run side by side. One matches your words against each photo's description, tags and text, with B M twenty-five. The other compares your sentence's embedding with every photo's. Reciprocal rank fusion merges them, so a photo that is good on both comes first.",
+   "speech": 18.9,
+   "speed": 1.0,
+   "seconds": 20.0,
+   "words": 46,
+   "fits": true,
+   "cues": {
+    "words": 4.37,
+    "meaning": 10.91,
+    "fuse": 14.67,
+    "first": 18.71
+   },
+   "starts": 82.4
+  },
+  {
+   "n": 9,
+   "id": "query",
+   "text": "Before ranking, the query itself is understood: places and dates become filters, typos are corrected against the index's own vocabulary, and Chinese is translated on the phone, because the visual model only reads English.",
+   "speech": 14.55,
+   "speed": 1.0,
+   "seconds": 15.6,
+   "words": 34,
+   "fits": true,
+   "cues": {
+    "places": 3.75,
+    "typos": 6.01,
+    "chinese": 9.84
+   },
+   "starts": 101.9
+  },
+  {
+   "n": 10,
+   "id": "assistant",
+   "text": "And questions? They go to an assistant: a language model that calls tools over the local index, such as find photos or propose an album. The model only ever sees text, never the images, and anything that changes your library waits for your tap.",
+   "speech": 15.89,
+   "speed": 1.0,
+   "seconds": 17.0,
+   "words": 44,
+   "fits": true,
+   "cues": {
+    "model": 3.39,
+    "tools": 4.64,
+    "index": 5.6,
+    "back": 6.76,
+    "answer": 8.04,
+    "text": 10.35,
+    "tap": 12.49
+   },
+   "starts": 117.0
+  },
+  {
+   "n": 11,
+   "id": "notes",
+   "text": "Lecture notes use the same index. Slides taken within thirty minutes form one lecture, and only their recognised text goes to the model, which returns a summary, key points and flashcards. Edit requests are read on the phone too; only generative ones go to an image service.",
+   "speech": 17.54,
+   "speed": 1.0,
+   "seconds": 18.6,
+   "words": 47,
+   "fits": true,
+   "cues": {
+    "group": 3.17,
+    "text": 6.49,
+    "out": 9.5,
+    "edit": 12.84,
+    "phone": 14.11,
+    "ai": 15.49
+   },
+   "starts": 133.5
+  },
+  {
+   "n": 12,
+   "id": "built",
+   "text": "So, what did we build? A native iOS app in Swift and Swift U I, about fourteen thousand lines. Models run on the phone, and every language-model feature sits behind one interface, with on-device and cloud backends.",
+   "speech": 14.85,
+   "speed": 1.0,
+   "seconds": 15.9,
+   "words": 35,
+   "fits": true,
+   "cues": {
+    "lines": 5.58,
+    "models": 7.91,
+    "iface": 12.15
+   },
+   "starts": 151.6
+  },
+  {
+   "n": 13,
+   "id": "find",
+   "text": "Let's see it in action. Back to the ski trip: just type what you remember. Skiing, white hat, big smile. And there it is: Zermatt, the thirteenth of January.",
+   "speech": 9.79,
+   "speed": 1.0,
+   "seconds": 11.4,
+   "words": 29,
+   "fits": true,
+   "cues": {},
+   "starts": 167.0
+  },
+  {
+   "n": 14,
+   "id": "ask",
+   "text": "And today's slides? Just ask Phophy to summarise them. It picks out today's seven slides and sums them up.",
+   "speech": 6.36,
+   "speed": 1.0,
+   "seconds": 9.0,
+   "words": 19,
+   "fits": true,
+   "cues": {},
+   "starts": 177.9
+  },
+  {
+   "n": 15,
+   "id": "makenotes",
+   "text": "Or tap Make notes. On the phone, Phophy writes a summary, lists the key points with their slide numbers, and makes flashcards, so the photos you took actually get reviewed.",
+   "speech": 10.35,
+   "speed": 1.0,
+   "seconds": 13.0,
+   "words": 30,
+   "fits": true,
+   "cues": {},
+   "starts": 186.4
+  },
+  {
+   "n": 16,
+   "id": "receipt",
+   "text": "It can also answer from what's inside a photo. How much did I spend at Muji? It reads the receipt.",
+   "speech": 5.93,
+   "speed": 1.0,
+   "seconds": 7.4,
+   "words": 20,
+   "fits": true,
+   "cues": {},
+   "starts": 198.9
+  },
+  {
+   "n": 17,
+   "id": "chinese",
+   "text": "Ask the same thing in Chinese, and it still finds the English receipt.",
+   "speech": 3.93,
+   "speed": 1.0,
+   "seconds": 5.95,
+   "words": 13,
+   "fits": true,
+   "cues": {},
+   "starts": 205.8
+  },
+  {
+   "n": 18,
+   "id": "edit",
+   "text": "Editing works the same way: just describe the change. Small edits run on the phone. Bigger ones, like adding a hot-air balloon to the sky, go to an AI image service after you confirm. And there it is.",
+   "speech": 13.27,
+   "speed": 1.0,
+   "seconds": 16.75,
+   "words": 38,
+   "fits": true,
+   "cues": {},
+   "starts": 211.25
+  },
+  {
+   "n": 19,
+   "id": "collections",
+   "text": "Collections sorts the library by itself: slides, receipts, documents and more. It also groups near-identical shots and suggests which one to keep.",
+   "speech": 9.51,
+   "speed": 1.05,
+   "seconds": 10.5,
+   "words": 22,
+   "fits": true,
+   "cues": {},
+   "starts": 227.5
+  },
+  {
+   "n": 20,
+   "id": "results-search",
+   "text": "So, does it work? We measured search on the Flicker thirty K benchmark. Against our first version, Chinese searches rose from 2 to 51 percent, misspelled ones from 13 to 59, and objects found from 51 to 89 percent.",
+   "speech": 15.47,
+   "speed": 1.0,
+   "seconds": 16.6,
+   "words": 37,
+   "fits": true,
+   "cues": {
+    "zh": 6.82,
+    "typo": 10.3,
+    "obj": 12.95,
+    "long": 14.88
+   },
+   "starts": 237.5
+  },
+  {
+   "n": 21,
+   "id": "results-language",
+   "text": "For Chinese sentences, translating on the phone lifts top-five accuracy from 60 to 87 percent, level with human-written English. And sentence vectors of the text in photos find 74 percent of paraphrased searches, up from 50.",
+   "speech": 15.87,
+   "speed": 1.0,
+   "seconds": 17.0,
+   "words": 36,
+   "fits": true,
+   "cues": {
+    "dict": 5.66,
+    "trans": 6.23,
+    "human": 7.6,
+    "para": 9.89,
+    "vec": 12.94
+   },
+   "starts": 253.6
+  },
+  {
+   "n": 22,
+   "id": "results-assistant",
+   "text": "And the assistant? Running on Apple's on-device model, it completes 14 to 17 of 20 real tasks, in about seven seconds each, at no cost. It still misreads some values on tickets and receipts.",
+   "speech": 13.44,
+   "speed": 1.0,
+   "seconds": 14.5,
+   "words": 34,
+   "fits": true,
+   "cues": {
+    "count": 4.15,
+    "time": 7.89,
+    "fails": 10.91
+   },
+   "starts": 270.1
+  },
+  {
+   "n": 23,
+   "id": "thanks",
+   "text": "That's Phophy, by Team 26. Thank you for watching.",
+   "speech": 3.39,
+   "speed": 1.0,
+   "seconds": 5.0,
+   "words": 9,
+   "fits": true,
+   "cues": {},
+   "starts": 284.1
+  }
+ ]
+}
