@@ -40,6 +40,13 @@ enum EditRequestReader {
             let check = EditInstructions.plan(item, from: start)
             return !(check.leftover.isEmpty && !check.applied.isEmpty)
         }
+        // A request for the AI service ("add a balloon in the sky") is sometimes
+        // also read as a general fix or as a background change. From the model
+        // alone, those two only count when nothing is left for the service.
+        if !leftover.isEmpty {
+            if rules.recipe.autoEnhance == start.autoEnhance { recipe.autoEnhance = start.autoEnhance }
+            if rules.recipe.background == start.background { recipe.background = start.background }
+        }
         return EditInstructions.Plan(recipe: recipe, applied: describe(recipe, from: start), leftover: leftover)
     }
 

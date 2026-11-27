@@ -189,6 +189,12 @@ actor ConceptTagger {
 
     /// English names of the concepts mentioned in a Chinese query, for the
     /// visual search (the CLIP model only reads English).
+    /// Whether the text is exactly one concept's Chinese name ("长椅").
+    nonisolated func isConcept(_ chinese: String) -> Bool {
+        let text = chinese.trimmingCharacters(in: .whitespacesAndNewlines)
+        return concepts.contains { $0.chinese.contains(text) }
+    }
+
     nonisolated func englishConcepts(in chinese: String, words: [String]) -> [String] {
         var found: [(position: String.Index, english: String)] = []
         var covered = Set<String>()

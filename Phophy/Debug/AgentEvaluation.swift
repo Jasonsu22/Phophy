@@ -120,28 +120,16 @@ enum AgentEvaluation {
 
     /// One task in a fresh conversation, as a user would ask it.
     private static func run(_ task: TaskSpec, backend: AIBackend, indexedCount: Int, categories: [String: PhotoCategory]) async -> TaskResult {
-        let toolbox = PhotoToolbox(snippetLength: backend == .appleIntelligence ? 60 : 160, categories: categories)
-        await toolbox.setIndexedCount(indexedCount)
-        let tally = UsageTally(label: "agent-eval:\(task.id)")
+        // The app's own answer flow (instant search, filters checked against
+        // the question, the answer's photos), without saving the conversation.
+        let model = AssistantModel(keepsHistory: false)
         let started = ContinuousClock.now
-        var reply = ""
-        var errorText: String?
-        do {
-            let chat: ChatBackend
-            if backend == .appleIntelligence {
-                chat = OnDeviceAssistant(toolbox: toolbox)
-            } else {
-                chat = CloudAssistant.make(config: try .current(), toolbox: toolbox)
-            }
-            reply = try await UsageMeter.$current.withValue(tally) {
-                try await chat.send(task.ask)
-            }
-        } catch {
-            errorText = error.localizedDescription
-        }
+        await model.send(task.ask, indexedCount: indexedCount, categories: categories)
         let elapsed = ContinuousClock.now - started
-        let tools = await toolbox.takeToolLog()
-        let shown = await toolbox.present(reply: reply)
+        let answer = model.messages.last { $0.role == .assistant }
+        let errorText: String? = answer?.isError == true ? answer?.text : (answer == nil ? "no answer" : nil)
+        let tools = model.lastTools
+        let shown = (text: answer?.text ?? "", photoIDs: answer?.photoIDs ?? [], albums: answer?.albums ?? [])
         let names = fileNames(for: shown.photoIDs)
 
         var failed: [String] = []
@@ -165,6 +153,7 @@ enum AgentEvaluation {
         if let minimum = task.minShown, names.count < minimum { failed.append("showed \(names.count) < \(minimum) photos") }
 
         let seconds = Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
+        let tally = model.lastUsage ?? UsageTally(label: "agent-eval:\(task.id)")
         let usage = await tally.usage
         // On the phone it's free; in the cloud, nil means the model has no price.
         var cost: Double? = 0

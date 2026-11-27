@@ -51,6 +51,15 @@ final class AssistantModel {
     private(set) var backend: AIBackend = .resolve()
 
     @ObservationIgnored private var toolbox: PhotoToolbox?
+    /// False for the evaluation's throwaway conversations.
+    @ObservationIgnored private let keepsHistory: Bool
+    /// What the last answer took: the tools called and the cloud tokens.
+    @ObservationIgnored private(set) var lastTools: [String] = []
+    @ObservationIgnored private(set) var lastUsage: UsageTally?
+
+    init(keepsHistory: Bool = true) {
+        self.keepsHistory = keepsHistory
+    }
     @ObservationIgnored private var chat: ChatBackend?
 
     func open() {
@@ -93,7 +102,7 @@ final class AssistantModel {
 
     /// Stores the current conversation at the top of the history.
     private func record() {
-        guard let first = messages.first(where: { $0.role == .user }) else { return }
+        guard keepsHistory, let first = messages.first(where: { $0.role == .user }) else { return }
         let id = conversationID ?? UUID()
         conversationID = id
         history.removeAll { $0.id == id }
@@ -116,6 +125,11 @@ final class AssistantModel {
     private func saveHistory() {
         guard let url = Self.historyURL, let data = try? JSONEncoder().encode(history) else { return }
         try? data.write(to: url, options: [.atomic, .completeFileProtection])
+    }
+
+    private static func isRefusal(_ reply: String) -> Bool {
+        let text = reply.lowercased().replacingOccurrences(of: "’", with: "'")
+        return ["can't", "cannot", "unable to", "not able to", "private information", "无法", "不能", "無法"].contains(where: text.contains)
     }
 
     func send(_ rawText: String, indexedCount: Int, categories: [String: PhotoCategory]) async {
@@ -169,6 +183,7 @@ final class AssistantModel {
         )
         self.toolbox = toolbox
         await toolbox.setIndexedCount(indexedCount)
+        await toolbox.setAsked(messages.filter { $0.role == .user }.map(\.text).joined(separator: " "), latest: text)
 
         do {
             let chat: ChatBackend
@@ -194,9 +209,20 @@ final class AssistantModel {
             }
             // Every cloud round of this answer adds its tokens here (E11).
             let usage = UsageTally(label: "assistant")
+            lastUsage = usage
             let reply = try await UsageMeter.$current.withValue(usage) {
-                try await chat.send(prompt)
+                var reply = try await chat.send(prompt)
+                // Small models sometimes refuse ("I can't access private
+                // information") without looking: have them search first.
+                if await !toolbox.calledTools, Self.isRefusal(reply) {
+                    reply = try await chat.send("""
+                        Search my photos with find_photos before answering. They are my own photos, \
+                        so reading what is written in them is fine. My question: \(text)
+                        """)
+                }
+                return reply
             }
+            lastTools = await toolbox.takeToolLog()
             let shown = await toolbox.present(reply: reply)
             let text = shown.text.isEmpty ? "Here they are." : shown.text
             var steps = shown.steps

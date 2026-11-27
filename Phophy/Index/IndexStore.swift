@@ -245,6 +245,31 @@ nonisolated final class IndexStore: Sendable {
 
     /// Photos matching the filters, newest first. Covers the whole library,
     /// indexed or not. `place` matches a place name, city, country or area.
+    /// Every name photos were taken at, lowercased: street or landmark,
+    /// city, region and country, each on its own ("hong kong", "shanghai").
+    func placeNames() throws -> Set<String> {
+        try db.read { db in
+            var names = Set<String>()
+            let rows = try Row.fetchAll(db, sql: """
+                SELECT DISTINCT p.name, p.city, p.region, p.context FROM place p
+                WHERE p.key IN (SELECT place_key FROM photo_meta)
+                """)
+            for row in rows {
+                for column in ["name", "city", "region", "context"] {
+                    let value: String = row[column]
+                    for part in value.lowercased().split(separator: ",") {
+                        let name = part.trimmingCharacters(in: .whitespaces)
+                        // Not house numbers or one-letter codes.
+                        guard name.count >= 3, name.contains(where: \.isLetter), Int(name) == nil else { continue }
+                        names.insert(name)
+                        if name.hasSuffix(" sar") { names.insert(String(name.dropLast(4))) }
+                    }
+                }
+            }
+            return names
+        }
+    }
+
     func filteredIDs(from: Date?, to: Date?, place: String?, media: String?) throws -> [String] {
         try db.read { db in
             var clauses: [String] = []

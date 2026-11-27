@@ -38,9 +38,14 @@ enum ChineseQueryEvaluation {
     static let conditions: [Condition] = {
         var noDictionary = SearchOptions.standard
         noDictionary.chineseConcepts = false
+        var dictionaryOnly = SearchOptions.standard
+        dictionaryOnly.chineseTranslation = false
         return [
             Condition(label: "a. Chinese as typed (no handling)", options: noDictionary) { $0.zh },
-            Condition(label: "a+. Chinese through the concept dictionary (app today)", options: .standard) { $0.zh },
+            Condition(label: "a+. Chinese through the concept dictionary only", options: dictionaryOnly) { $0.zh },
+            // The app's own search: translated on this device when the
+            // languages are installed, with the dictionary alongside.
+            Condition(label: "d. the app: translation + dictionary", options: .standard) { $0.zh },
             Condition(label: "b. rewritten in English by Apple's on-device model", options: .standard) { $0.appleRewrite },
             Condition(label: "b2. rewritten in English by Claude", options: .standard) { $0.claudeRewrite },
             Condition(label: "c. translated on the device (Apple Translation)", options: .standard) { $0.appleTranslation },
@@ -75,6 +80,15 @@ enum ChineseQueryEvaluation {
         }
         let byName = fileNameIndex()
         log("results for \(testSet.library), \(imageCount) photos, CLIP \(model ?? "missing")")
+
+        // Condition d needs the device's translation; where there is none
+        // (the simulator), it uses the Mac's from e3_queries.json.
+        if await QueryTranslator.shared.status() != .on {
+            var given: [String: String] = [:]
+            for query in testSet.sets.flatMap(\.queries) { given[query.zh] = query.appleTranslation }
+            await QueryTranslator.shared.preload(given)
+            log("translations for condition d come from e3_queries.json (\(given.count))")
+        }
 
         var report: [String: [SetResult]] = [:]
         for condition in conditions {

@@ -33,9 +33,13 @@ actor PhotoIndexer {
     private var isRunning = false
     private var runAgain = false
 
-    /// Whether indexing is under way. Describing waits for it: indexing is
-    /// the cheaper layer and covers every photo, so it goes first.
+    /// Whether indexing is under way. Describing takes turns with it.
     func isIndexing() -> Bool { isRunning }
+
+    /// How many batches have been indexed since launch, so describing can
+    /// tell that indexing is getting its share.
+    private(set) var batchesIndexed = 0
+    func batchCount() -> Int { batchesIndexed }
 
     func run(status: IndexStatus) async {
         if isRunning {
@@ -136,6 +140,7 @@ actor PhotoIndexer {
                 )
                 indexed += 1
             }
+            batchesIndexed += 1
             await status.update(indexed: indexed, total: total, isRunning: true)
             // Every few hundred photos, make the new ones findable by keyword.
             if (start / batchSize) % 100 == 99 { await updateKeywordIndex(status: status) }

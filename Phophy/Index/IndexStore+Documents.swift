@@ -211,14 +211,17 @@ nonisolated extension IndexStore {
 
     /// Photos matching any of `terms` (already normalized), best BM25 first.
     /// Each entry of `terms` may hold alternatives ("dog OR puppy").
-    func keywordMatches(_ terms: [[String]], weights: Weights = Weights(), limit: Int = 300) throws -> [(id: String, score: Double)] {
+    /// With `requireAll`, a photo must have a word from every group.
+    func keywordMatches(
+        _ terms: [[String]], requireAll: Bool = false, weights: Weights = Weights(), limit: Int = 300
+    ) throws -> [(id: String, score: Double)] {
         let groups = terms.compactMap { alternatives -> String? in
             let quoted = alternatives.filter { !$0.isEmpty }.map { "\"" + $0.replacingOccurrences(of: "\"", with: "\"\"") + "\"" }
             guard !quoted.isEmpty else { return nil }
             return quoted.count == 1 ? quoted[0] : "(" + quoted.joined(separator: " OR ") + ")"
         }
         guard !groups.isEmpty else { return [] }
-        let match = groups.joined(separator: " OR ")
+        let match = groups.joined(separator: requireAll ? " AND " : " OR ")
         return try db.read { db in
             let rows = try Row.fetchAll(
                 db,

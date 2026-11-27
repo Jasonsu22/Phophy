@@ -1,4 +1,5 @@
 import SwiftUI
+import Translation
 
 struct SettingsView: View {
     @Environment(IndexStatus.self) private var indexStatus
@@ -283,6 +284,8 @@ struct SettingsView: View {
                 )
             }
             RowDivider()
+            ChineseSearchRow()
+            RowDivider()
             SettingsRow(icon: "icloud.and.arrow.down.fill", title: "Index photos stored in iCloud") {
                 Toggle("Index photos stored in iCloud", isOn: $indexICloudPhotos)
                     .labelsHidden()
@@ -432,6 +435,39 @@ private struct RowDivider: View {
     }
 }
 
+/// Chinese searches are translated to English on the phone, which needs
+/// Apple's Chinese and English translation languages (a free download).
+private struct ChineseSearchRow: View {
+    @State private var status: QueryTranslator.Status?
+    @State private var download: TranslationSession.Configuration?
+
+    var body: some View {
+        SettingsRow(
+            icon: "character.bubble.fill", title: "Search in Chinese",
+            subtitle: status == .needsDownload ? "Translates on your iPhone. Free download from Apple" : nil
+        ) {
+            switch status {
+            case .on: StatusPill(text: "On", isPositive: true)
+            case .needsDownload:
+                Button("Download") {
+                    // A new value each time, so a second tap asks again.
+                    if download == nil { download = QueryTranslator.download } else { download?.invalidate() }
+                }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
+            case .unsupported: StatusPill(text: "Basic", isPositive: false)
+            case nil: EmptyView()
+            }
+        }
+        .task { status = await QueryTranslator.shared.status() }
+        .translationTask(download) { session in
+            // The system shows its own download sheet.
+            try? await session.prepareTranslation()
+            status = await QueryTranslator.shared.status()
+        }
+    }
+}
+
 private struct StatusPill: View {
     let text: String
     let isPositive: Bool
@@ -475,6 +511,7 @@ private extension AIBackend {
 /// Who writes photo descriptions for search, with a clear warning before
 /// any photo is uploaded.
 private struct DescriptionSettings: View {
+    @Environment(IndexStatus.self) private var indexStatus
     @Environment(DescribeStatus.self) private var status
     @AppStorage(AppSettings.Key.describer) private var choiceID = DescriberChoice.automatic.rawValue
     @AppStorage(AppSettings.Key.downloadableModel) private var modelID = DownloadableModel.smolVLM.rawValue
@@ -509,7 +546,8 @@ private struct DescriptionSettings: View {
     var body: some View {
         SettingsSection(title: "Photo descriptions", footer: footer) {
             SettingsRow(icon: "text.below.photo", title: "Described photos", subtitle: status.message ?? status.describer.map { "By " + Self.describerName($0) }) {
-                Text("\(status.described, format: .number) of \(max(status.toDescribe, status.described), format: .number)")
+                // Out of the whole library, not only the photos indexed so far.
+                Text("\(status.described, format: .number) of \(max(indexStatus.total, status.toDescribe, status.described), format: .number)")
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }

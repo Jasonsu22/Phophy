@@ -24,6 +24,21 @@ nonisolated enum TextNormalizer {
         text.unicodeScalars.contains { isCJK($0) }
     }
 
+    /// The same Chinese written in the other script: simplified for
+    /// traditional and the reverse ("无印良品" ↔ "無印良品"). A search typed
+    /// in one must find a receipt printed in the other. Empty when the
+    /// text has no Chinese or reads the same in both.
+    static func scriptVariants(_ text: String) -> [String] {
+        guard containsCJK(text) else { return [] }
+        var variants: [String] = []
+        for id in ["Hans-Hant", "Hant-Hans"] {
+            if let other = text.applyingTransform(StringTransform(id), reverse: false), other != text, !variants.contains(other) {
+                variants.append(other)
+            }
+        }
+        return variants
+    }
+
     /// How much text there is, with a Chinese or Japanese character counted
     /// as three letters.
     static func textAmount(_ text: String) -> Int {
