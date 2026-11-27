@@ -50,6 +50,10 @@ nonisolated struct SearchOptions: Sendable, Hashable {
     /// BM25 score. Off: on the Flickr test it didn't pay (MRR 0.97 → 0.95
     /// on objects, recall@1 0.765 → 0.69 on long descriptions).
     var keywordScores = false
+    /// Chinese searches are read through the concept dictionary, so the
+    /// English-only visual model gets English. Off: the Chinese goes to the
+    /// visual model as typed (experiment E3's "no handling").
+    var chineseConcepts = true
 
     static let standard = SearchOptions()
     static let previous = SearchOptions(legacy: true)
@@ -242,7 +246,7 @@ actor SearchEngine {
         var visualQuery: String? = query
         var expansion: [[String]] = []
 
-        if chinese {
+        if chinese, options.chineseConcepts {
             // The visual model reads English only: read the query through the
             // concept dictionary, and search the English names as words too.
             let english = ConceptTagger.shared.englishConcepts(in: query, words: words)
