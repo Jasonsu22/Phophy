@@ -48,22 +48,54 @@
 
 | | |
 |---|---|
-| 🔎 **Search by description** | "pink flowers", "whiteboard", or any word written in a photo. |
-| 🗂 **Sorts itself** | Slides, documents, receipts, food, people, pets and scenery. Near-duplicates are grouped for clean-up, and any collection can be saved as an album. |
-| ✨ **Assistant** | Ask about your library in plain words. It finds photos, counts them, and offers to make albums. Past chats are kept on your phone. |
+| 🔎 **Search by description** | Type what you remember: "skiing, white hat, big smile", "whiteboard from last month", a word written in the photo, or a search in Chinese. Only photos that really match are shown. |
+| ✨ **Assistant** | Ask about your library in plain words: "How much did I spend at Muji?" It searches with tools, reads the answer from the photo's text, and offers to make albums. |
 | 📚 **Lecture notes** | Slides photographed in one lecture become one page: summary, key points with slide numbers, and flip-card flashcards. |
+| 🎨 **Edit by describing** | "Warmer and more vivid" is done on the iPhone for free. Bigger requests, like "add a hot air balloon in the sky", go to an AI image service you choose, only after you confirm. |
+| 🗂 **Sorts itself** | Slides, documents, receipts, food, people, pets and scenery. Near-duplicates are grouped for clean-up, and any collection can be saved as an album. |
 | 🖼 **Viewer** | Zooms out of its thumbnail, pinch or double-tap to zoom, swipe between photos, swipe down to close. |
+
+## How it works
+
+Every photo is read **once, on the iPhone**, by the cheapest tool that works, and the result is stored in a local database:
+
+| Tier | What it gives | Runs on |
+|---|---|---|
+| 0. Metadata | Date, place, kind of photo | PhotoKit |
+| 1. Text and labels | Every word in the photo, scene labels | Apple Vision |
+| 2. Embedding | One vector per photo, plus tags from 4,585 English and Chinese concepts | MobileCLIP S0, Core ML |
+| 3. Description | One line about what the photo shows | Apple Intelligence, or SmolVLM2 on phones without it |
+| 4. Cloud model (optional) | The assistant and notes, text only | Claude, OpenAI or any OpenAI-compatible service |
+
+**Search** runs two rankings and fuses them with reciprocal rank fusion: BM25 keyword matching over descriptions, tags and text, and MobileCLIP similarity between your words and every photo. Before ranking, places and dates become filters, typos are corrected against the index's own vocabulary, and Chinese is translated on the phone.
+
+**The assistant** is a language model that calls five tools over the index (`find_photos`, `list_places`, `list_collections`, `show_photos`, `propose_album`). It only ever sees text, never images, and anything that changes the library waits for your tap.
+
+## Results
+
+Measured in the iOS simulator; the scripts and raw numbers are in [`Eval/`](Eval/README.md).
+
+| What | Before | Now |
+|---|---|---|
+| Chinese searches, top 10 correct (Flickr30k, 1,000 photos) | 2% | 51% |
+| Misspelled searches, top 10 correct | 13% | 59% |
+| Objects found in the top 50 | 51% | 89% |
+| Chinese sentences, right photo in the top 5 ([E3](Eval/E3_CHINESE.md)) | 60% (dictionary) | 87% (on-device translation) |
+| Paraphrased searches for slides and documents, top 10 ([E4](Eval/E4_OCR_EMBEDDINGS.md), experiment) | 50% | 74% |
+| Assistant, 20 real tasks on Apple Intelligence ([E7](Eval/AGENT_EVAL.md)) | | 14–17 of 20, about 7 s each |
+
+A search takes about 10–30 ms.
 
 ## Private and cheap by design
 
-Phophy reads each photo **once, on the iPhone**. Text recognition and labels come from Apple's Vision framework, and description search from Apple's MobileCLIP model. Indexing thousands of photos costs nothing and uploads nothing.
-
-A language model is only used for the assistant and lecture notes, and it only ever receives **text**: dates, labels and the words read from photos, never the images. You choose which model in Settings:
+Indexing and search never leave the phone and cost nothing. A language model is only used for the assistant, lecture notes and reading edit requests, and it receives **text** only: dates, labels and the words read from photos. You choose which model in Settings:
 
 | Model | When |
 |---|---|
 | Apple Intelligence | Used first on iPhones that have it. Free and offline. |
 | Claude, OpenAI, or any OpenAI-compatible service | For other iPhones, or by choice. Bring your own API key; it stays in the Keychain. |
+
+Photos leave the phone in one case only: a generative edit you have confirmed, sent to the image service you chose.
 
 ## Run it
 
@@ -73,30 +105,49 @@ Requires Xcode 27 or later and an iPhone or simulator on iOS 26 or later.
 2. Download Apple's MobileCLIP models into `Phophy/CLIP/Models/` (see [PLAN.md](PLAN.md#mobileclip-models-not-in-git)). Without them, the app still runs with text and label search only.
 3. Choose a simulator or your iPhone and press **Run** (⌘R). On a real iPhone, select your Apple ID team under *Signing & Capabilities* first; a free account works.
 
-To try it in the simulator with your own pictures:
+To try it in the simulator with a made-up library (photos, slides, receipts and screenshots with known contents):
 
 ```bash
-xcrun simctl addmedia booted ~/Pictures/test/*.jpg
+python3 Demo/build_library.py CAPTIONS.tsv IMAGES_DIR OUT_DIR
+xcrun simctl addmedia booted OUT_DIR/*
 ```
 
 ## How it's built
+
+A native iOS app in Swift 6 and SwiftUI, about 14,000 lines.
 
 | Path | What's inside |
 |---|---|
 | `Phophy/RootView.swift`, `LibraryView.swift` | Tabs, ask bar, home screen |
 | `Phophy/PhotoLibrary.swift`, `PhotoGridView.swift` | PhotoKit access, filters, grids |
 | `Phophy/Viewer/` | Full-screen photo viewer |
-| `Phophy/Index/` | On-device index (SQLite via GRDB), indexer, search engine |
+| `Phophy/Index/` | On-device index (SQLite via GRDB), indexer, search engine, query filters and translation |
 | `Phophy/CLIP/` | MobileCLIP encoder and tokenizer |
+| `Phophy/Describe/` | Photo descriptions: Apple Intelligence, SmolVLM2 (MLX) or a cloud model |
 | `Phophy/Collections/` | Categories, similar-photo clean-up |
-| `Phophy/Assistant/` | Chat, chat history, photo tools, Apple Intelligence and cloud backends |
+| `Phophy/Assistant/` | Chat, chat history, photo tools, Apple Intelligence and cloud backends, cost per answer |
 | `Phophy/Study/` | Lecture grouping, notes, flashcards |
+| `Phophy/Editor/` | Photo editor, edit requests, AI image service |
 | `Phophy/Settings/` | Settings, AI provider choice, Keychain storage |
+| `Phophy/Debug/` | Debug-only evaluation runners |
+| `Eval/` | Search benchmark, Chinese queries (E3), text vectors (E4), assistant tasks (E7) |
+| `Demo/` | The made-up demo library and the presentation video (Remotion) |
 
-The full plan, cost reasoning and build phases are in [PLAN.md](PLAN.md).
+The design, cost reasoning and build phases are in [PLAN.md](PLAN.md); the proposal is in [PROPOSAL.md](PROPOSAL.md).
+
+## Team 26
+
+| | |
+|---|---|
+| Su Chuanzhou | Lead: design, integration, Study |
+| Yin Fengling | Indexing and performance |
+| Qin Mengmeng | Search and assistant |
+| Wang Zhengyao | Viewer, editor and collections |
 
 ## Roadmap
 
 - [x] Library, search, collections, assistant, lecture notes
-- [ ] AI photo editing
+- [x] Photo descriptions on the device, Chinese search, AI photo editing
+- [ ] Sentence vectors of the text in photos, inside the app (E4)
 - [ ] Indexing in the background while charging
+- [ ] Assistant and cost measured on cloud models (E7, E11)
