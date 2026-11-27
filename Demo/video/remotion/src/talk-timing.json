@@ -1,16 +1,16 @@
 {
- "total": 289.1,
+ "total": 287.9,
  "transition": 0.5,
  "lead": 0.45,
  "pages": [
   {
    "n": 1,
    "id": "title",
-   "text": "This is Phophy: an iPhone app that understands your photos. We are Team 26.",
-   "speech": 5.14,
+   "text": "This is Phophy: an iPhone app that understands your photos.",
+   "speech": 3.5,
    "speed": 1.0,
-   "seconds": 6.2,
-   "words": 14,
+   "seconds": 5.0,
+   "words": 10,
    "fits": true,
    "cues": {},
    "starts": 0.0
@@ -32,7 +32,7 @@
     "scroll": 9.21,
     "giveup": 11.1
    },
-   "starts": 5.7
+   "starts": 4.5
   },
   {
    "n": 3,
@@ -47,7 +47,7 @@
     "slides": 2.48,
     "never": 5.99
    },
-   "starts": 17.9
+   "starts": 16.7
   },
   {
    "n": 4,
@@ -67,7 +67,7 @@
     "costly": 10.26,
     "private": 11.11
    },
-   "starts": 25.3
+   "starts": 24.1
   },
   {
    "n": 5,
@@ -85,7 +85,7 @@
     "edit": 7.69,
     "langs": 9.32
    },
-   "starts": 38.8
+   "starts": 37.6
   },
   {
    "n": 6,
@@ -104,7 +104,7 @@
     "t3": 10.78,
     "t4": 13.02
    },
-   "starts": 49.7
+   "starts": 48.5
   },
   {
    "n": 7,
@@ -123,7 +123,7 @@
     "desc": 11.26,
     "db": 14.76
    },
-   "starts": 65.4
+   "starts": 64.2
   },
   {
    "n": 8,
@@ -140,7 +140,7 @@
     "fuse": 14.67,
     "first": 18.71
    },
-   "starts": 82.4
+   "starts": 81.2
   },
   {
    "n": 9,
@@ -156,7 +156,7 @@
     "typos": 6.01,
     "chinese": 9.84
    },
-   "starts": 101.9
+   "starts": 100.7
   },
   {
    "n": 10,
@@ -176,7 +176,7 @@
     "text": 10.35,
     "tap": 12.49
    },
-   "starts": 117.0
+   "starts": 115.8
   },
   {
    "n": 11,
@@ -195,7 +195,7 @@
     "phone": 14.11,
     "ai": 15.49
    },
-   "starts": 133.5
+   "starts": 132.3
   },
   {
    "n": 12,
@@ -211,7 +211,7 @@
     "models": 7.91,
     "iface": 12.15
    },
-   "starts": 151.6
+   "starts": 150.4
   },
   {
    "n": 13,
@@ -223,7 +223,7 @@
    "words": 29,
    "fits": true,
    "cues": {},
-   "starts": 167.0
+   "starts": 165.8
   },
   {
    "n": 14,
@@ -235,7 +235,7 @@
    "words": 19,
    "fits": true,
    "cues": {},
-   "starts": 177.9
+   "starts": 176.7
   },
   {
    "n": 15,
@@ -247,7 +247,7 @@
    "words": 30,
    "fits": true,
    "cues": {},
-   "starts": 186.4
+   "starts": 185.2
   },
   {
    "n": 16,
@@ -259,7 +259,7 @@
    "words": 20,
    "fits": true,
    "cues": {},
-   "starts": 198.9
+   "starts": 197.7
   },
   {
    "n": 17,
@@ -271,7 +271,7 @@
    "words": 13,
    "fits": true,
    "cues": {},
-   "starts": 205.8
+   "starts": 204.6
   },
   {
    "n": 18,
@@ -283,7 +283,7 @@
    "words": 38,
    "fits": true,
    "cues": {},
-   "starts": 211.25
+   "starts": 210.05
   },
   {
    "n": 19,
@@ -295,7 +295,7 @@
    "words": 22,
    "fits": true,
    "cues": {},
-   "starts": 227.5
+   "starts": 226.3
   },
   {
    "n": 20,
@@ -312,7 +312,7 @@
     "obj": 12.95,
     "long": 14.88
    },
-   "starts": 237.5
+   "starts": 236.3
   },
   {
    "n": 21,
@@ -330,7 +330,7 @@
     "para": 9.89,
     "vec": 12.94
    },
-   "starts": 253.6
+   "starts": 252.4
   },
   {
    "n": 22,
@@ -346,19 +346,19 @@
     "time": 7.89,
     "fails": 10.91
    },
-   "starts": 270.1
+   "starts": 268.9
   },
   {
    "n": 23,
    "id": "thanks",
-   "text": "That's Phophy, by Team 26. Thank you for watching.",
-   "speech": 3.39,
+   "text": "That's Phophy. Thank you for watching.",
+   "speech": 2.09,
    "speed": 1.0,
    "seconds": 5.0,
-   "words": 9,
+   "words": 6,
    "fits": true,
    "cues": {},
-   "starts": 284.1
+   "starts": 282.9
   }
  ]
 }

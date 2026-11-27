@@ -4,16 +4,9 @@
 
 ---
 
-## 1. Team members
+## 1. Overview
 
-**Team ID: 26**
-
-| Name | Student ID |
-|---|---|
-| Wang Zhengyao | 3036795675 |
-| Yin Fengling | 3036807375 |
-| Qin Mengmeng | 3036843769 |
-| Su Chuanzhou | 3036837980 |
+Phophy is an iPhone app that indexes the photo library on the phone, finds photos from a description, answers questions about them, turns lecture slides into notes and edits photos from a typed request.
 
 ---
 
@@ -50,85 +43,6 @@ Build an iOS app, **Phophy**, that:
 
 Most of the work does not need a paid language model. Each photo is processed once, on the phone, and the results are stored in a local database. Search then runs against the database, not against a model that charges per photo.
 
-| Tier | What it does | Runs where | Cost |
-|---|---|---|---|
-| 0. Metadata | Date, location, type, favourites | PhotoKit | Free |
-| 1. Classic vision | Text recognition (OCR), scene labels, subject masks | Apple Vision, on device | Free |
-| 2. Embeddings | One vector per photo, so a description can find it | MobileCLIP via Core ML, on device | Free |
-| 3. On-device LLM | Query understanding, notes, edit requests | Apple Foundation Models (Apple Intelligence phones) | Free |
-| 4. Cloud LLM | Assistant reasoning and lecture notes on other phones | User-chosen API, only on request | Pay per use |
-
-### 3.2 Architecture
-
-Figure 1 shows how the parts of the app fit together:
-
-1. **Indexing.** New and changed photos from the photo library go to a background indexer. It reads the date and place, recognises text, assigns scene labels and computes a MobileCLIP vector. It waits while the user scrolls or views a photo, and pauses when the phone is hot.
-2. **Local index.** The results are stored in a SQLite database on the phone. Every feature reads from it, so photos are never analysed twice.
-3. **Features.** Search, Collections, Study and the viewer and editor all work from the index and the photo library.
-4. **Assistant.** The user asks a question in the ask bar. The assistant uses a language model to understand it, then calls tools (search, by date, collections, show photos, make album) that read the local index.
-5. **Language model.** The model is Apple Intelligence on phones that have it. Otherwise it is a cloud model the user chooses, which receives only text.
-6. **Cloud editing.** Generative photo edits go to an AI image service, and only after the user confirms.
-
-The assistant never touches photos directly. It calls a small set of tools that read the local index, and anything that changes the library, such as creating an album, needs the user's confirmation.
-
-![Figure 1. How Phophy works: everything inside the blue area runs on the iPhone; the cloud services on the right are optional and only used when the user asks.](docs/architecture.svg)
-
-### 3.3 Methods per feature
-
-- **Hybrid search.**
-  - Keyword search on OCR text and labels, using an SQLite FTS5 trigram index.
-  - Semantic search by cosine similarity between the MobileCLIP text embedding of the query and the image embeddings of photos.
-  - The two result lists are merged with reciprocal rank fusion, and date and place filters are applied on top.
-  - Brute-force similarity over 10,000 photos takes a few milliseconds, so no vector database is needed at this scale.
-- **Categories.**
-  - Zero-shot classification: each photo's embedding is compared with a few text prompts per category, plus an "other" class so ordinary photos stay uncategorised.
-  - Slides, documents and receipts also need a minimum amount of recognised text.
-- **Near-duplicates.**
-  - Cosine similarity between photos taken close together in time.
-  - The suggested keeper is a favourite if there is one, otherwise the largest image.
-  - Deleting goes through iOS's own confirmation and into Recently Deleted.
-- **Assistant.**
-  - Tool calling through one `LanguageModel` interface, with interchangeable backends: Apple Foundation Models, Claude, OpenAI and custom OpenAI-compatible services.
-  - The model only receives text (dates, categories, labels, recognised text), never images.
-- **Lecture notes.**
-  - Slide photos taken less than 30 minutes apart are grouped into one lecture.
-  - The OCR text is sent to the model, which returns structured output: a title, a summary, key points with slide numbers, and flashcards.
-- **Editing.**
-  - Core Image handles light, colour, looks and crop; Vision's subject mask handles background replacement.
-  - Typed requests are read by word rules on every phone, and by the on-device model on Apple Intelligence phones.
-  - Edits are saved through Photos' editing API, so they can be reverted.
-- **Performance.**
-  - Lists and grids use reusable cells (UICollectionView), so cost does not grow with library size.
-  - Indexing yields to the user interface: it pauses while anything scrolls or a photo is open, and when the phone is hot or in Low Power Mode.
-- **Privacy and keys.**
-  - Indexing and search are fully on device.
-  - API keys are stored only in the iPhone's Keychain and sent only to their own provider.
-
-### 3.4 Optional: Android version
-
-The Android app would follow the same design, with Android counterparts for each part:
-
-| Part | iOS (built) | Android (optional) |
-|---|---|---|
-| Photo access | PhotoKit | MediaStore |
-| Text recognition and labels | Apple Vision | Google ML Kit (on device) |
-| Embeddings | MobileCLIP via Core ML | The same MobileCLIP model, exported to ONNX Runtime or LiteRT (TensorFlow Lite) |
-| Database | SQLite (GRDB) with FTS5 | SQLite (Room) with FTS |
-| On-device LLM | Apple Foundation Models | Gemini Nano on supported phones; otherwise the cloud backend |
-| Cloud assistant | Claude, OpenAI or OpenAI-compatible | The same APIs and the same tool definitions |
-| UI | SwiftUI | Jetpack Compose |
-
-Using the same embedding model, the same tool definitions and the same note format means the search evaluation set and the prompts can be reused, and results on both platforms can be compared directly. A cross-platform framework (Flutter or React Native) was considered. It was rejected because most of the work happens in native photo, vision and machine-learning APIs, which such frameworks would have to call through platform-specific code anyway.
-
-### 3.5 Alternatives considered
-
-| Option | Why not chosen (or kept only as an option) |
-|---|---|
-| Caption every photo with a cloud vision model | Costs money for every photo, is slow on large libraries, and uploads private photos |
-| Larger CLIP models (MobileCLIP S2, B) | More accurate but larger and slower; to be compared in the experiments below |
-| A vector database (sqlite-vec, IVF) | Not needed below about 100,000 photos; kept as a fallback if search exceeds 30 ms |
-| A server-side app (like Immich) | Needs a server, and doesn't work offline or on the phone alone |
-
 ---
 
 ## 4. Experimental plan
@@ -138,7 +52,7 @@ All experiments run on the team's own iPhones (including an iPhone 13 Pro Max wi
 ### 4.1 Datasets
 
 - **Search evaluation set.**
-  - About 50 real questions written by the four team members about their own libraries, each with its correct photo or photos marked.
+  - About 50 real questions written by the authors about their own libraries, each with its correct photo or photos marked.
   - The questions mix five types: place and time ("Hong Kong two years ago"), content ("the whiteboard with the network diagram"), text in the photo ("the receipt from Muji"), vague ("that sunset at the beach"), and language (English and Chinese).
 - **Category labels.** About 300 photos labelled by hand into the app's categories, including "none".
 - **Near-duplicate pairs.** About 100 photo pairs labelled as same shot or different.
@@ -157,7 +71,7 @@ All experiments run on the team's own iPhones (including an iPhone 13 Pro Max wi
 | E5 | How good are automatic categories? | Run on the labelled set and tune the thresholds on a separate part of it | Precision, recall and F1 per category |
 | E6 | Where should the duplicate threshold be? | Sweep the cosine similarity threshold from 0.85 to 0.97 | Precision–recall curve; choose the threshold with high precision, since deleting is costly |
 | E7 | Can the assistant complete tasks? | 20 end-to-end tasks run on each backend (Apple Intelligence, Claude Haiku, an OpenAI model) | Task success rate, number of tool calls, response time, cost per task |
-| E8 | Are the lecture notes useful and faithful? | Each team member rates notes for lectures they attended; key points are checked against the slide text | 1–5 ratings for usefulness and accuracy; unsupported statements per summary; flashcard correctness |
+| E8 | Are the lecture notes useful and faithful? | Notes are rated by people who attended the lectures; key points are checked against the slide text | 1–5 ratings for usefulness and accuracy; unsupported statements per summary; flashcard correctness |
 | E9 | Are edit requests understood? | Run the request set through word rules alone, and word rules plus the on-device model | Exact-match rate, response time |
 | E10 | Does the app stay fast on a large library? | Built-in debug test (`-PhophyOpenTest`) and Instruments traces on the iPhone 13 Pro Max | Worst frame time when opening a photo, dropped frames while scrolling during indexing, photos indexed per minute, memory, battery drain and thermal state per 1,000 photos |
 | E11 | How much does the cloud cost? | Log tokens per request | Cost per assistant answer and per lecture summary |
@@ -193,20 +107,20 @@ Early measurements:
 
 ### 4.5 Work arrangement
 
-| Member | Role | Responsible for | Experiments |
+| Role | Area | Responsible for | Experiments |
 |---|---|---|---|
-| Su Chuanzhou | Lead | Overall design and integration, the Study tab (lecture notes), reviewing and merging code, the report and the demo | E8 |
-| Yin Fengling | Track A: performance and indexing | Indexing speed, memory and battery, background indexing, the embedding models, reliability | E2, E10 |
-| Qin Mengmeng | Track B: search and assistant | Search quality, the search evaluation set, Chinese queries, the assistant's tools and backends, cloud cost | E1, E3, E4, E7, E11 |
-| Wang Zhengyao | Track C: viewer, editing and collections | The photo viewer and grids, the editor, categories and similar photos | E5, E6, E9 |
+| Lead | Design and integration | Overall design and integration, the Study tab (lecture notes), reviewing and merging code, the report and the demo | E8 |
+| Track A | Performance and indexing | Indexing speed, memory and battery, background indexing, the embedding models, reliability | E2, E10 |
+| Track B | Search and assistant | Search quality, the search evaluation set, Chinese queries, the assistant's tools and backends, cloud cost | E1, E3, E4, E7, E11 |
+| Track C | Viewer, editing and collections | The photo viewer and grids, the editor, categories and similar photos | E5, E6, E9 |
 
-All four members write search questions about their own libraries and test the app on their own phones.
+Everyone writes search questions about their own libraries and test the app on their own phones.
 
 ### 4.6 Timeline
 
 The project is submitted on **30 November 2026**, about two weeks after this proposal. This is enough because the core app already works (section 4.4), so the time goes mainly into experiments, tuning and the report. The four members work in parallel on their own tracks.
 
-| Dates | Su Chuanzhou (Lead) | Yin Fengling (A) | Qin Mengmeng (B) | Wang Zhengyao (C) |
+| Dates | Lead | Track A | Track B | Track C |
 |---|---|---|---|---|
 | 16–19 Nov | Collect lecture photos; set up the shared dataset format; review the first changes | Measure the current app (E10 baseline); start background indexing while charging | Write the search questions; build the in-app evaluation runner; E1 baseline | Label category photos and duplicate pairs; write the edit requests |
 | 20–23 Nov | Improve lecture grouping and the notes prompts | Compare MobileCLIP S0 and S2 (E2); memory and model loading | Chinese queries (E3) and OCR text embeddings (E4); tune search | Tune categories (E5) and the duplicate threshold (E6) |
@@ -249,9 +163,9 @@ How the team works in the repository:
 |---|---|
 | MobileCLIP understands only English | Experiment E3 (query rewriting and on-device translation) |
 | Apple's on-device model is small and sometimes invents filters | Loosen filters when results are empty; prefer cloud backends for complex tasks; measure in E7 |
-| The search evaluation set is small and personal | Mix question types and include all four members' libraries; report results per question type |
+| The search evaluation set is small and personal | Mix question types and include several people's libraries; report results per question type |
 | Battery and heat from indexing | Indexing pauses when the phone is hot or in Low Power Mode, with overnight indexing while charging; measured in E10 |
 | Privacy | All indexing on device; the cloud receives only text, and only for the request the user makes |
 | Licences | MobileCLIP weights use Apple's research licence; check before any public release |
 | Building for Android splits the team's time | Android is a stretch goal, started only once the iOS objectives are met |
-| Two weeks is a short time | The app is already built; the datasets are kept small, the four members work in parallel, and E2–E4 are dropped first if time runs short |
+| Two weeks is a short time | The app is already built; the datasets are kept small, the tracks work in parallel, and E2–E4 are dropped first if time runs short |

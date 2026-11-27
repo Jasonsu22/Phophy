@@ -1,10 +1,20 @@
 <p align="center">
-  <img src="docs/media/banner.svg" alt="Phophy: your photos, understood. On your iPhone." width="100%">
+  <img src="docs/media/icon.png" width="96" alt="Phophy">
+</p>
+
+<h1 align="center">Phophy</h1>
+
+<p align="center">
+  <b>Your photos, understood. On your iPhone.</b><br>
+  Find any photo by describing it, ask about what's inside, turn lecture slides into notes, and edit by typing the change.
 </p>
 
 <p align="center">
-  <b>An AI photo app for iPhone.</b> Find any photo by describing it, let it sort your library,<br>
-  and turn the lecture slides you photographed into notes and flashcards.
+  <img src="docs/media/hero.gif" width="780" alt="Three iPhones: finding a ski photo from “skiing, white hat, big smile”, reading a total from a receipt, and adding a hot air balloon to a photo">
+</p>
+
+<p align="center">
+  <a href="https://github.com/Jasonsu22/Phophy/blob/main/docs/media/phophy-video.mp4"><img src="docs/media/watch.svg" height="54" alt="Watch the video"></a>
 </p>
 
 <p align="center">
@@ -14,48 +24,60 @@
   <img alt="On-device AI" src="https://img.shields.io/badge/AI-on--device%20first-b4366f?style=flat-square">
 </p>
 
----
+## 💡 Why Phophy
 
-## See it move
+A phone holds thousands of photos, and the one you want is always buried. You remember a ski trip, a white hat, a big smile, but not the month, so you scroll and give up. Lecture slides you photograph end up in the camera roll and are never opened again. Built-in search knows dates, places and a fixed set of labels, not descriptions, and sending every photo to a cloud AI is slow, costly and gives your private photos away. Phophy reads every photo once, on the phone, so you can find, ask, study and edit in plain language.
 
-<table>
-  <tr>
-    <td align="center" width="33%"><img src="docs/media/assistant.gif" width="240" alt="Asking the assistant for waterfall photos"></td>
-    <td align="center" width="33%"><img src="docs/media/viewer.gif" width="240" alt="A photo zooming open from the grid, pinch to zoom, swipe down to close"></td>
-    <td align="center" width="33%"><img src="docs/media/study.gif" width="240" alt="A lecture's notes and flashcards"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Ask</b><br><sub>Type a question; matching photos come back with the answer.</sub></td>
-    <td align="center"><b>View</b><br><sub>Photos open and close like Apple's Photos app.</sub></td>
-    <td align="center"><b>Study</b><br><sub>Slide photos become a summary, key points and flashcards.</sub></td>
-  </tr>
-</table>
+## ✨ What it does
 
 <table>
   <tr>
-    <td align="center" width="33%"><img src="docs/media/library.png" width="220" alt="Library home screen"></td>
-    <td align="center" width="33%"><img src="docs/media/collections.png" width="220" alt="Automatic collections"></td>
-    <td align="center" width="33%"><img src="docs/media/search.png" width="220" alt="Search by description"></td>
+    <td width="50%" valign="top" align="center">
+      <img src="docs/media/card-search.gif" width="220" alt="Typing “skiing, white hat, big smile” finds the ski photo">
+      <h3>🔎 Find by describing</h3>
+      <p align="left">Type the few things you remember, like <i>“skiing, white hat, big smile”</i>, a word written in the photo, or a place and month. Only photos that really match come back.</p>
+    </td>
+    <td width="50%" valign="top" align="center">
+      <img src="docs/media/card-ask.gif" width="220" alt="Asking how much was spent at Muji, answered from the receipt">
+      <h3>💬 Ask about your photos</h3>
+      <p align="left"><i>“How much did I spend at Muji?”</i> The assistant searches your library with tools and reads the answer from the receipt.</p>
+    </td>
   </tr>
   <tr>
-    <td align="center"><b>Library</b></td>
-    <td align="center"><b>Collections</b></td>
-    <td align="center"><b>Search</b></td>
+    <td width="50%" valign="top" align="center">
+      <img src="docs/media/card-study.gif" width="220" alt="A lecture's slides turned into a summary, key points and flashcards">
+      <h3>📚 Slides become notes</h3>
+      <p align="left">Slides photographed in one lecture become one page: a summary, key points with slide numbers, and flip-card flashcards.</p>
+    </td>
+    <td width="50%" valign="top" align="center">
+      <img src="docs/media/card-edit.gif" width="220" alt="Adding a red hot air balloon to a mountain photo with an AI image service">
+      <h3>🎨 Edit by describing</h3>
+      <p align="left"><i>“Warmer and more vivid”</i> runs on the iPhone for free. Bigger requests, like adding a hot air balloon, go to an image service you choose, after you confirm.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top" align="center">
+      <img src="docs/media/card-chinese.gif" width="220" alt="The same receipt question asked in Chinese">
+      <h3>🌏 English and 中文</h3>
+      <p align="left">Ask in Chinese and Phophy still finds English photos: searches are translated on the phone, and simplified and traditional characters match each other.</p>
+    </td>
+    <td width="50%" valign="top" align="center">
+      <img src="docs/media/card-collections.gif" width="220" alt="Automatic collections and similar-photo clean-up">
+      <h3>🗂 Sorts itself</h3>
+      <p align="left">Slides, documents, receipts, food, people, pets and scenery, sorted automatically. Near-duplicate shots are grouped, with one suggested to keep.</p>
+    </td>
   </tr>
 </table>
 
-## What it does
+## 🎬 Watch the video
 
-| | |
-|---|---|
-| 🔎 **Search by description** | Type what you remember: "skiing, white hat, big smile", "whiteboard from last month", a word written in the photo, or a search in Chinese. Only photos that really match are shown. |
-| ✨ **Assistant** | Ask about your library in plain words: "How much did I spend at Muji?" It searches with tools, reads the answer from the photo's text, and offers to make albums. |
-| 📚 **Lecture notes** | Slides photographed in one lecture become one page: summary, key points with slide numbers, and flip-card flashcards. |
-| 🎨 **Edit by describing** | "Warmer and more vivid" is done on the iPhone for free. Bigger requests, like "add a hot air balloon in the sky", go to an AI image service you choose, only after you confirm. |
-| 🗂 **Sorts itself** | Slides, documents, receipts, food, people, pets and scenery. Near-duplicates are grouped for clean-up, and any collection can be saved as an album. |
-| 🖼 **Viewer** | Zooms out of its thumbnail, pinch or double-tap to zoom, swipe between photos, swipe down to close. |
+<p align="center">
+  <a href="https://github.com/Jasonsu22/Phophy/blob/main/docs/media/phophy-video.mp4"><img src="docs/media/video-poster.jpg" width="720" alt="Phophy: the five-minute video, with sound and subtitles"></a>
+</p>
 
-## How it works
+<p align="center"><sub>Five minutes: the problem, how it works, the app in action, and what we measured. Recorded on the iPhone 18 Pro Max simulator with a made-up photo library.</sub></p>
+
+## 🧠 How it works
 
 Every photo is read **once, on the iPhone**, by the cheapest tool that works, and the result is stored in a local database:
 
@@ -71,7 +93,7 @@ Every photo is read **once, on the iPhone**, by the cheapest tool that works, an
 
 **The assistant** is a language model that calls five tools over the index (`find_photos`, `list_places`, `list_collections`, `show_photos`, `propose_album`). It only ever sees text, never images, and anything that changes the library waits for your tap.
 
-## Results
+## 📊 Results
 
 Measured in the iOS simulator; the scripts and raw numbers are in [`Eval/`](Eval/README.md).
 
@@ -86,7 +108,7 @@ Measured in the iOS simulator; the scripts and raw numbers are in [`Eval/`](Eval
 
 A search takes about 10–30 ms.
 
-## Private and cheap by design
+## 🔒 Private and cheap by design
 
 Indexing and search never leave the phone and cost nothing. A language model is only used for the assistant, lecture notes and reading edit requests, and it receives **text** only: dates, labels and the words read from photos. You choose which model in Settings:
 
@@ -97,7 +119,7 @@ Indexing and search never leave the phone and cost nothing. A language model is 
 
 Photos leave the phone in one case only: a generative edit you have confirmed, sent to the image service you chose.
 
-## Run it
+## 🚀 Run it
 
 Requires Xcode 27 or later and an iPhone or simulator on iOS 26 or later.
 
@@ -112,7 +134,7 @@ python3 Demo/build_library.py CAPTIONS.tsv IMAGES_DIR OUT_DIR
 xcrun simctl addmedia booted OUT_DIR/*
 ```
 
-## How it's built
+## 🛠️ How it's built
 
 A native iOS app in Swift 6 and SwiftUI, about 14,000 lines.
 
@@ -135,16 +157,7 @@ A native iOS app in Swift 6 and SwiftUI, about 14,000 lines.
 
 The design, cost reasoning and build phases are in [PLAN.md](PLAN.md); the proposal is in [PROPOSAL.md](PROPOSAL.md).
 
-## Team 26
-
-| | |
-|---|---|
-| Su Chuanzhou | Lead: design, integration, Study |
-| Yin Fengling | Indexing and performance |
-| Qin Mengmeng | Search and assistant |
-| Wang Zhengyao | Viewer, editor and collections |
-
-## Roadmap
+## 🗺️ Roadmap
 
 - [x] Library, search, collections, assistant, lecture notes
 - [x] Photo descriptions on the device, Chinese search, AI photo editing

@@ -1,6 +1,8 @@
 """Burns subtitles of the narration into the rendered presentation.
 
-    python3 Demo/video/make_subtitles.py
+    python3 Demo/video/make_subtitles.py [NAME]
+
+NAME is the rendered video in out/ (default phophy-talk).
 
 Reads out/phophy-talk.mp4 (left untouched), remotion/src/talk.json and
 talk-timing.json. Each spoken line is split into short cues timed within the
@@ -14,13 +16,14 @@ dark rounded box near the bottom, and laid over the video. Writes:
 
 (This ffmpeg has no text or subtitle filter, which is why cues are images.)
 """
-import json, re, subprocess, tempfile, textwrap
+import json, re, subprocess, sys, tempfile, textwrap
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).parent
 OUT = HERE / "out"
-SOURCE = OUT / "phophy-talk.mp4"
+NAME = sys.argv[1] if len(sys.argv) > 1 else "phophy-talk"
+SOURCE = OUT / f"{NAME}.mp4"
 talk = json.loads((HERE / "remotion/src/talk.json").read_text())
 timing = json.loads((HERE / "remotion/src/talk-timing.json").read_text())
 
@@ -132,7 +135,7 @@ with tempfile.TemporaryDirectory() as tmp:
         if cues[i][1] > cues[i + 1][0] - 0.02:
             cues[i] = (cues[i][0], cues[i + 1][0] - 0.02, cues[i][2])
 
-    (OUT / "phophy-talk.srt").write_text("".join(f"{i}\n{stamp(s)} --> {stamp(e)}\n{c}\n\n" for i, (s, e, c) in enumerate(cues, 1)))
+    (OUT / f"{NAME}.srt").write_text("".join(f"{i}\n{stamp(s)} --> {stamp(e)}\n{c}\n\n" for i, (s, e, c) in enumerate(cues, 1)))
 
     # One transparent image per cue, and an empty one for the gaps, played as a timed slideshow.
     blank = tmp / "blank.png"
@@ -152,8 +155,8 @@ with tempfile.TemporaryDirectory() as tmp:
     encode = ["-c:v", "libx264", "-preset", "slow", "-crf", "24", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart"]
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(SOURCE), "-f", "concat", "-safe", "0", "-i", str(tmp / "subs.txt"),
                     "-filter_complex", "[1:v]fps=60,format=rgba[s];[0:v][s]overlay=0:0:eof_action=pass:format=auto[v]",
-                    "-map", "[v]", "-map", "0:a", *encode, str(OUT / "phophy-talk-subtitled.mp4")], check=True)
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(SOURCE), "-map", "0:v", "-map", "0:a", *encode, str(OUT / "phophy-talk-small.mp4")], check=True)
+                    "-map", "[v]", "-map", "0:a", *encode, str(OUT / f"{NAME}-subtitled.mp4")], check=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(SOURCE), "-map", "0:v", "-map", "0:a", *encode, str(OUT / f"{NAME}-small.mp4")], check=True)
 
-for name in ("phophy-talk.mp4", "phophy-talk-small.mp4", "phophy-talk-subtitled.mp4"):
+for name in (f"{NAME}.mp4", f"{NAME}-small.mp4", f"{NAME}-subtitled.mp4"):
     print(f"{name:<28} {(OUT / name).stat().st_size / 1e6:5.1f} MB")

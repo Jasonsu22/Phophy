@@ -154,7 +154,7 @@ export const TitleTalk: React.FC = () => (
       </Rise>
       <Words text="Your photos, understood. On your iPhone." at={0.8} style={{ fontSize: 54, color: SOFT, marginTop: 6 }} />
       <Rise at={1.6}>
-        <div style={{ fontSize: 32, color: TEAL, marginTop: 70, fontWeight: 700, letterSpacing: 4 }}>TEAM 26 · COMP7607 PROJECT</div>
+        <div style={{ fontSize: 32, color: TEAL, marginTop: 70, fontWeight: 700, letterSpacing: 4 }}>AN AI PHOTO APP FOR IPHONE</div>
       </Rise>
     </AbsoluteFill>
     <Sfx name="chime" at={0.9} volume={0.2} />

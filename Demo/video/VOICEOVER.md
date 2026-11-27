@@ -17,6 +17,6 @@ The preview is narrated by an AI voice (Kokoro, `make_voice.py`). To use your ow
 | 11 | 1:31.4 | 7.4 s | Settings: Apple Intelligence and cloud AI switches | All of this runs on the phone by default. Cloud AI is only used if you turn it on. |
 | 12 | 1:38.3 | 16.5 s | Search before and after, four bars | We measured search on the Flickr30k benchmark. Against our first version, Chinese searches rose from 2 to 51 percent, misspelled ones from 13 to 59, and objects found from 51 to 89 percent. |
 | 13 | 1:54.3 | 8.0 s | Under 25 ms per search; 1.5 s per description; 0 uploads | On a real iPhone 13 Pro Max, a search takes under 25 milliseconds, and no photo is uploaded. |
-| 14 | 2:01.8 | 6.0 s | Team card | Phophy, by Team 26. Thank you for watching. |
+| 14 | 2:01.8 | 6.0 s | Closing card | Thank you for watching. |
 
 Whole video: 2:07.8.

@@ -14,8 +14,8 @@
       "title": "Title",
       "kind": "coded",
       "source": "Updated",
-      "screen": "The name Phophy rises over a slow wall of demo photos, then the line “Your photos, understood. On your iPhone.” and “Team 26 · COMP7607 project”.",
-      "voice": "This is Phophy: an iPhone app that understands your photos. We are Team 26.",
+      "screen": "The name Phophy rises over a slow wall of demo photos, then the line “Your photos, understood. On your iPhone.” and “An AI photo app for iPhone”.",
+      "voice": "This is Phophy: an iPhone app that understands your photos.",
       "sfx": [
         "Chime when the tagline lands"
       ]
@@ -400,7 +400,7 @@
         "Rising tone as the bars grow",
         "Chime at 87%"
       ],
-      "check": "Experiments E3 and E4, by Qin Mengmeng. E3: 30 sentences on Flickr30k; I re-ran it through the app's own search and got the same 60% to 87%. E4: 50 searches over 1,106 photos; an experiment, not in the app yet."
+      "check": "Experiments E3 and E4. E3: 30 sentences on Flickr30k; re-run through the app's own search gave the same 60% to 87%. E4: 50 searches over 1,106 photos; an experiment, not in the app yet."
     },
     {
       "id": "results-assistant",
@@ -427,8 +427,8 @@
       "title": "Thank you",
       "kind": "coded",
       "source": "Reused",
-      "screen": "“Thank you”, Team 26 with the repository address, and the four members with their student IDs and their parts of the work.",
-      "voice": "That's Phophy, by Team 26. Thank you for watching.",
+      "screen": "“Thank you”, the repository address, and the four things Phophy does.",
+      "voice": "That's Phophy. Thank you for watching.",
       "sfx": [
         "Whoosh into the closing page",
         "Soft chime"

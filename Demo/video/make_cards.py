@@ -55,8 +55,7 @@ def card(name, title, lines=(), subtitle=None, draw_extra=None):
 
 card("01", "Phophy", subtitle="Find anything in your photos, on your iPhone",
      draw_extra=lambda img, d: (
-         d.text((140, 520), "Team 26", font=font(48, True), fill="white"),
-         d.text((140, 600), "Su Chuanzhou  ·  Yin Fengling  ·  Qin Mengmeng  ·  Wang Zhengyao", font=font(40), fill=(200, 210, 255)),
+         d.text((140, 520), "An AI photo app for iPhone", font=font(48, True), fill="white"),
      ))
 
 card("02", "The problem", [
@@ -108,9 +107,9 @@ card("15", "On a real iPhone 13 Pro Max", [
 ])
 
 card("16", "Thank you", [
-    "Su Chuanzhou (lead): design, integration, Study",
-    "Yin Fengling: indexing and performance",
-    "Qin Mengmeng: search and assistant",
-    "Wang Zhengyao: viewer, editor and collections",
-], subtitle="Team 26 · github.com/Jasonsu22/Phophy")
+    "Find any photo by describing it",
+    "Ask about what's inside a photo",
+    "Turn lecture slides into notes",
+    "Edit a photo by typing the change",
+], subtitle="github.com/Jasonsu22/Phophy")
 print("cards in", out)

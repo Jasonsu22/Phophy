@@ -362,9 +362,9 @@ def screen(title, rows, chinese=False, accent=(0, 122, 255), dark=False):
 SCREENS = [
     ("screen_train.png", datetime(2026, 11, 6, 22, 41), screen("Booking confirmed", [
         "**G1234  Hong Kong West Kowloon", "**→ Shanghai Hongqiao", "Friday 19 December 2026", "Departs 08:15 · Arrives 16:47", "---",
-        "Passenger: SU, CHUANZHOU", "Coach 6 · Seat 12F · Second class", "Fare: HK$1,128", "---", "Order no. E829104417",
+        "Passenger: CHAN, ALEX", "Coach 6 · Seat 12F · Second class", "Fare: HK$1,128", "---", "Order no. E829104417",
         "Show your ID at the gate."], accent=(0, 140, 90))),
-    ("screen_chat.png", datetime(2026, 11, 14, 18, 3), screen("Project Team 26", [
+    ("screen_chat.png", datetime(2026, 11, 14, 18, 3), screen("Project group", [
         (False, "Dinner after the demo on Saturday?"), (True, "Yes! Hot pot in Mong Kok?"), (False, "Book for 4 at 7pm"),
         (True, "Booked: Haidilao, 7:00pm, table for 4"), (False, "Great, see you there")], chinese=False)),
     ("screen_boarding.png", datetime(2026, 4, 30, 6, 55), screen("Boarding pass", [
