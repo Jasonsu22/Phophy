@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Jasonsu22/Phophy/blob/main/docs/media/phophy-video.mp4"><img src="docs/media/watch.svg" height="54" alt="Watch the video"></a>
+  <a href="https://github.com/Jasonsu22/Phophy/raw/main/docs/media/phophy-video.mp4"><img src="docs/media/watch.svg" height="54" alt="Watch the video"></a>
 </p>
 
 <p align="center">
@@ -72,7 +72,7 @@ A phone holds thousands of photos, and the one you want is always buried. You re
 ## 🎬 Watch the video
 
 <p align="center">
-  <a href="https://github.com/Jasonsu22/Phophy/blob/main/docs/media/phophy-video.mp4"><img src="docs/media/video-poster.jpg" width="720" alt="Phophy: the five-minute video, with sound and subtitles"></a>
+  <a href="https://github.com/Jasonsu22/Phophy/raw/main/docs/media/phophy-video.mp4"><img src="docs/media/video-poster.jpg" width="720" alt="Phophy: the five-minute video, with sound and subtitles"></a>
 </p>
 
 <p align="center"><sub>Five minutes: the problem, how it works, the app in action, and what we measured. Recorded on the iPhone 18 Pro Max simulator with a made-up photo library.</sub></p>
