@@ -234,7 +234,7 @@ details { margin-top:18px; } summary { cursor:pointer; font-weight:600; }
   <li><b>__PAGES__ pages</b>__NEW__ new animations</li>
   <li><b>__WORDS__ words</b>of narration</li>
   <li><b>__REUSED__ kept</b>from the last video</li>
-  <li><b>Student IDs</b>on the last page</li>
+  <li><b>Public</b>no team details</li>
 </ul>
 
 <div class="panel">

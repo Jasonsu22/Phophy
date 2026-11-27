@@ -15,7 +15,7 @@ npx remotion render PhophyDemo ../out/phophy-coded.mp4
 
 | # | Scene | Starts | Fits in | Line |
 |---|---|---|---|---|
-| 01 | Title | 0:00 | 6 s | This is Phophy, an iPhone app that understands your photo library, built by Team 26. |
+| 01 | Title | 0:00 | 6 s | This is Phophy, an iPhone app that understands your photo library. |
 | 02 | The problem | 0:07 | 12 s | A phone holds thousands of photos. Finding the receipt from last week or the slide about TCP means minutes of scrolling, and sending everything to a cloud AI costs money and gives your photos away. |
 | 03 | How it works | 0:19 | 14 s | Phophy reads every photo once, on the phone: the text in it, what it shows, and an embedding. A small AI model writes a short description. Search combines all of that. Nothing leaves the phone unless you choose a cloud model. |
 | 04 | Library | 0:33 | 10 s | Here's the library. Open a photo and Phophy shows what it knows: where it was taken, a description written on the phone, and every word on the receipt. |
@@ -30,6 +30,6 @@ npx remotion render PhophyDemo ../out/phophy-coded.mp4
 | 13 | Privacy | 2:03 | 12 s | Everything runs on the phone by default, with Apple Intelligence or a small open model for older iPhones. If you choose a cloud model, Phophy warns you first that your photos leave the device. |
 | 14 | Results | 2:15 | 22 s | We measured search on a standard benchmark, Flickr30k. Compared with our first version, Chinese searches went from 2% to 51% correct in the top ten, misspelled searches from 13% to 59%, and objects found in the top 50 from 51% to 89%, while long descriptions stayed as accurate as before. |
 | 15 | On a real iPhone | 2:38 | 11 s | On a real iPhone 13 Pro Max, without Apple Intelligence, search takes under 25 milliseconds and the on-device model describes a photo in about one and a half seconds. |
-| 16 | Thank you | 2:49 | 8 s | Phophy was built by Su Chuanzhou, Yin Fengling, Qin Mengmeng and Wang Zhengyao. Thank you for watching. |
+| 16 | Thank you | 2:49 | 8 s | Thank you for watching. |
 
 Scenes 01, 10 and 12 are the tightest, at about 6 seconds each, so read those at a natural but brisk pace.

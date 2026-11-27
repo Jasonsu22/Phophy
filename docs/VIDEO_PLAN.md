@@ -13,7 +13,7 @@ About 7 minutes, recorded in the iOS simulator ("Phophy Demo", iPhone 18 Pro Max
 
 | # | Time | On screen | Voice-over |
 |---|---|---|---|
-| 1 | 0:00 | Title card: "Phophy: find anything in your photos, on your iPhone". Team 26 | "This is Phophy, an iPhone app that understands your photo library, built by Team 26." |
+| 1 | 0:00 | Title card: "Phophy: find anything in your photos, on your iPhone" | "This is Phophy, an iPhone app that understands your photo library, " |
 | 2 | 0:10 | Problem card: thousands of photos, receipts, slides, screenshots | "A phone holds thousands of photos. Finding the receipt from last week or the slide about TCP means minutes of scrolling, and sending everything to a cloud AI costs money and gives your photos away." |
 | 3 | 0:30 | How it works card (architecture) | "Phophy reads every photo once, on the phone: the text in it, what it shows, and an embedding. A small AI model writes a short description. Search combines all of that. Nothing leaves the phone unless you choose a cloud model." |
 | 4 | 0:55 | App: Library, scroll Recents, open a receipt, info sheet (where, description, text) | "Here's the library. Open a photo and Phophy shows what it knows: where it was taken, a description written on the phone, and every word on the receipt." |
@@ -28,7 +28,7 @@ About 7 minutes, recorded in the iOS simulator ("Phophy Demo", iPhone 18 Pro Max
 | 13 | 5:10 | Settings: who describes photos, the cloud warning alert | "Everything runs on the phone by default, with Apple Intelligence or a small open model for older iPhones. If you choose a cloud model, Phophy warns you first that your photos leave the device." |
 | 14 | 5:35 | Results card: search before and after | "We measured search on a standard benchmark, Flickr30k. Compared with our first version, Chinese searches went from 2% to 51% correct in the top ten, misspelled searches from 13% to 59%, and objects found in the top 50 from 51% to 89%, while long descriptions stayed as accurate as before." |
 | 15 | 6:10 | Results card: speed on an iPhone 13 Pro Max | "On a real iPhone 13 Pro Max, without Apple Intelligence, search takes under 25 milliseconds and the on-device model describes a photo in about one and a half seconds." |
-| 16 | 6:35 | Team card: four members and their parts | "Phophy was built by Su Chuanzhou, Yin Fengling, Qin Mengmeng and Wang Zhengyao. Thank you for watching." |
+| 16 | 6:35 | Closing card | "Thank you for watching." |
 
 ## Before recording
 

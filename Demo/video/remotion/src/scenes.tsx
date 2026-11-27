@@ -38,7 +38,7 @@ export const TitleScene: React.FC = () => (
       </Rise>
       <Words text="Your photos, understood. On your iPhone." at={0.8} style={{ fontSize: 54, color: SOFT, marginTop: 6 }} />
       <Rise at={1.6}>
-        <div style={{ fontSize: 32, color: TEAL, marginTop: 70, fontWeight: 700, letterSpacing: 4 }}>TEAM 26</div>
+        <div style={{ fontSize: 32, color: TEAL, marginTop: 70, fontWeight: 700, letterSpacing: 4 }}>AN AI PHOTO APP FOR IPHONE</div>
       </Rise>
     </AbsoluteFill>
   </AbsoluteFill>
@@ -390,25 +390,18 @@ export const PhoneSpeedScene: React.FC = () => (
 // MARK: Thanks
 
 export const ThanksScene: React.FC = () => {
-  const team = [
-    ["Wang Zhengyao", "3036795675", "Viewer, editor and collections"],
-    ["Yin Fengling", "3036807375", "Indexing and performance"],
-    ["Qin Mengmeng", "3036843769", "Search and assistant"],
-    ["Su Chuanzhou", "3036837980", "Lead · design, integration, Study"],
-  ];
+  const features = ["Find any photo by describing it", "Ask about what’s inside a photo", "Turn lecture slides into notes", "Edit a photo by typing the change"];
   return (
     <AbsoluteFill style={{ fontFamily: FONT, padding: "120px 160px" }}>
       <Words text="Thank you" at={0.1} style={{ color: "white", fontSize: 96, fontWeight: 800 }} />
       <Rise at={0.4}>
-        <div style={{ color: TEAL, fontSize: 34, fontWeight: 700, marginTop: 10, letterSpacing: 2 }}>TEAM 26 · github.com/Jasonsu22/Phophy</div>
+        <div style={{ color: TEAL, fontSize: 34, fontWeight: 700, marginTop: 10, letterSpacing: 2 }}>OPEN SOURCE · github.com/Jasonsu22/Phophy</div>
       </Rise>
       <div style={{ marginTop: 60 }}>
-        {team.map(([name, id, role], i) => (
-          <Rise key={name} at={0.8 + i * 0.25}>
-            <div style={{ display: "flex", gap: 40, alignItems: "baseline", marginTop: 26 }}>
-              <div style={{ color: "white", fontSize: 50, fontWeight: 700, width: 420 }}>{name}</div>
-              <div style={{ color: TEAL, fontSize: 40, width: 260, fontVariantNumeric: "tabular-nums" }}>{id}</div>
-              <div style={{ color: SOFT, fontSize: 36 }}>{role}</div>
+        {features.map((text, i) => (
+          <Rise key={text} at={0.8 + i * 0.25}>
+            <div style={{ color: "white", fontSize: 46, fontWeight: 600, marginTop: 26 }}>
+              <span style={{ color: TEAL, marginRight: 24 }}>✦</span>{text}
             </div>
           </Rise>
         ))}

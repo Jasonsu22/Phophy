@@ -1,6 +1,6 @@
-# Progress log and handover: Qin Mengmeng (Track B: search and assistant)
+# Progress log and handover: Track B (search and assistant)
 
-Owner: Qin Mengmeng (GitHub `MJoy519`) · Team 26, COMP7607 · Last updated: **27 Nov 2026**
+Last updated: **27 Nov 2026**
 
 Track B covers search quality, the search evaluation set, Chinese queries,
 the assistant's tools and backends, and cloud cost. Its experiments in the
@@ -19,10 +19,10 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
 
 ### Waiting on others
 
-- **Lead (Su Chuanzhou):**
+- **Lead:**
   - Review and merge #2, then the E3 PR.
   - Run the **Apple Intelligence** group of E7 on a macOS 27 Mac: `Eval/run_agent_eval.sh <sim> apple`. This Mac (macOS 26.6) can't load the simulator's on-device model; see Environment.
-- **Qin:** a Claude API key (console.anthropic.com; a Claude subscription doesn't include API credit). It unblocks:
+- **Track B:** a Claude API key (console.anthropic.com; a Claude subscription doesn't include API credit). It unblocks:
   - E7 and E11 on Claude Haiku 5.5;
   - E3 condition b2 (`Eval/e3_claude_rewrite.py`).
 
@@ -58,7 +58,7 @@ proposal are **E1, E3, E4, E7, E11**. Code owned: `Phophy/Assistant/`,
 | Date (HKT) | What | Track B input |
 |---|---|---|
 | 28 Nov | Results handed to whoever edits the video | E3 table (ready), E7/E11 numbers (need a key), one search before/after slide |
-| **29 Nov 23:59** | `Team26.zip`: 5-minute pre-recorded video (we present **online**) | Scenes 9–11 (assistant) and 14 (search results) |
+| **29 Nov 23:59** | 5-minute pre-recorded video (we present **online**) | Scenes 9–11 (assistant) and 14 (search results) |
 | **15 Dec 23:59** | Final report | Methods and results sections for E1, E3, E4, E7, E11 |
 
 ## Status
