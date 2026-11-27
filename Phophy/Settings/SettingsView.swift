@@ -1,8 +1,8 @@
 import SwiftUI
+import Translation
 
 struct SettingsView: View {
     @Environment(IndexStatus.self) private var indexStatus
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
     @AppStorage(AppSettings.Key.useAppleIntelligence) private var useAppleIntelligence = true
@@ -57,12 +57,8 @@ struct SettingsView: View {
             .tint(Color(hex: 0x14B8C6))
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                        .fontWeight(.semibold)
-                }
-            }
+            // Room for the floating ask bar and the tab bar.
+            .contentMargins(.bottom, 80, for: .scrollContent)
         }
         .presentationBackground(.clear)
         .onAppear(perform: loadProviderFields)
@@ -288,6 +284,8 @@ struct SettingsView: View {
                 )
             }
             RowDivider()
+            ChineseSearchRow()
+            RowDivider()
             SettingsRow(icon: "icloud.and.arrow.down.fill", title: "Index photos stored in iCloud") {
                 Toggle("Index photos stored in iCloud", isOn: $indexICloudPhotos)
                     .labelsHidden()
@@ -437,6 +435,39 @@ private struct RowDivider: View {
     }
 }
 
+/// Chinese searches are translated to English on the phone, which needs
+/// Apple's Chinese and English translation languages (a free download).
+private struct ChineseSearchRow: View {
+    @State private var status: QueryTranslator.Status?
+    @State private var download: TranslationSession.Configuration?
+
+    var body: some View {
+        SettingsRow(
+            icon: "character.bubble.fill", title: "Search in Chinese",
+            subtitle: status == .needsDownload ? "Translates on your iPhone. Free download from Apple" : nil
+        ) {
+            switch status {
+            case .on: StatusPill(text: "On", isPositive: true)
+            case .needsDownload:
+                Button("Download") {
+                    // A new value each time, so a second tap asks again.
+                    if download == nil { download = QueryTranslator.download } else { download?.invalidate() }
+                }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
+            case .unsupported: StatusPill(text: "Basic", isPositive: false)
+            case nil: EmptyView()
+            }
+        }
+        .task { status = await QueryTranslator.shared.status() }
+        .translationTask(download) { session in
+            // The system shows its own download sheet.
+            try? await session.prepareTranslation()
+            status = await QueryTranslator.shared.status()
+        }
+    }
+}
+
 private struct StatusPill: View {
     let text: String
     let isPositive: Bool
@@ -480,6 +511,7 @@ private extension AIBackend {
 /// Who writes photo descriptions for search, with a clear warning before
 /// any photo is uploaded.
 private struct DescriptionSettings: View {
+    @Environment(IndexStatus.self) private var indexStatus
     @Environment(DescribeStatus.self) private var status
     @AppStorage(AppSettings.Key.describer) private var choiceID = DescriberChoice.automatic.rawValue
     @AppStorage(AppSettings.Key.downloadableModel) private var modelID = DownloadableModel.smolVLM.rawValue
@@ -498,10 +530,24 @@ private struct DescriptionSettings: View {
     private var model: DownloadableModel { DownloadableModel(rawValue: modelID) ?? .smolVLM }
     private var keyAccount: String { choice == .gemini ? ImageProvider.gemini.keyAccount : ImageProvider.openai.keyAccount }
 
+    /// "apple" → "Apple Intelligence", "gemini:gemini-2.5-flash-lite" → "Google Gemini".
+    static func describerName(_ id: String) -> String {
+        switch id {
+        case IndexStore.userDescriber: "you"
+        case "apple": "Apple Intelligence"
+        case "smolVLM": "SmolVLM2 on this iPhone"
+        case "fastVLM": "FastVLM on this iPhone"
+        case let id where id.hasPrefix("gemini"): "Google Gemini"
+        case let id where id.hasPrefix("openai"): "OpenAI"
+        default: id
+        }
+    }
+
     var body: some View {
         SettingsSection(title: "Photo descriptions", footer: footer) {
-            SettingsRow(icon: "text.below.photo", title: "Described photos", subtitle: status.message ?? status.describer.map { "By \($0)" }) {
-                Text("\(status.described, format: .number) of \(max(status.toDescribe, status.described), format: .number)")
+            SettingsRow(icon: "text.below.photo", title: "Described photos", subtitle: status.message ?? status.describer.map { "By " + Self.describerName($0) }) {
+                // Out of the whole library, not only the photos indexed so far.
+                Text("\(status.described, format: .number) of \(max(indexStatus.total, status.toDescribe, status.described), format: .number)")
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
@@ -560,11 +606,11 @@ private struct DescriptionSettings: View {
     private var footer: String {
         switch choice {
         case .gemini, .openai:
-            return "Privacy: small copies of your photos are uploaded to \(choice == .gemini ? "Google" : "OpenAI") to be described. Their terms apply, and Phophy can't control or delete what they keep. Text-heavy photos and near-duplicates are skipped to save cost."
+            return "Privacy: small copies of your photos are uploaded to \(choice == .gemini ? "Google" : "OpenAI") to be described. Their terms apply, and Phophy can't control or delete what they keep. Near-duplicates are described once to save cost."
         case .off:
             return "Without descriptions, search still uses text in photos, labels, concept tags and visual similarity."
         default:
-            return "Descriptions are written on your iPhone and never leave it. They let search find details such as \u{201C}red umbrella\u{201D} or \u{201C}girl with a kite\u{201D}. Text-heavy photos and near-duplicates are skipped, and work pauses while you use the app."
+            return "Descriptions are written on your iPhone and never leave it. They let search find details such as \u{201C}red umbrella\u{201D} or \u{201C}girl with a kite\u{201D}, and find a screenshot by what it is, such as \u{201C}train ticket\u{201D}. Near-duplicates are described once, and work pauses while you use the app."
         }
     }
 

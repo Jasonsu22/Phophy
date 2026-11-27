@@ -158,6 +158,11 @@ nonisolated final class IndexStore: Sendable {
                 sql: "INSERT OR REPLACE INTO place (key, name, city, region, context, looked_up) VALUES (?, ?, ?, ?, ?, ?)",
                 arguments: [key, name, city, region, context, Date().timeIntervalSince1970]
             )
+            // The photos there get the place name in their keyword entry.
+            try db.execute(
+                sql: "UPDATE asset SET doc_version = 0 WHERE local_id IN (SELECT local_id FROM photo_meta WHERE place_key = ?)",
+                arguments: [key]
+            )
         }
     }
 
@@ -240,6 +245,31 @@ nonisolated final class IndexStore: Sendable {
 
     /// Photos matching the filters, newest first. Covers the whole library,
     /// indexed or not. `place` matches a place name, city, country or area.
+    /// Every name photos were taken at, lowercased: street or landmark,
+    /// city, region and country, each on its own ("hong kong", "shanghai").
+    func placeNames() throws -> Set<String> {
+        try db.read { db in
+            var names = Set<String>()
+            let rows = try Row.fetchAll(db, sql: """
+                SELECT DISTINCT p.name, p.city, p.region, p.context FROM place p
+                WHERE p.key IN (SELECT place_key FROM photo_meta)
+                """)
+            for row in rows {
+                for column in ["name", "city", "region", "context"] {
+                    let value: String = row[column]
+                    for part in value.lowercased().split(separator: ",") {
+                        let name = part.trimmingCharacters(in: .whitespaces)
+                        // Not house numbers or one-letter codes.
+                        guard name.count >= 3, name.contains(where: \.isLetter), Int(name) == nil else { continue }
+                        names.insert(name)
+                        if name.hasSuffix(" sar") { names.insert(String(name.dropLast(4))) }
+                    }
+                }
+            }
+            return names
+        }
+    }
+
     func filteredIDs(from: Date?, to: Date?, place: String?, media: String?) throws -> [String] {
         try db.read { db in
             var clauses: [String] = []
@@ -296,10 +326,29 @@ nonisolated final class IndexStore: Sendable {
         }
         try db.write { db in
             try db.execute(
+                // Re-indexing keeps a photo's description unless the photo
+                // itself changed (edited), and always keeps one the user
+                // wrote: descriptions cost minutes of
+                // battery or real money, and a new index version alone
+                // doesn't make them wrong. Tags are recomputed either way.
                 sql: """
-                    INSERT OR REPLACE INTO asset
+                    INSERT INTO asset
                         (local_id, modified, ocr, labels, embedding, embedding_model, indexed_at, index_version)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(local_id) DO UPDATE SET
+                        caption = CASE WHEN modified IS excluded.modified OR described_by = 'user' THEN caption ELSE '' END,
+                        keywords = CASE WHEN modified IS excluded.modified OR described_by = 'user' THEN keywords ELSE '' END,
+                        described_by = CASE WHEN modified IS excluded.modified OR described_by = 'user' THEN described_by ELSE NULL END,
+                        modified = excluded.modified,
+                        ocr = excluded.ocr,
+                        labels = excluded.labels,
+                        embedding = excluded.embedding,
+                        embedding_model = excluded.embedding_model,
+                        indexed_at = excluded.indexed_at,
+                        index_version = excluded.index_version,
+                        tags = '',
+                        tag_version = 0,
+                        doc_version = 0
                     """,
                 arguments: [
                     localID, modified?.timeIntervalSince1970, text, labelText,
@@ -410,12 +459,14 @@ nonisolated final class IndexStore: Sendable {
     }
 
     /// How many characters of text were recognized in each photo.
+    /// Each photo's amount of recognized text, with a Chinese or Japanese
+    /// character counted as three letters (one says about as much as a word).
     func textLengths() throws -> [String: Int] {
         try db.read { db in
             var lengths: [String: Int] = [:]
-            let rows = try Row.fetchCursor(db, sql: "SELECT local_id, length(ocr) AS n FROM asset")
+            let rows = try Row.fetchCursor(db, sql: "SELECT local_id, ocr FROM asset WHERE ocr != ''")
             while let row = try rows.next() {
-                lengths[row["local_id"]] = row["n"]
+                lengths[row["local_id"]] = TextNormalizer.textAmount(row["ocr"])
             }
             return lengths
         }

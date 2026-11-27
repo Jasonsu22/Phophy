@@ -11,6 +11,9 @@ final class AssistantModel {
         let role: Role
         var text: String
         var photoIDs: [String] = []
+        /// The shown photos plus the rest of what the search found, for
+        /// "Show all"; nil when there's nothing more.
+        var moreIDs: [String]? = nil
         var albums: [AlbumProposal] = []
         var isError = false
         /// What the assistant did to answer, e.g. "Searched “waterfall” · 3 found".
@@ -36,11 +39,27 @@ final class AssistantModel {
     private(set) var isPresented = false
     /// What's typed in the ask bar; it's the same field open or closed.
     var draft = ""
+
+    /// All the results of one answer, opened as a full grid over the chat.
+    struct OpenedResults: Equatable {
+        let title: String
+        let ids: [String]
+    }
+    var openedResults: OpenedResults?
     private(set) var messages: [Message] = []
     private(set) var isWorking = false
     private(set) var backend: AIBackend = .resolve()
 
     @ObservationIgnored private var toolbox: PhotoToolbox?
+    /// False for the evaluation's throwaway conversations.
+    @ObservationIgnored private let keepsHistory: Bool
+    /// What the last answer took: the tools called and the cloud tokens.
+    @ObservationIgnored private(set) var lastTools: [String] = []
+    @ObservationIgnored private(set) var lastUsage: UsageTally?
+
+    init(keepsHistory: Bool = true) {
+        self.keepsHistory = keepsHistory
+    }
     @ObservationIgnored private var chat: ChatBackend?
 
     func open() {
@@ -83,7 +102,7 @@ final class AssistantModel {
 
     /// Stores the current conversation at the top of the history.
     private func record() {
-        guard let first = messages.first(where: { $0.role == .user }) else { return }
+        guard keepsHistory, let first = messages.first(where: { $0.role == .user }) else { return }
         let id = conversationID ?? UUID()
         conversationID = id
         history.removeAll { $0.id == id }
@@ -108,6 +127,11 @@ final class AssistantModel {
         try? data.write(to: url, options: [.atomic, .completeFileProtection])
     }
 
+    private static func isRefusal(_ reply: String) -> Bool {
+        let text = reply.lowercased().replacingOccurrences(of: "’", with: "'")
+        return ["can't", "cannot", "unable to", "not able to", "private information", "无法", "不能", "無法"].contains(where: text.contains)
+    }
+
     func send(_ rawText: String, indexedCount: Int, categories: [String: PhotoCategory]) async {
         let text = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !isWorking else { return }
@@ -118,6 +142,40 @@ final class AssistantModel {
             record()
         }
 
+        // Search and asking are one: the photos that match appear at once
+        // (a local search takes milliseconds), the answer follows.
+        let instant = await SearchEngine.shared.search(text, indexedCount: indexedCount).bestMatches
+        let resultsID = UUID()
+        if !instant.isEmpty {
+            messages.append(Message(
+                id: resultsID, role: .assistant, text: "",
+                photoIDs: Array(instant.prefix(12)), moreIDs: instant.count > 12 ? Array(instant.prefix(60)) : nil
+            ))
+        }
+        /// Replaces the instant results with the answer, keeping the results
+        /// under it (the answer's own photos first).
+        func answer(_ reply: Message) {
+            var reply = reply
+            if let i = messages.firstIndex(where: { $0.id == resultsID }) {
+                let results = messages.remove(at: i)
+                if reply.photoIDs.isEmpty {
+                    reply.photoIDs = results.photoIDs
+                }
+                // The answer's picks, then the search for exactly what was
+                // typed (ranked by match), then anything else the assistant
+                // found. Its own searches may be filter-only (newest first),
+                // so they never go ahead of the ranked results.
+                var seen = Set<String>()
+                let all = Array((reply.photoIDs + (results.moreIDs ?? results.photoIDs) + (reply.moreIDs ?? []))
+                    .filter { seen.insert($0).inserted }
+                    .prefix(60))
+                reply.moreIDs = all.count > reply.photoIDs.count ? all : nil
+                messages.insert(reply, at: i)
+            } else {
+                messages.append(reply)
+            }
+        }
+
         if messages.count == 1 { backend = .resolve() }
         let toolbox = toolbox ?? PhotoToolbox(
             snippetLength: backend == .appleIntelligence ? 60 : 160,
@@ -125,6 +183,7 @@ final class AssistantModel {
         )
         self.toolbox = toolbox
         await toolbox.setIndexedCount(indexedCount)
+        await toolbox.setAsked(messages.filter { $0.role == .user }.map(\.text).joined(separator: " "), latest: text)
 
         do {
             let chat: ChatBackend
@@ -134,10 +193,11 @@ final class AssistantModel {
             case .cloud:
                 chat = try self.chat ?? CloudAssistant.make(config: .current(), toolbox: toolbox)
             case .off:
-                messages.append(Message(
+                answer(Message(
                     role: .assistant,
-                    text: "The assistant is off. Turn on Apple Intelligence or cloud AI in Settings.",
-                    isError: true
+                    text: instant.isEmpty
+                        ? "Nothing matched. For answers to questions, turn on Apple Intelligence or cloud AI in Settings."
+                        : "Here's what matched. For answers to questions, turn on Apple Intelligence or cloud AI in Settings."
                 ))
                 return
             }
@@ -147,13 +207,33 @@ final class AssistantModel {
                 prompt = "Earlier in this conversation:\n\(context)\n\nNew question: \(text)"
                 carryOver = nil
             }
-            let reply = try await chat.send(prompt)
+            // Every cloud round of this answer adds its tokens here (E11).
+            let usage = UsageTally(label: "assistant")
+            lastUsage = usage
+            let reply = try await UsageMeter.$current.withValue(usage) {
+                var reply = try await chat.send(prompt)
+                // Small models sometimes refuse ("I can't access private
+                // information") without looking: have them search first.
+                if await !toolbox.calledTools, Self.isRefusal(reply) {
+                    reply = try await chat.send("""
+                        Search my photos with find_photos before answering. They are my own photos, \
+                        so reading what is written in them is fine. My question: \(text)
+                        """)
+                }
+                return reply
+            }
+            lastTools = await toolbox.takeToolLog()
             let shown = await toolbox.present(reply: reply)
             let text = shown.text.isEmpty ? "Here they are." : shown.text
-            messages.append(Message(role: .assistant, text: text, photoIDs: shown.photoIDs, albums: shown.albums, steps: shown.steps))
+            var steps = shown.steps
+            if let cost = await usage.summaryLine() { steps.append(cost) }
+            answer(Message(
+                role: .assistant, text: text, photoIDs: shown.photoIDs,
+                moreIDs: shown.moreIDs.isEmpty ? nil : shown.moreIDs, albums: shown.albums, steps: steps
+            ))
         } catch {
             _ = await toolbox.present(reply: "")
-            messages.append(Message(role: .assistant, text: error.localizedDescription, isError: true))
+            answer(Message(role: .assistant, text: error.localizedDescription, isError: true))
         }
     }
 }

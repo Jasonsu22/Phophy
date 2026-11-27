@@ -224,8 +224,14 @@ On the iPhone 13 Pro Max (20 Nov, `-PhophyPhoneBench`, 16,080 photos, 3,487 inde
 
 On the iPhone, with SmolVLM2, about 6 of 9 screenshots per run got a useful description ("a fund performance report", "course enrollment, add/drop period", "a graduate programme application"); the rest were vague or dropped. 1–6 s each. Apple's model and the cloud models should do much better here; not yet measured.
 
+### Bugs found on the iPhone (fixed 20 Nov)
+
+- **No tags on a big library.** Tagging ran only every 200 photos and at the end of indexing; with 12,000 photos waiting on iCloud neither came, so 3,597 indexed photos had no tags. Tagging now runs before indexing continues: 3,645 photos tagged in seconds.
+- **Describing ran alongside indexing.** A second start of the indexer returned at once, so describing began in parallel, doubling the heat. Describing now waits until indexing is done ("Waiting for indexing to finish" in Settings).
+- **Re-indexing threw away descriptions.** Any re-index, including a new index version, wiped them. Now a description is kept unless the photo itself was edited.
+
 ### Still to do
 
-- Check battery and heat over a full night of describing on the iPhone. (Apple's model can't be timed on this phone: it has no Apple Intelligence.)
+- Check battery and heat over a full night on the iPhone (started 20 Nov: indexing the remaining ~12,400 photos from iCloud first, then describing). (Apple's model can't be timed on this phone: it has no Apple Intelligence.)
 - Test cloud describing with a real key.
 - In Xcode, approve the MLX and Hugging Face package macros ("Trust & Enable") on the first build.

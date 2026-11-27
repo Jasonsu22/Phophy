@@ -49,7 +49,8 @@ struct PhotoGrid: View {
             sections: [.photos(source, layout: .grid(columns: 4, spacing: 2))],
             contentID: contentID,
             startsAtEnd: true,
-            bottomInset: assistant.isPresented ? 0 : 58
+            bottomInset: assistant.isPresented ? 0 : 58,
+            zoomKey: "gridColumns.library"
         )
         .ignoresSafeArea(.container, edges: .vertical)
     }

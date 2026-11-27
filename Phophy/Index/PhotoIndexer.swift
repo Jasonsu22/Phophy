@@ -33,6 +33,14 @@ actor PhotoIndexer {
     private var isRunning = false
     private var runAgain = false
 
+    /// Whether indexing is under way. Describing takes turns with it.
+    func isIndexing() -> Bool { isRunning }
+
+    /// How many batches have been indexed since launch, so describing can
+    /// tell that indexing is getting its share.
+    private(set) var batchesIndexed = 0
+    func batchCount() -> Int { batchesIndexed }
+
     func run(status: IndexStatus) async {
         if isRunning {
             runAgain = true
@@ -95,6 +103,11 @@ actor PhotoIndexer {
             if !done.contains(asset.localIdentifier) { pending.append(asset) }
         }
 
+        // Tag and keyword-index what's already indexed before starting on the
+        // rest: it takes seconds, and the rest can take hours on a big
+        // library (photos waiting on iCloud).
+        await updateKeywordIndex(status: status)
+
         // Images are fetched two at a time, so waiting on iCloud for one
         // photo doesn't hold up the other, without holding many large
         // images in memory. Before each step, indexing waits until the
@@ -127,6 +140,7 @@ actor PhotoIndexer {
                 )
                 indexed += 1
             }
+            batchesIndexed += 1
             await status.update(indexed: indexed, total: total, isRunning: true)
             // Every few hundred photos, make the new ones findable by keyword.
             if (start / batchSize) % 100 == 99 { await updateKeywordIndex(status: status) }
@@ -134,6 +148,8 @@ actor PhotoIndexer {
         await updateKeywordIndex(status: status)
         await status.update(indexed: indexed, total: total, isRunning: false)
         await PlaceResolver.shared.run()
+        // Place names just looked up go into the keyword entries.
+        await refreshKeywordIndex()
     }
 
     /// Tags new photos with concepts and rebuilds their keyword entries.

@@ -1,0 +1,309 @@
+{
+  "metrics" : {
+    "1. app search today|all" : {
+      "MRR" : 0.30649135309023029,
+      "R@1" : 0.20000000000000001,
+      "R@5" : 0.41999999999999998,
+      "R@10" : 0.5
+    },
+    "1. app search today|en" : {
+      "MRR" : 0.34877536748804921,
+      "R@1" : 0.22857142857142856,
+      "R@5" : 0.48571428571428571,
+      "R@10" : 0.51428571428571423
+    },
+    "1. app search today|zh" : {
+      "MRR" : 0.20782865282865284,
+      "R@1" : 0.13333333333333333,
+      "R@5" : 0.26666666666666666,
+      "R@10" : 0.46666666666666667
+    },
+    "2. app + query translation|all" : {
+      "MRR" : 0.32054004258620572,
+      "R@1" : 0.22,
+      "R@5" : 0.41999999999999998,
+      "R@10" : 0.46000000000000002
+    },
+    "2. app + query translation|en" : {
+      "MRR" : 0.34877536748804921,
+      "R@1" : 0.22857142857142856,
+      "R@5" : 0.48571428571428571,
+      "R@10" : 0.51428571428571423
+    },
+    "2. app + query translation|zh" : {
+      "MRR" : 0.25465761781523766,
+      "R@1" : 0.20000000000000001,
+      "R@5" : 0.26666666666666666,
+      "R@10" : 0.33333333333333331
+    },
+    "3. text vectors only|all" : {
+      "MRR" : 0.3457306809042065,
+      "R@1" : 0.20000000000000001,
+      "R@5" : 0.47999999999999998,
+      "R@10" : 0.73999999999999999
+    },
+    "3. text vectors only|en" : {
+      "MRR" : 0.29473885936236593,
+      "R@1" : 0.14285714285714285,
+      "R@5" : 0.45714285714285713,
+      "R@10" : 0.7142857142857143
+    },
+    "3. text vectors only|zh" : {
+      "MRR" : 0.46471159783516769,
+      "R@1" : 0.33333333333333331,
+      "R@5" : 0.53333333333333333,
+      "R@10" : 0.80000000000000004
+    },
+    "4. app + text vectors|all" : {
+      "MRR" : 0.40564584093876499,
+      "R@1" : 0.29999999999999999,
+      "R@5" : 0.52000000000000002,
+      "R@10" : 0.64000000000000001
+    },
+    "4. app + text vectors|en" : {
+      "MRR" : 0.39854167753156911,
+      "R@1" : 0.25714285714285712,
+      "R@5" : 0.5714285714285714,
+      "R@10" : 0.7142857142857143
+    },
+    "4. app + text vectors|zh" : {
+      "MRR" : 0.42222222222222222,
+      "R@1" : 0.40000000000000002,
+      "R@5" : 0.40000000000000002,
+      "R@10" : 0.46666666666666667
+    },
+    "5. app + translation + text vectors|all" : {
+      "MRR" : 0.38289863472694913,
+      "R@1" : 0.26000000000000001,
+      "R@5" : 0.52000000000000002,
+      "R@10" : 0.64000000000000001
+    },
+    "5. app + translation + text vectors|en" : {
+      "MRR" : 0.39854167753156911,
+      "R@1" : 0.25714285714285712,
+      "R@5" : 0.5714285714285714,
+      "R@10" : 0.7142857142857143
+    },
+    "5. app + translation + text vectors|zh" : {
+      "MRR" : 0.34639820151616885,
+      "R@1" : 0.26666666666666666,
+      "R@5" : 0.40000000000000002,
+      "R@10" : 0.46666666666666667
+    },
+    "6. app + text vectors (translation for vectors only)|all" : {
+      "MRR" : 0.41458395818874666,
+      "R@1" : 0.28000000000000003,
+      "R@5" : 0.56000000000000005,
+      "R@10" : 0.69999999999999996
+    },
+    "6. app + text vectors (translation for vectors only)|en" : {
+      "MRR" : 0.39854167753156911,
+      "R@1" : 0.25714285714285712,
+      "R@5" : 0.5714285714285714,
+      "R@10" : 0.7142857142857143
+    },
+    "6. app + text vectors (translation for vectors only)|zh" : {
+      "MRR" : 0.45201594638882775,
+      "R@1" : 0.33333333333333331,
+      "R@5" : 0.53333333333333333,
+      "R@10" : 0.66666666666666663
+    },
+    "7. same as 6, vectors weighted 2|all" : {
+      "MRR" : 0.42121016718444509,
+      "R@1" : 0.29999999999999999,
+      "R@5" : 0.57999999999999996,
+      "R@10" : 0.73999999999999999
+    },
+    "7. same as 6, vectors weighted 2|en" : {
+      "MRR" : 0.37910325801830341,
+      "R@1" : 0.22857142857142856,
+      "R@5" : 0.59999999999999998,
+      "R@10" : 0.74285714285714288
+    },
+    "7. same as 6, vectors weighted 2|zh" : {
+      "MRR" : 0.51945962190544237,
+      "R@1" : 0.46666666666666667,
+      "R@5" : 0.53333333333333333,
+      "R@10" : 0.73333333333333328
+    },
+    "8. same as 6, vectors weighted 3|all" : {
+      "MRR" : 0.42624310416106082,
+      "R@1" : 0.29999999999999999,
+      "R@5" : 0.56000000000000005,
+      "R@10" : 0.71999999999999997
+    },
+    "8. same as 6, vectors weighted 3|en" : {
+      "MRR" : 0.38629316798489732,
+      "R@1" : 0.22857142857142856,
+      "R@5" : 0.5714285714285714,
+      "R@10" : 0.7142857142857143
+    },
+    "8. same as 6, vectors weighted 3|zh" : {
+      "MRR" : 0.51945962190544237,
+      "R@1" : 0.46666666666666667,
+      "R@5" : 0.53333333333333333,
+      "R@10" : 0.73333333333333328
+    }
+  },
+  "misses" : {
+    "1. app search today" : [
+      "predicting the neighbours of a word from the word itself",
+      "words that mean different things in different sentences",
+      "why early information fades when training on long sequences",
+      "memory cell that decides what to keep and what to throw away",
+      "fill in the blank pretraining objective",
+      "cheap fine-tuning that trains only a tiny add-on",
+      "how much data a model of a given size should see",
+      "always choosing the single most likely next word",
+      "making generated text more creative or more conservative",
+      "stopping the model from saying the same thing over and over",
+      "how much two labellers agree beyond luck",
+      "learning which of two answers people like better",
+      "aligning a model without reinforcement learning",
+      "the model making up facts and fake references",
+      "asking the model to show its working step by step",
+      "how long is my computer covered for repairs",
+      "what did I get for takeaway dinner",
+      "子词切分是怎么做的",
+      "模型一本正经地胡说八道",
+      "让生成的文字更随机一点",
+      "为什么要先检索文档再回答",
+      "程序互相等待对方释放资源卡住了",
+      "查得准和查得全",
+      "把几个搜索结果列表合成一个",
+      "台风来了还要不要上课"
+    ],
+    "2. app + query translation" : [
+      "predicting the neighbours of a word from the word itself",
+      "words that mean different things in different sentences",
+      "why early information fades when training on long sequences",
+      "memory cell that decides what to keep and what to throw away",
+      "fill in the blank pretraining objective",
+      "cheap fine-tuning that trains only a tiny add-on",
+      "how much data a model of a given size should see",
+      "always choosing the single most likely next word",
+      "making generated text more creative or more conservative",
+      "stopping the model from saying the same thing over and over",
+      "how much two labellers agree beyond luck",
+      "learning which of two answers people like better",
+      "aligning a model without reinforcement learning",
+      "the model making up facts and fake references",
+      "asking the model to show its working step by step",
+      "how long is my computer covered for repairs",
+      "what did I get for takeaway dinner",
+      "模型一本正经地胡说八道",
+      "让生成的文字更随机一点",
+      "程序互相等待对方释放资源卡住了",
+      "分配资源前先判断安不安全",
+      "内存满了该把哪一页换出去",
+      "记录每个词出现在哪些文档里的数据结构",
+      "怎么衡量一个词对文档有多重要",
+      "查得准和查得全",
+      "把几个搜索结果列表合成一个",
+      "西红柿鸡蛋怎么做"
+    ],
+    "3. text vectors only" : [
+      "dividing attention scores by the square root of the dimension",
+      "fill in the blank pretraining objective",
+      "cheap fine-tuning that trains only a tiny add-on",
+      "when is the NLP project report due",
+      "fine for returning library books late",
+      "how to quit my gym contract early",
+      "when does my summer job start",
+      "storm warning, are classes cancelled",
+      "how much was the flu medicine",
+      "the NLP textbook I bought",
+      "注意力分数为什么要除以根号维度",
+      "模型一本正经地胡说八道",
+      "让生成的文字更随机一点"
+    ],
+    "4. app + text vectors" : [
+      "words that mean different things in different sentences",
+      "why early information fades when training on long sequences",
+      "fill in the blank pretraining objective",
+      "cheap fine-tuning that trains only a tiny add-on",
+      "how much data a model of a given size should see",
+      "stopping the model from saying the same thing over and over",
+      "asking the model to show its working step by step",
+      "when is the NLP project report due",
+      "how much was the flu medicine",
+      "the NLP textbook I bought",
+      "子词切分是怎么做的",
+      "注意力分数为什么要除以根号维度",
+      "模型一本正经地胡说八道",
+      "让生成的文字更随机一点",
+      "为什么要先检索文档再回答",
+      "把几个搜索结果列表合成一个",
+      "图书逾期要罚多少钱",
+      "台风来了还要不要上课"
+    ],
+    "5. app + translation + text vectors" : [
+      "words that mean different things in different sentences",
+      "why early information fades when training on long sequences",
+      "fill in the blank pretraining objective",
+      "cheap fine-tuning that trains only a tiny add-on",
+      "how much data a model of a given size should see",
+      "stopping the model from saying the same thing over and over",
+      "asking the model to show its working step by step",
+      "when is the NLP project report due",
+      "how much was the flu medicine",
+      "the NLP textbook I bought",
+      "模型一本正经地胡说八道",
+      "程序互相等待对方释放资源卡住了",
+      "分配资源前先判断安不安全",
+      "内存满了该把哪一页换出去",
+      "记录每个词出现在哪些文档里的数据结构",
+      "怎么衡量一个词对文档有多重要",
+      "查得准和查得全",
+      "把几个搜索结果列表合成一个"
+    ],
+    "6. app + text vectors (translation for vectors only)" : [
+      "words that mean different things in different sentences",
+      "why early information fades when training on long sequences",
+      "fill in the blank pretraining objective",
+      "cheap fine-tuning that trains only a tiny add-on",
+      "how much data a model of a given size should see",
+      "stopping the model from saying the same thing over and over",
+      "asking the model to show its working step by step",
+      "when is the NLP project report due",
+      "how much was the flu medicine",
+      "the NLP textbook I bought",
+      "模型一本正经地胡说八道",
+      "让生成的文字更随机一点",
+      "为什么要先检索文档再回答",
+      "查得准和查得全",
+      "把几个搜索结果列表合成一个"
+    ],
+    "7. same as 6, vectors weighted 2" : [
+      "words that mean different things in different sentences",
+      "why early information fades when training on long sequences",
+      "fill in the blank pretraining objective",
+      "cheap fine-tuning that trains only a tiny add-on",
+      "how much data a model of a given size should see",
+      "asking the model to show its working step by step",
+      "when is the NLP project report due",
+      "how much was the flu medicine",
+      "the NLP textbook I bought",
+      "模型一本正经地胡说八道",
+      "让生成的文字更随机一点",
+      "为什么要先检索文档再回答",
+      "把几个搜索结果列表合成一个"
+    ],
+    "8. same as 6, vectors weighted 3" : [
+      "words that mean different things in different sentences",
+      "fill in the blank pretraining objective",
+      "cheap fine-tuning that trains only a tiny add-on",
+      "asking the model to show its working step by step",
+      "when is the NLP project report due",
+      "fine for returning library books late",
+      "how to quit my gym contract early",
+      "storm warning, are classes cancelled",
+      "how much was the flu medicine",
+      "the NLP textbook I bought",
+      "模型一本正经地胡说八道",
+      "让生成的文字更随机一点",
+      "为什么要先检索文档再回答",
+      "把几个搜索结果列表合成一个"
+    ]
+  }
+}

@@ -192,10 +192,16 @@ nonisolated struct ImageEditService: Sendable {
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
         guard (200..<300).contains(status) else {
-            let message = (json["error"] as? [String: Any])?["message"] as? String
+            let error = json["error"] as? [String: Any]
+            let message = error?["message"] as? String ?? json["message"] as? String
                 ?? String(data: data.prefix(300), encoding: .utf8) ?? ""
+            // The service's own short code says why ("INVALID_API_KEY", "insufficient_quota").
+            // Its message is not shown for these: some services echo part of the key in it.
+            let code = (json["code"] ?? error?["code"] ?? error?["type"]) as? String
             switch status {
-            case 401, 403: throw ImageEditError.service("\(provider.title) rejected the key (\(status)). Check it in Settings.")
+            case 401, 403:
+                let reason = code.map { ", \($0)" } ?? ""
+                throw ImageEditError.service("\(provider.title) rejected the key (\(status)\(reason)). Check it in Settings.")
             case 404: throw ImageEditError.service("\(provider.title) doesn't know the model \"\(model)\". Check the name in Settings. \(message)")
             case 429: throw ImageEditError.service("\(provider.title) is rate limiting or out of credit (429). \(message)")
             default: throw ImageEditError.service("\(provider.title) error \(status): \(message)")

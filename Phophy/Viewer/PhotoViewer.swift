@@ -86,6 +86,7 @@ private struct OpensInViewer: ViewModifier {
 
     func body(content: Content) -> some View {
         let button = Button {
+            guard !GridPinch.isRecent else { return }
             viewer.open(source(), at: index)
         } label: {
             content.contentShape(.rect)
@@ -220,6 +221,10 @@ struct PhotoViewer: View {
             if !chromeHidden {
                 bottomBar.transition(.opacity)
             }
+        }
+        .overlay(alignment: .bottom) {
+            // An AI edit still running after the editor closed.
+            AIEditStatusPill().padding(.bottom, 110)
         }
         .statusBarHidden(chromeHidden)
         .environment(\.colorScheme, .dark)
@@ -1086,13 +1091,36 @@ final class ZoomScrollView: UIScrollView, UIScrollViewDelegate {
 struct PhotoInfoSheet: View {
     let asset: PHAsset
 
+    @State private var caption = ""
+    @State private var keywords = ""
+    @State private var describedBy: String?
+    @State private var isEditing = false
+    @State private var draftCaption = ""
+    @State private var draftKeywords = ""
+    @State private var detent: PresentationDetent = .medium
+    @FocusState private var captionFocused: Bool
+
     var body: some View {
-        let info = try? IndexStore.shared.info(for: asset.localIdentifier)
+        let id = asset.localIdentifier
+        let info = try? IndexStore.shared.info(for: id)
+        let document = try? IndexStore.shared.document(for: id)
+        let place = (try? IndexStore.shared.placeLabels(for: [id]))?[id]
+        // Vision's labels if it gave any, else the concept tags (English half).
+        let shows = info?.labels.isEmpty == false ? info!.labels : (document?.tags ?? "")
+            .components(separatedBy: ", ").compactMap { $0.components(separatedBy: " / ").first }.filter { !$0.isEmpty }
         NavigationStack {
             List {
+                if info != nil {
+                    descriptionSection
+                }
+                if let place {
+                    Section("Where") {
+                        Label(place, systemImage: "mappin.and.ellipse")
+                    }
+                }
                 if let info {
                     Section("Shows") {
-                        Text(info.labels.isEmpty ? "No labels" : info.labels.joined(separator: " · "))
+                        Text(shows.isEmpty ? "No labels" : shows.joined(separator: " · "))
                     }
                     Section("Text in photo") {
                         Text(info.text.isEmpty ? "No text found" : info.text)
@@ -1105,7 +1133,110 @@ struct PhotoInfoSheet: View {
             .navigationTitle(asset.creationDate?.formatted(date: .abbreviated, time: .shortened) ?? "Photo")
             .navigationBarTitleDisplayMode(.inline)
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.medium, .large], selection: $detent)
+        .onAppear(perform: load)
+    }
+
+    // MARK: Description
+
+    @ViewBuilder
+    private var descriptionSection: some View {
+        Section {
+            if isEditing {
+                TextField("What the photo shows", text: $draftCaption, axis: .vertical)
+                    .lineLimit(2...6)
+                    .focused($captionFocused)
+                    // Names and terms ("kung fu", "G1234") must stay as typed.
+                    .autocorrectionDisabled()
+                TextField("Search words, separated by commas", text: $draftKeywords, axis: .vertical)
+                    .lineLimit(1...4)
+                    .font(.subheadline)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                HStack {
+                    Button("Cancel", role: .cancel) { isEditing = false }
+                        .buttonStyle(.borderless)
+                    Spacer()
+                    Button("Save") { save() }
+                        .buttonStyle(.borderless)
+                        .fontWeight(.semibold)
+                        .disabled(draftCaption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            } else if caption.isEmpty {
+                Text("No description yet. Phophy writes one in the background, or you can write your own.")
+                    .foregroundStyle(.secondary)
+            } else {
+                Text(caption)
+                    .textSelection(.enabled)
+                if !keywords.isEmpty {
+                    Text(keywords)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
+            }
+        } header: {
+            HStack {
+                Text("Description")
+                Spacer()
+                if !isEditing {
+                    Button(caption.isEmpty ? "Write" : "Edit") { startEditing() }
+                        .font(.subheadline.weight(.semibold))
+                        .textCase(nil)
+                }
+            }
+        } footer: {
+            if !isEditing, !caption.isEmpty {
+                Text(Self.describerName(describedBy))
+            } else if isEditing {
+                Text("Search uses these words. Phophy won't replace a description you wrote.")
+            }
+        }
+    }
+
+    private func load() {
+        guard let document = try? IndexStore.shared.document(for: asset.localIdentifier) else { return }
+        caption = document.caption
+        keywords = document.keywords
+        describedBy = document.describedBy
+    }
+
+    private func startEditing() {
+        draftCaption = caption
+        draftKeywords = keywords
+        isEditing = true
+        detent = .large
+        captionFocused = true
+    }
+
+    private func save() {
+        let newCaption = draftCaption.trimmingCharacters(in: .whitespacesAndNewlines)
+        let newKeywords = draftKeywords
+            .split(whereSeparator: { $0 == "," || $0 == "，" || $0 == "\n" })
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+        try? IndexStore.shared.saveDescription(
+            localID: asset.localIdentifier, caption: newCaption, keywords: newKeywords,
+            describedBy: IndexStore.userDescriber
+        )
+        caption = newCaption
+        keywords = newKeywords
+        describedBy = IndexStore.userDescriber
+        isEditing = false
+        // Make the new words searchable straight away.
+        Task.detached(priority: .userInitiated) { await PhotoIndexer.shared.refreshKeywordIndex() }
+    }
+
+    static func describerName(_ id: String?) -> String {
+        switch id {
+        case IndexStore.userDescriber: "Written by you"
+        case "apple": "Written by Apple Intelligence on this iPhone"
+        case "smolVLM", "fastVLM": "Written by a model on this iPhone"
+        case let id? where id.hasPrefix("gemini"): "Written by Google Gemini"
+        case let id? where id.hasPrefix("openai"): "Written by OpenAI"
+        default: "Written by AI"
+        }
     }
 }
 

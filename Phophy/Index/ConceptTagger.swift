@@ -15,7 +15,9 @@ actor ConceptTagger {
     static let shared = ConceptTagger()
 
     /// Bumped when the tagging rule changes, so photos are tagged again.
-    nonisolated static let version = 1
+    /// 4: back to tagging every photo (dropping tags from text-heavy photos
+    /// also dropped useful ones such as "receipt").
+    nonisolated static let version = 4
 
     nonisolated struct Concept: Sendable {
         let english: String
@@ -187,6 +189,12 @@ actor ConceptTagger {
 
     /// English names of the concepts mentioned in a Chinese query, for the
     /// visual search (the CLIP model only reads English).
+    /// Whether the text is exactly one concept's Chinese name ("长椅").
+    nonisolated func isConcept(_ chinese: String) -> Bool {
+        let text = chinese.trimmingCharacters(in: .whitespacesAndNewlines)
+        return concepts.contains { $0.chinese.contains(text) }
+    }
+
     nonisolated func englishConcepts(in chinese: String, words: [String]) -> [String] {
         var found: [(position: String.Index, english: String)] = []
         var covered = Set<String>()

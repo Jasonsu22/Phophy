@@ -1,0 +1,438 @@
+{
+  "title": "Phophy: five-minute project presentation",
+  "voice": "af_heart",
+  "parts": [
+    "Motivation",
+    "Methodology",
+    "Implementation",
+    "Key results"
+  ],
+  "pages": [
+    {
+      "id": "title",
+      "part": "Opening",
+      "title": "Title",
+      "kind": "coded",
+      "source": "Updated",
+      "screen": "The name Phophy rises over a slow wall of demo photos, then the line “Your photos, understood. On your iPhone.” and “Team 26 · COMP7607 project”.",
+      "voice": "This is Phophy: an iPhone app that understands your photos. We are Team 26.",
+      "sfx": [
+        "Chime when the tagline lands"
+      ]
+    },
+    {
+      "id": "scenario1",
+      "part": "Motivation",
+      "title": "Scenario 1: the travel photo you can’t find",
+      "kind": "coded",
+      "source": "Updated",
+      "screen": "A phone scrolls the whole library by hand, up and down, while a clock counts the minutes spent looking. Beside it: “Where is that photo from the ski trip?” and the three things you remember: snow, a white hat, a big smile. It ends on “Still not found. It is buried.”",
+      "voice": "Take a look at this situation. On a ski trip last winter, you took a great photo of a friend. All you remember now is snow, a white hat and a big smile. You scroll, and scroll, and give up.",
+      "cues": {
+        "remember": "All you remember",
+        "snow": "snow,",
+        "hat": "a white hat",
+        "smile": "a big smile",
+        "scroll": "You scroll",
+        "giveup": "and give up"
+      },
+      "sfx": [
+        "Whoosh into the Motivation part",
+        "A soft swipe with each scroll",
+        "Pop for each of the three things remembered",
+        "Low tone at “Still not found”"
+      ]
+    },
+    {
+      "id": "scenario2",
+      "part": "Motivation",
+      "title": "Scenario 2: the slides you never review",
+      "kind": "coded",
+      "source": "Reused",
+      "screen": "Seven lecture slide photos are dealt out in a row, then swept into a pile that fades: “Into the camera roll. Never opened again.”",
+      "voice": "Or let's say you're in a lecture. You photograph seven slides from your seat and, like most of us, you never open them again.",
+      "cues": {
+        "slides": "You photograph",
+        "never": "you never open"
+      },
+      "sfx": [
+        "Camera shutter as the slides land",
+        "Whoosh as they are swept into a pile",
+        "Low tone at “Never opened again”"
+      ]
+    },
+    {
+      "id": "why",
+      "part": "Motivation",
+      "title": "Why today’s tools don’t solve it",
+      "kind": "coded",
+      "source": "New animation",
+      "screen": "Two cards appear in turn. Built-in photo search: ticks for dates, places and fixed labels, crosses for the two scenarios. A cloud AI on every photo: three crosses (slow, costs money, uploads private photos). Then the line “We want search by description, without giving the photos away.”",
+      "voice": "So why is this so hard? Built-in search works by date, place and a fixed set of labels, not by description. And sending every photo to a cloud model is slow, costly, and gives your private photos away.",
+      "cues": {
+        "builtin": "Built-in search",
+        "labels": "a fixed set",
+        "not": "not by description",
+        "cloud": "And sending",
+        "slow": "is slow",
+        "costly": "costly",
+        "private": "gives your private"
+      },
+      "sfx": [
+        "Pop as each card appears",
+        "Tick for each line"
+      ],
+      "check": "The claim about built-in search is the one in our proposal (section 2)."
+    },
+    {
+      "id": "goal",
+      "part": "Motivation",
+      "title": "Our goal",
+      "kind": "coded",
+      "source": "New animation",
+      "screen": "The goal as a headline, then four tiles as they are named: Find, Ask, Study, Edit. Three chips underneath: English and Chinese, on-device first, works without Apple Intelligence.",
+      "voice": "So here is our goal: an app that understands every photo on the phone itself, so you can find, ask, study and edit in plain language, in English or Chinese.",
+      "cues": {
+        "find": "find,",
+        "ask": "ask,",
+        "study": "study",
+        "edit": "edit in",
+        "langs": "in English"
+      },
+      "sfx": [
+        "Pop for each of the four tiles",
+        "Chime at the end"
+      ]
+    },
+    {
+      "id": "tiers",
+      "part": "Methodology",
+      "title": "Key idea: tiered processing",
+      "kind": "coded",
+      "source": "New animation",
+      "screen": "Five tiers build up from the top, each arriving as it is named, with what it does, what runs it and what it costs. Tiers 0 to 3 are bracketed “On the iPhone: once per photo” and marked Free. Tier 4, the cloud model, arrives last in pink: “Optional. Pay per use.”",
+      "voice": "How does it work? The key idea is tiered processing. Each photo is read once, on the phone, by the cheapest tools that work: metadata, text recognition, an embedding, and a small language model. The cloud comes last, and only if you allow it.",
+      "cues": {
+        "once": "read once",
+        "t0": "metadata",
+        "t1": "text recognition",
+        "t2": "an embedding",
+        "t3": "a small language model",
+        "t4": "The cloud comes last"
+      },
+      "sfx": [
+        "Whoosh into the Methodology part",
+        "A rising note for each tier (5)"
+      ],
+      "check": "Based on the table in the proposal (section 3.1). Photo descriptions and the SmolVLM2 model were added since."
+    },
+    {
+      "id": "index",
+      "part": "Methodology",
+      "title": "Indexing: every photo is read once",
+      "kind": "coded",
+      "source": "New animation",
+      "screen": "The ski photo from scenario 1 on the left. Arrows fan out to five readers, each showing what it got from this photo: when and where (13 January 2026, Zermatt), the text in it (none in this one), tags in English and Chinese, a MobileCLIP embedding, and a one-line description. All five flow into a database labelled “Local index, on the iPhone”.",
+      "voice": "Let's follow that ski photo. The indexer notes when and where it was taken, reads any text in it, tags it in English and Chinese, computes a MobileCLIP embedding, and has an on-device model write a one-line description. All of that goes into a local database.",
+      "say": "Let's follow that ski photo. The indexer notes when and where it was taken, reads any text in it, tags it in English and Chinese, computes a Mobile Clip embedding, and has an on-device model write a one-line description. All of that goes into a local database.",
+      "cues": {
+        "when": "notes when",
+        "text": "reads any text",
+        "tags": "tags it",
+        "emb": "computes a",
+        "desc": "has an on-device model",
+        "db": "All of that"
+      },
+      "sfx": [
+        "Tick as each arrow reaches a reader (5)",
+        "Pop when the results land in the database"
+      ],
+      "check": "What is shown is what the app's index really holds for this photo. The concept list has 4,585 entries."
+    },
+    {
+      "id": "hybrid",
+      "part": "Methodology",
+      "title": "Search: two rankings, fused",
+      "kind": "coded",
+      "source": "New animation",
+      "screen": "The vague search “skiing, white hat, big smile” is typed. It feeds two lanes: Words (BM25 keyword match over descriptions, tags and text) and Meaning (MobileCLIP embedding similarity). Each lane produces its own ranked row of photos, with the ski photo first in both. Both rows flow into “Reciprocal rank fusion”, and the ski photo comes out first.",
+      "voice": "Now you search. Two rankings run side by side. One matches your words against each photo's description, tags and text, with BM25. The other compares your sentence's embedding with every photo's. Reciprocal rank fusion merges them, so a photo that is good on both comes first.",
+      "say": "Now you search. Two rankings run side by side. One matches your words against each photo's description, tags and text, with B M twenty-five. The other compares your sentence's embedding with every photo's. Reciprocal rank fusion merges them, so a photo that is good on both comes first.",
+      "cues": {
+        "words": "One matches",
+        "meaning": "The other compares",
+        "fuse": "Reciprocal rank fusion",
+        "first": "comes first"
+      },
+      "sfx": [
+        "Key clicks while the search is typed",
+        "Tick as each ranked row fills",
+        "Chime when the fused result appears"
+      ],
+      "check": "The two rows show the app's real rankings for this search. Simplified for the talk: the app fuses several word lists and several visual lists, each with its own weight."
+    },
+    {
+      "id": "query",
+      "part": "Methodology",
+      "title": "Understanding the query",
+      "kind": "coded",
+      "source": "New animation",
+      "screen": "Three examples, one after another. “food in Tokyo in May” splits into chips: place Tokyo, time May 2026, looks like food. “bicyle” becomes “bicycle”. A Chinese sentence becomes “The girl is running and jumping on the riverbank.”",
+      "voice": "Before ranking, the query itself is understood: places and dates become filters, typos are corrected against the index's own vocabulary, and Chinese is translated on the phone, because the visual model only reads English.",
+      "cues": {
+        "places": "places and dates",
+        "typos": "typos are",
+        "chinese": "and Chinese"
+      },
+      "sfx": [
+        "Key clicks for each typed example",
+        "Pop as each result appears"
+      ],
+      "check": "The translation shown is what Apple's on-device translator gave for this sentence in our experiment (Eval/e3_queries.json). Translation was added to the app this week; the simulator can't run it, so there the app falls back to the concept dictionary."
+    },
+    {
+      "id": "assistant",
+      "part": "Methodology",
+      "title": "The assistant: a model that calls tools",
+      "kind": "coded",
+      "source": "New animation",
+      "screen": "A question bubble (“How much did I spend at Muji?”) goes to a box labelled Language model: Apple Intelligence on the iPhone, or a cloud model you choose. The model sends a tool call to the Tools box (find_photos, list_places, list_collections, show_photos, propose_album), which reads the local index and returns text only. The answer comes back with the receipt. Two badges: the model sees text, never images; changes wait for your tap.",
+      "voice": "And questions? They go to an assistant: a language model that calls tools over the local index, such as find photos or propose an album. The model only ever sees text, never the images, and anything that changes your library waits for your tap.",
+      "cues": {
+        "model": "a language model",
+        "tools": "calls tools",
+        "index": "the local index",
+        "back": "such as find",
+        "answer": "or propose",
+        "text": "only ever sees text",
+        "tap": "anything that changes"
+      },
+      "sfx": [
+        "Pop for the question",
+        "Two ticks as the tool call goes out and the text comes back",
+        "Chime for the answer"
+      ]
+    },
+    {
+      "id": "notes",
+      "part": "Methodology",
+      "title": "Lecture notes and edits",
+      "kind": "coded",
+      "source": "New animation",
+      "screen": "Two pipelines, drawn left to right. Lecture notes: slide photos, grouped into lectures (less than 30 minutes apart), only the recognised text goes to the model, out come a summary, key points with slide numbers, and flashcards. Edit by request: a typed request, read on the phone, applied with Core Image; a pink branch shows generative edits going to an AI image service only after you confirm.",
+      "voice": "Lecture notes use the same index. Slides taken within thirty minutes form one lecture, and only their recognised text goes to the model, which returns a summary, key points and flashcards. Edit requests are read on the phone too; only generative ones go to an image service.",
+      "cues": {
+        "group": "Slides taken within",
+        "text": "only their recognised text",
+        "out": "returns a summary",
+        "edit": "Edit requests",
+        "phone": "on the phone too",
+        "ai": "only generative ones"
+      },
+      "sfx": [
+        "Tick for each step of the two pipelines"
+      ]
+    },
+    {
+      "id": "built",
+      "part": "Implementation",
+      "title": "What we built",
+      "kind": "coded",
+      "source": "New animation",
+      "screen": "Headline “A native iOS app, in Swift and SwiftUI”. On the left, three facts: about 14,000 lines of Swift in 60 files, iOS 26 and later, and where the demos are shown (the iPhone 18 Pro Max simulator). On the right, eight module tiles pop in, each with the Apple or open technology behind it.",
+      "voice": "So, what did we build? A native iOS app in Swift and SwiftUI, about fourteen thousand lines. Models run on the phone, and every language-model feature sits behind one interface, with on-device and cloud backends.",
+      "say": "So, what did we build? A native iOS app in Swift and Swift U I, about fourteen thousand lines. Models run on the phone, and every language-model feature sits behind one interface, with on-device and cloud backends.",
+      "cues": {
+        "lines": "about fourteen thousand",
+        "models": "Models run",
+        "iface": "one interface"
+      },
+      "sfx": [
+        "Whoosh into the Implementation part",
+        "Rising tone as the counter runs",
+        "Quick ticks for the eight tiles"
+      ],
+      "check": "13,901 lines in 60 Swift files today, counting the changes not yet committed."
+    },
+    {
+      "id": "find",
+      "part": "Implementation",
+      "title": "Demo: scenario 1, solved",
+      "kind": "clip",
+      "clip": "ski",
+      "clipSeconds": 11.4,
+      "source": "New recording",
+      "screen": "Real app, recorded in the iPhone 18 Pro Max simulator. The ask bar opens, “skiing, white hat, big smile” is typed and sent, the matching photo appears at once, then the answer naming Zermatt, Switzerland. A tap opens the photo: 13 January 2026.",
+      "voice": "Let's see it in action. Back to the ski trip: just type what you remember. Skiing, white hat, big smile. And there it is: Zermatt, the thirteenth of January.",
+      "sfx": [
+        "Key clicks while the search is typed",
+        "Chime when the photo is found"
+      ]
+    },
+    {
+      "id": "ask",
+      "part": "Implementation",
+      "title": "Demo: scenario 2, solved",
+      "kind": "clip",
+      "clip": "ask-lecture",
+      "clipSeconds": 9.0,
+      "source": "Reused recording",
+      "screen": "Real app. “Summarise the slides from today’s lecture” is asked; the app picks out today’s seven slides and writes a summary.",
+      "voice": "And today's slides? Just ask Phophy to summarise them. It picks out today's seven slides and sums them up.",
+      "sfx": [
+        "Key clicks while the question is typed",
+        "Chime when the summary appears"
+      ]
+    },
+    {
+      "id": "makenotes",
+      "part": "Implementation",
+      "title": "Demo: slides become notes",
+      "kind": "clip",
+      "clip": "notes-short",
+      "clipSeconds": 13.0,
+      "still": 8.4,
+      "source": "Reused recording, cut 2.7 s shorter",
+      "screen": "Real app. One tap on Make notes; the summary, the key points with slide numbers, and a flashcard that turns over.",
+      "voice": "Or tap Make notes. On the phone, Phophy writes a summary, lists the key points with their slide numbers, and makes flashcards, so the photos you took actually get reviewed.",
+      "sfx": [
+        "Tick as each of the four steps lights up",
+        "Soft flip when the flashcard turns"
+      ]
+    },
+    {
+      "id": "receipt",
+      "part": "Implementation",
+      "title": "Demo: answers from what’s in a photo",
+      "kind": "clip",
+      "clip": "muji",
+      "clipSeconds": 7.4,
+      "source": "Reused recording",
+      "screen": "Real app. “How much did I spend at Muji?” is answered HK$702.00, with the receipt shown.",
+      "voice": "It can also answer from what's inside a photo. How much did I spend at Muji? It reads the receipt.",
+      "sfx": [
+        "Key clicks while the question is typed",
+        "Chime when the amount appears"
+      ]
+    },
+    {
+      "id": "chinese",
+      "part": "Implementation",
+      "title": "Demo: the same question in Chinese",
+      "kind": "clip",
+      "clip": "zh",
+      "clipSeconds": 5.95,
+      "source": "New recording",
+      "screen": "Real app. The same question asked in Chinese; the app finds the same English receipt and gives the same total.",
+      "voice": "Ask the same thing in Chinese, and it still finds the English receipt.",
+      "sfx": [
+        "Chime when the amount appears"
+      ],
+      "check": "The receipt prints 無印良品 in traditional characters and the question uses simplified ones; the app now matches either script."
+    },
+    {
+      "id": "edit",
+      "part": "Implementation",
+      "title": "Demo: an AI edit through an image service",
+      "kind": "clip",
+      "clip": "aiedit",
+      "clipSeconds": 16.75,
+      "source": "New recording",
+      "screen": "Real app. In the editor, “add a red hot air balloon in the sky” is typed. The phone can’t do this itself, so a card asks before sending the photo to the AI image service set in Settings. After Send (about 40 seconds of waiting is cut), the edited photo comes back with a red hot-air balloon over the mountains.",
+      "voice": "Editing works the same way: just describe the change. Small edits run on the phone. Bigger ones, like adding a hot-air balloon to the sky, go to an AI image service after you confirm. And there it is.",
+      "sfx": [
+        "Typing while the request is typed",
+        "Tick for each step",
+        "Chime when the edited photo arrives"
+      ]
+    },
+    {
+      "id": "collections",
+      "part": "Implementation",
+      "title": "Demo: the library sorts itself",
+      "kind": "clip",
+      "clip": "collections-short",
+      "clipSeconds": 10.5,
+      "source": "Reused recording, cut 1.4 s shorter",
+      "screen": "Real app. The Collections tab with its automatic categories, then Similar photos with a suggested one to keep.",
+      "voice": "Collections sorts the library by itself: slides, receipts, documents and more. It also groups near-identical shots and suggests which one to keep.",
+      "sfx": [
+        "Tick as each step lights up"
+      ]
+    },
+    {
+      "id": "results-search",
+      "part": "Key results",
+      "title": "Result 1: search, measured",
+      "kind": "coded",
+      "source": "Updated",
+      "screen": "Four pairs of bars grow as they are named, first version in grey and Phophy now in teal: Chinese searches 2% to 51%, misspelled searches 13% to 59%, objects found in the top 50 51% to 89%, long descriptions 76% to 76%.",
+      "voice": "So, does it work? We measured search on the Flickr30k benchmark. Against our first version, Chinese searches rose from 2 to 51 percent, misspelled ones from 13 to 59, and objects found from 51 to 89 percent.",
+      "say": "So, does it work? We measured search on the Flicker thirty K benchmark. Against our first version, Chinese searches rose from 2 to 51 percent, misspelled ones from 13 to 59, and objects found from 51 to 89 percent.",
+      "cues": {
+        "zh": "Chinese searches",
+        "typo": "misspelled ones",
+        "obj": "and objects found",
+        "long": "to 89 percent"
+      },
+      "sfx": [
+        "Whoosh into the Key results part",
+        "Rising tone as each pair of bars grows (4)"
+      ],
+      "check": "Experiment E1. Flickr30k 1K test set, 1,006 photos, 362 searches, every photo described on the device (Eval/results-final-apple.json). The last bar is corrected from 77% to 76%."
+    },
+    {
+      "id": "results-language",
+      "part": "Key results",
+      "title": "Result 2: Chinese and paraphrased searches",
+      "kind": "coded",
+      "source": "New animation",
+      "screen": "Two charts side by side. Left, Chinese sentences, right photo in the top 5: as typed 0%, concept dictionary 60%, on-device translation 87%, human English 87%. Right, paraphrased searches for slides and documents, found in the top 10: keywords 50%, with sentence vectors of the text 74%.",
+      "voice": "For Chinese sentences, translating on the phone lifts top-five accuracy from 60 to 87 percent, level with human-written English. And sentence vectors of the text in photos find 74 percent of paraphrased searches, up from 50.",
+      "cues": {
+        "dict": "from 60",
+        "trans": "to 87 percent",
+        "human": "level with",
+        "para": "And sentence vectors",
+        "vec": "74 percent"
+      },
+      "sfx": [
+        "Rising tone as the bars grow",
+        "Chime at 87%"
+      ],
+      "check": "Experiments E3 and E4, by Qin Mengmeng. E3: 30 sentences on Flickr30k; I re-ran it through the app's own search and got the same 60% to 87%. E4: 50 searches over 1,106 photos; an experiment, not in the app yet."
+    },
+    {
+      "id": "results-assistant",
+      "part": "Key results",
+      "title": "Result 3: can the assistant finish real tasks?",
+      "kind": "coded",
+      "source": "New animation",
+      "screen": "A large “14–17 of 20 tasks” counts up, with 20 dots underneath: 14 filled teal (passed in every run), 4 outlined (some runs), 2 pink (never). Small figures: about 7 seconds a task, 1.7 tool calls, no cost. Two cards list what works and what fails in some or all runs.",
+      "voice": "And the assistant? Running on Apple's on-device model, it completes 14 to 17 of 20 real tasks, in about seven seconds each, at no cost. It still misreads some values on tickets and receipts.",
+      "cues": {
+        "count": "it completes",
+        "time": "in about",
+        "fails": "It still misreads"
+      },
+      "sfx": [
+        "Rising tone as the number counts up",
+        "Ticks as the 20 dots fill"
+      ],
+      "check": "Experiment E7: three runs on the final build, on the demo library in the iPhone 18 Pro Max simulator. They passed 14, 15 and 17 of 20. Cloud models are not measured (no API keys)."
+    },
+    {
+      "id": "thanks",
+      "part": "Closing",
+      "title": "Thank you",
+      "kind": "coded",
+      "source": "Reused",
+      "screen": "“Thank you”, Team 26 with the repository address, and the four members with their student IDs and their parts of the work.",
+      "voice": "That's Phophy, by Team 26. Thank you for watching.",
+      "sfx": [
+        "Whoosh into the closing page",
+        "Soft chime"
+      ]
+    }
+  ]
+}

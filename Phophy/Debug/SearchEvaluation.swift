@@ -68,13 +68,13 @@ nonisolated enum SearchEvaluation {
     /// Each layer added in turn, so the table shows what each one adds.
     static let configurations: [(String, SearchOptions)] = [
         ("1 before", .previous),
-        ("2 keywords+tags", SearchOptions(typos: false, expansion: false, visualTail: false, visualScores: false)),
-        ("3 +typos", SearchOptions(expansion: false, visualTail: false, visualScores: false)),
-        ("4 +visual tail", SearchOptions(expansion: false, visualScores: false)),
-        ("5 +expansion", SearchOptions(visualScores: false)),
-        ("6 +visual scores for long searches (all)", .standard),
-        ("7 visual scores, long-query keywords 1.0", SearchOptions(longQueryKeywordWeight: 1.0)),
-        ("8 visual scores, long-query keywords 0.25", SearchOptions(longQueryKeywordWeight: 0.25)),
+        ("2 keywords+tags", SearchOptions(typos: false, expansion: false, visualTail: false, visualScores: false, rareWordWeight: 0, keywordScores: false)),
+        ("3 +typos", SearchOptions(expansion: false, visualTail: false, visualScores: false, rareWordWeight: 0, keywordScores: false)),
+        ("4 +visual tail", SearchOptions(expansion: false, visualScores: false, rareWordWeight: 0, keywordScores: false)),
+        ("5 +expansion", SearchOptions(visualScores: false, rareWordWeight: 0, keywordScores: false)),
+        ("6 +visual scores for long searches", SearchOptions(rareWordWeight: 0, keywordScores: false)),
+        ("7 +rare words for short searches (all)", .standard),
+        ("8 with keyword scores", SearchOptions(keywordScores: true)),
     ]
 
     /// Hook for later index stages (tags, descriptions) to report they're finished.
@@ -225,6 +225,31 @@ nonisolated enum SearchEvaluation {
             }
         }
         return result == KERN_SUCCESS ? Int(info.phys_footprint / 1_048_576) : -1
+    }
+
+    /// Testing aid: `-PhophySearchProbe` runs each line of Documents/queries.txt
+    /// through search once indexing is done and logs the top results by file name.
+    static func probeSearch() async {
+        guard ProcessInfo.processInfo.arguments.contains("-PhophySearchProbe") else { return }
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        guard let text = try? String(contentsOf: documents.appendingPathComponent("queries.txt"), encoding: .utf8) else { return }
+        while !(await extraWorkDone()) { try? await Task.sleep(for: .seconds(2)) }
+        let ids = Array((try? IndexStore.shared.allIDs()) ?? [])
+        var names: [String: String] = [:]
+        PHAsset.fetchAssets(withLocalIdentifiers: ids, options: nil).enumerateObjects { asset, _, _ in
+            names[asset.localIdentifier] = PHAssetResource.assetResources(for: asset).first?.originalFilename ?? "?"
+        }
+        for query in text.split(separator: "\n").map(String.init) where !query.isEmpty {
+            let started = ContinuousClock.now
+            let results = await SearchEngine.shared.search(query, indexedCount: ids.count)
+            let ms = milliseconds(since: started)
+            let top = (results.bestMatches.isEmpty ? results.closest : results.bestMatches).prefix(6).map { names[$0] ?? "?" }
+            for list in await SearchEngine.shared.lastLists {
+                log("probe   list w\(list.weight): \(list.ids.prefix(4).map { names[$0] ?? "?" }.joined(separator: " ")) (\(list.ids.count))")
+            }
+            log("probe \"\(query)\" \(String(format: "%.0f", ms)) ms\(results.bestMatches.isEmpty ? " WEAK" : "") best \(results.bestMatches.count) text \(results.textMatches.count): \(top.joined(separator: " "))")
+        }
+        log("probe done")
     }
 
     static func log(_ message: String) {

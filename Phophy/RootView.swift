@@ -18,21 +18,25 @@ struct RootView: View {
     /// How far the ask bar sits above the bottom safe area while the tab bar shows.
     private let askBarLift: CGFloat = 62
     private let chatAnimation = Animation.smooth(duration: 0.38)
+    @State private var keyboardShown = false
+    @State private var tab = "library"
+    /// The keyboard is up for a field other than the ask bar.
+    private var otherKeyboard: Bool { keyboardShown && !askFocused && !assistant.isPresented }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView {
-                Tab("Library", systemImage: "photo.on.rectangle") {
+            TabView(selection: $tab) {
+                Tab("Library", systemImage: "photo.on.rectangle", value: "library") {
                     LibraryView().belowAskBar(chatOpen: assistant.isPresented)
                 }
-                Tab("Collections", systemImage: "square.stack") {
+                Tab("Collections", systemImage: "square.stack", value: "collections") {
                     CollectionsView().belowAskBar(chatOpen: assistant.isPresented)
                 }
-                Tab("Study", systemImage: "text.book.closed") {
+                Tab("Study", systemImage: "text.book.closed", value: "study") {
                     StudyView().belowAskBar(chatOpen: assistant.isPresented)
                 }
-                Tab(role: .search) {
-                    SearchView().belowAskBar(chatOpen: assistant.isPresented)
+                Tab("Settings", systemImage: "gearshape", value: "settings") {
+                    SettingsView().belowAskBar(chatOpen: assistant.isPresented)
                 }
             }
             .tint(.white)
@@ -50,11 +54,27 @@ struct RootView: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .bottom)))
             }
 
+            if !assistant.isPresented {
+                AIEditStatusPill()
+                    .padding(.bottom, askBarLift + 66)
+                    .ignoresSafeArea(.keyboard)
+            }
+
             AskBar(isFocused: $askFocused, onSend: send)
                 .padding(.horizontal, assistant.isPresented ? 12 : 20)
                 .padding(.bottom, assistant.isPresented ? 8 : askBarLift)
                 // Closed, the bar must not jump above the keyboard of another field.
                 .ignoresSafeArea(assistant.isPresented ? [] : .keyboard)
+                // While another field (Search) is typed in, the bar steps
+                // aside instead of floating over the results.
+                .opacity(otherKeyboard ? 0 : 1)
+                .allowsHitTesting(!otherKeyboard)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            keyboardShown = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            keyboardShown = false
         }
         .fullScreenCover(item: $viewer.presentation) { presentation in
             PhotoViewer(presentation: presentation)
@@ -100,8 +120,21 @@ struct RootView: View {
             if SearchEvaluation.isRequested {
                 Task.detached(priority: .utility) { await SearchEvaluation.runWhenIndexed() }
             }
+            // Testing aid: `-PhophyAgentEval` runs Documents/agent_tasks.json (E7).
+            if AgentEvaluation.isRequested {
+                Task { await AgentEvaluation.runWhenIndexed() }
+            }
+            // Testing aid: `-PhophyE3` compares ways to search in Chinese (E3).
+            if ChineseQueryEvaluation.isRequested {
+                Task { await ChineseQueryEvaluation.runWhenIndexed() }
+            }
+            // Testing aid: `-PhophyE4` measures vectors of the text in photos (E4).
+            if OCRTextEvaluation.isRequested {
+                Task { await OCRTextEvaluation.runWhenIndexed() }
+            }
             Task.detached(priority: .utility) { await SearchEvaluation.probeDescribers() }
             Task.detached(priority: .userInitiated) { await SearchEvaluation.benchPhone() }
+            Task.detached(priority: .userInitiated) { await SearchEvaluation.probeSearch() }
             if let index = arguments.firstIndex(of: "-PhophyAsk"), index + 1 < arguments.count {
                 try? await Task.sleep(for: .seconds(3))
                 send(arguments[index + 1])

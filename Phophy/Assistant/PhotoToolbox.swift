@@ -31,7 +31,22 @@ actor PhotoToolbox {
     private var searchesThisTurn = 0
     /// What the last search or date lookup this turn returned.
     private var lastResultIDs: [String] = []
+    /// How many of the last results really match what was searched; the
+    /// rest are only the nearest photos, given to the model to read.
+    private var lastMatchCount = 0
+    /// What the last search was for, as a name for an album of its results.
+    private var lastSearchTitle: String?
+    /// Whether any tool has been called since the last reply.
+    var calledTools: Bool { !toolLog.isEmpty }
+    /// Everything this turn's searches found, best first: the model reads
+    /// only the top few (its context is small), the user can see them all.
+    private var allMatchIDs: [String] = []
     private var proposals: [AlbumProposal] = []
+    /// Tools called since the last `takeToolLog()` or reply, in order (E7).
+    private var toolLog: [String] = []
+
+    /// How many results a search keeps for "Show more" under the reply.
+    private static let moreLimit = 60
 
     init(snippetLength: Int, categories: [String: PhotoCategory]) {
         self.snippetLength = snippetLength
@@ -40,36 +55,115 @@ actor PhotoToolbox {
 
     func setIndexedCount(_ count: Int) { indexedCount = count }
 
+    /// The tools called this turn, for the assistant evaluation. Read it
+    /// before `present(reply:)`, which starts the next turn.
+    func takeToolLog() -> [String] {
+        defer { toolLog = [] }
+        return toolLog
+    }
+
+    /// Everything the user has typed in this conversation. Small models add
+    /// filters nobody asked for ("in Hong Kong", "from 2024"), which hide
+    /// the photo being looked for; a filter is only kept if the user's own
+    /// words mention that place or a time.
+    private var asked = ""
+    private var latestQuestion = ""
+    func setAsked(_ text: String, latest: String) {
+        asked = PlaceNames.inEnglish(text).lowercased()
+        latestQuestion = latest
+    }
+
+    private func askedAboutPlace(_ place: String) -> Bool {
+        guard !asked.isEmpty else { return true }
+        if asked.contains(place.lowercased()) { return true }
+        let names = (try? IndexStore.shared.placeNames()) ?? []
+        return QueryFilters.parse(asked, places: names).place != nil
+    }
+
+    private var askedAboutTime: Bool {
+        guard !asked.isEmpty else { return true }
+        if QueryFilters.parse(asked, places: []).from != nil { return true }
+        if asked.contains(where: \.isNumber) { return true }
+        let words = ["ago", "recent", "latest", "newest", "oldest", "earliest", "first", "last", "since", "before",
+                     "after", "week", "month", "year", "day", "night", "morning", "weekend", "christmas", "birthday",
+                     "holiday", "when", "年", "月", "周", "天", "最近", "之前", "以前", "以后", "时候"]
+        return words.contains(where: asked.contains)
+    }
+
     /// Photos and albums to show with the reply, collected during one turn.
     /// Small models sometimes name photos in their reply ("p1, p2") instead
     /// of calling show_photos; those photos are shown too, and the refs,
     /// which mean nothing to the user, are taken out of the text.
-    func present(reply: String) -> (text: String, photoIDs: [String], albums: [AlbumProposal], steps: [String]) {
+    func present(reply: String) -> (text: String, photoIDs: [String], moreIDs: [String], albums: [AlbumProposal], steps: [String]) {
         let steps = self.steps
+        let allMatches = allMatchIDs
         defer {
             shownIDs = []
             proposals = []
             lastResultIDs = []
+            allMatchIDs = []
             self.steps = []
             searchesThisTurn = 0
+            toolLog = []
         }
         let pattern = /\bp(\d+)\b/
         let mentioned = reply.matches(of: pattern).compactMap { idByRef["p\($0.1)"] }
         var seen = Set<String>()
         var ids = (shownIDs + mentioned).filter { seen.insert($0).inserted }
         // Last resort: the model looked photos up but showed none of them.
-        if ids.isEmpty { ids = Array(lastResultIDs.prefix(12)) }
-        return (Self.removingRefs(from: reply), ids, proposals, steps)
+        // Only the ones that match: the model also gets near misses to read,
+        // and those mustn't be shown as results.
+        if ids.isEmpty {
+            // First choice: the photos the answer was read from, told by the
+            // figures in the reply ("08:15", "HK$702") that are in their text.
+            let sources = Self.sources(of: reply, among: lastResultIDs)
+            ids = sources.isEmpty ? Array(lastResultIDs.prefix(min(12, max(lastMatchCount, 1)))) : sources
+        }
+        // The shown photos first, then the rest of what the searches found.
+        let shown = Set(ids)
+        let more = ids.isEmpty ? [] : ids + allMatches.filter { !shown.contains($0) }
+        // Small models ask "shall I make an album?" instead of offering one,
+        // which leaves the user with nothing to tap. Asked for an album and
+        // photos were found: offer it.
+        if proposals.isEmpty, ids.count >= 2, Self.asksForAlbum(latestQuestion) {
+            let quoted = reply.firstMatch(of: /[“"「]([^”"」\n]{2,40})[”"」]/).map { String($0.1) }
+            proposals.append(AlbumProposal(title: quoted ?? lastSearchTitle ?? "New album", localIDs: more.isEmpty ? ids : more))
+        }
+        return (Self.removingRefs(from: reply), ids, more.count > ids.count ? more : [], proposals, steps)
+    }
+
+    /// The photos whose text holds a figure the reply quotes: a time, a
+    /// price, a code. Years are skipped; nearly every photo's date has one.
+    private static func sources(of reply: String, among ids: [String]) -> [String] {
+        func plain(_ text: String) -> String { text.lowercased().filter { !",，".contains($0) } }
+        let figures = Set(plain(reply).matches(of: /[a-z$]*\d[\w:.\-]*/).map { String($0.0).trimmingCharacters(in: CharacterSet(charactersIn: ".:-")) })
+            .filter { $0.count >= 3 && $0.wholeMatch(of: /(19|20)\d\d/) == nil }
+        guard !figures.isEmpty, let documents = try? IndexStore.shared.documents(for: ids) else { return [] }
+        return ids.filter { id in
+            guard let text = documents[id].map({ plain($0.ocr) }), !text.isEmpty else { return false }
+            return figures.contains(where: text.contains)
+        }
+    }
+
+    private static func asksForAlbum(_ question: String) -> Bool {
+        let text = question.lowercased()
+        return ["album", "相册", "相簿", "影集"].contains(where: text.contains)
     }
 
     /// Drops ref tokens and the punctuation left around them, line by line.
     private static func removingRefs(from text: String) -> String {
         text.split(separator: "\n", omittingEmptySubsequences: false)
-            .map { line -> String in
-                var line = String(line)
-                line = line.replacing(/\(?\bp\d+\b\)?\s*(—|–|-|:)?\s*/, with: "")
-                line = line.replacing(/\s+([,.;:])/) { String($0.1) }
-                return line.trimmingCharacters(in: .whitespaces)
+            .compactMap { raw -> String? in
+                var line = String(raw)
+                // Small models invent links to photos ("[Diagram](https://…/p1)"):
+                // keep the words, drop the address.
+                line = line.replacing(/\[([^\]]+)\]\([^)]*\)?/) { String($0.1) }
+                let withoutRefs = line.replacing(/\(?\bp\d+\b\)?\s*(—|–|-|:)?\s*/, with: "")
+                let hadRef = withoutRefs != line
+                line = withoutRefs.replacing(/\s+([,.;:])/) { String($0.1) }.trimmingCharacters(in: .whitespaces)
+                // A list line that held only a ref ("- p1") leaves just its bullet: drop it.
+                if hadRef, line.allSatisfy({ "-•*·–—".contains($0) }) { return nil }
+                return line
             }
             .joined(separator: "\n")
             .replacing(/\n{3,}/, with: "\n\n")
@@ -85,12 +179,33 @@ actor PhotoToolbox {
         description: String?, place: String?, start: String?, end: String?,
         category: String?, favoritesOnly: Bool, media: String?, limit: Int
     ) async -> String {
+        toolLog.append("find_photos")
         searchesThisTurn += 1
         var description = description?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
-        let place = place?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        var place = place.map(PlaceNames.inEnglish)?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         var category = category?.nilIfEmpty
+        var start = start, end = end
+        var dropped: [String] = []
+        if let name = place, !askedAboutPlace(name) { place = nil; dropped.append("place “\(name)”") }
+        if start != nil || end != nil, !askedAboutTime { start = nil; end = nil; dropped.append("dates") }
+        // A guessed category hides the photo too ("whiteboard" filed under
+        // documents, when it's a plain photo). With a description to rank
+        // by, a category is only kept if the user's words name it.
+        if let name = category, description != nil, !asked.isEmpty {
+            let stem = name.lowercased().hasSuffix("s") ? String(name.lowercased().dropLast()) : name.lowercased()
+            if !asked.contains(stem) { category = nil; dropped.append("category \(name)") }
+        }
         // Models often repeat the place as the description; it adds nothing.
         if let d = description, let place, d.lowercased() == place.lowercased() { description = nil }
+        // Small models put shop names in the place field ("Muji"). A "place"
+        // no photo was taken at is searched as words instead (receipts and
+        // signs carry the name in their text).
+        var placeAsWords: String?
+        if let name = place, ((try? IndexStore.shared.places(matching: name, limit: 1)) ?? []).isEmpty {
+            description = [description, name].compactMap { $0 }.joined(separator: " ")
+            placeAsWords = name
+            place = nil
+        }
         let media = media?.nilIfEmpty
         let limit = clamped(limit)
 
@@ -103,10 +218,26 @@ actor PhotoToolbox {
             guard let day = Self.day.date(from: end) else { return "Error: end must look like 2024-03-31." }
             to = Calendar.current.date(byAdding: .day, value: 1, to: day)
         }
+        // Small models get relative dates wrong ("last week" became a week
+        // a month ago). When the user's latest message names a time the app
+        // can work out itself, that is the range used.
+        let named = QueryFilters.parse(latestQuestion, places: (try? IndexStore.shared.placeNames()) ?? [])
+        if let exactFrom = named.from, let exactTo = named.to {
+            from = exactFrom
+            to = exactTo
+        }
+        if place == nil, let namedPlace = named.place { place = namedPlace }
+        // The time or place repeated as the description adds nothing to rank by.
+        if let d = description {
+            let rest = QueryFilters.parse(d, places: (try? IndexStore.shared.placeNames()) ?? [])
+            if !rest.isEmpty { description = rest.text.nilIfEmpty }
+        }
 
         // Filters, covering the whole library whether indexed or not.
         let hasFilters = place != nil || from != nil || to != nil || category != nil || favoritesOnly || media != nil
         var candidates: [String]?
+        // Filters the user never asked for are dropped quietly: nothing to tell.
+        _ = dropped
         var relaxed: [String] = []
         if hasFilters {
             candidates = filtered(from: from, to: to, place: place, media: media, category: category, favoritesOnly: favoritesOnly)
@@ -114,9 +245,12 @@ actor PhotoToolbox {
             // misjudge dates ("two years ago" read as "since two years
             // ago"). Before giving up, loosen the filters a step at a time
             // and say so in the result.
-            if candidates?.isEmpty == true, category != nil {
-                let retry = filtered(from: from, to: to, place: place, media: media, category: nil, favoritesOnly: favoritesOnly)
-                if !retry.isEmpty { candidates = retry; relaxed.append("dropped the category \(category!)"); category = nil }
+            if candidates?.isEmpty == true, let guessed = category {
+                // A category that matched nothing stays dropped for the retries
+                // below too: small models add one the user never asked for.
+                category = nil
+                relaxed.append("dropped the category \(guessed)")
+                candidates = filtered(from: from, to: to, place: place, media: media, category: nil, favoritesOnly: favoritesOnly)
             }
             if candidates?.isEmpty == true, from != nil || to != nil {
                 let widen: TimeInterval = 183 * 86_400
@@ -135,8 +269,8 @@ actor PhotoToolbox {
         var summary: [String] = []
         if let description { summary.append("“\(description)”") }
         if let place { summary.append("in \(place)") }
-        if let start { summary.append("from \(start)") }
-        if let end { summary.append("to \(end)") }
+        if let from { summary.append("from \(Self.day.string(from: from))") }
+        if let to { summary.append("to \(Self.day.string(from: to.addingTimeInterval(-1)))") }
         if let category { summary.append(category) }
         if favoritesOnly { summary.append("favorites") }
         if let media { summary.append(media) }
@@ -162,24 +296,53 @@ actor PhotoToolbox {
 
         var ids: [String]
         var weak = false
+        var matchCount: Int?
         if let description {
-            var ranked = await SearchEngine.shared.rank(description, among: candidates, indexedCount: indexedCount, limit: limit)
+            var ranked = await SearchEngine.shared.rank(description, among: candidates, indexedCount: indexedCount, limit: max(limit, Self.moreLimit))
             // A weak result: look closer at the best guesses that have no
             // description yet, then rank again.
             if ranked.weak || ranked.ids.count < 3 {
                 let fresh = await DescriptionService.shared.describeNow(ranked.ids, limit: DescriptionService.lookCloserCount)
                 if fresh > 0 {
-                    ranked = await SearchEngine.shared.rank(description, among: candidates, indexedCount: indexedCount, limit: limit)
+                    ranked = await SearchEngine.shared.rank(description, among: candidates, indexedCount: indexedCount, limit: max(limit, Self.moreLimit))
                     steps.append("Looked closer at \(fresh) photos")
                 }
             }
-            ids = ranked.ids
-            weak = ranked.weak
+            // "My flight to Tokyo": the place may be what the photo is about,
+            // not where it was taken (a boarding pass is saved at home).
+            // Nothing matching there: look for it anywhere, by its words.
+            if let name = place, ranked.matches.isEmpty {
+                let others = from != nil || to != nil || category != nil || favoritesOnly || media != nil
+                let elsewhere = others
+                    ? filtered(from: from, to: to, place: nil, media: media, category: category, favoritesOnly: favoritesOnly) : nil
+                let wider = await SearchEngine.shared.rank(
+                    "\(description) \(name)", among: elsewhere, indexedCount: indexedCount, limit: max(limit, Self.moreLimit))
+                if !wider.matches.isEmpty {
+                    ranked = wider
+                    candidates = elsewhere
+                    placeAsWords = name
+                    place = nil
+                }
+            }
+            // The matches first, then near misses up to the limit: the
+            // answer may be in a photo the search wasn't sure about.
+            let matched = Set(ranked.matches)
+            let matches = ranked.matches.prefix(limit)
+            ids = Array(matches) + ranked.ids.filter { !matched.contains($0) }.prefix(limit - matches.count)
+            matchCount = matches.count
+            weak = ranked.weak || matches.isEmpty
+            // "Show all" gets the photos that match, not the whole ranking.
+            addMatches(ranked.matches)
         } else {
-            ids = Array((candidates ?? []).prefix(limit))
+            let all = candidates ?? []
+            ids = Array(all.prefix(limit))
+            addMatches(Array(all.prefix(Self.moreLimit)))
         }
 
         var header: [String] = []
+        if let placeAsWords {
+            header.append("Nothing matching was taken at a place called \(placeAsWords), so it was searched as words in the photos.")
+        }
         if !relaxed.isEmpty {
             header.append("Nothing matched exactly, so the search " + relaxed.joined(separator: " and ") + ". Tell the user this.")
         }
@@ -199,17 +362,25 @@ actor PhotoToolbox {
             return (header + ["Nothing found. \(budgetNote())"]).joined(separator: " ")
         }
         lastResultIDs = ids
-        steps.append("Searched \(label) · \(ids.count) found" + (relaxed.isEmpty ? "" : " after loosening filters"))
+        lastMatchCount = matchCount ?? ids.count
+        lastSearchTitle = (place ?? description).map { $0.prefix(1).uppercased() + $0.dropFirst() }
+        let found = lastMatchCount > 0 ? "\(lastMatchCount) found" : "no close match"
+        steps.append("Searched \(label) · \(found)" + (relaxed.isEmpty ? "" : " after loosening filters"))
         if weak {
             header.append("No close match for the description; these are only the nearest and may be unrelated. Use them only if their details fit. \(budgetNote())")
         } else {
-            header.append(description != nil ? "Best match first:" : "Newest first:")
+            if let matchCount, matchCount < ids.count {
+                header.append("Best match first. Only the first \(matchCount) match the description; the rest are near misses, to use only if their details fit:")
+            } else {
+                header.append(description != nil ? "Best match first:" : "Newest first:")
+            }
         }
         return header.joined(separator: " ") + "\n" + describe(ids)
     }
 
     /// Where photos were taken, with counts and date spans.
     func listPlaces(matching query: String?) -> String {
+        toolLog.append("list_places")
         let places = (try? IndexStore.shared.places(matching: query?.nilIfEmpty, limit: 25)) ?? []
         let coverage = try? IndexStore.shared.coverage()
         steps.append(query.map { "Looked up places like “\($0)”" } ?? "Looked up places")
@@ -261,6 +432,7 @@ actor PhotoToolbox {
     }
 
     func listCollections() -> String {
+        toolLog.append("list_collections")
         var counts: [PhotoCategory: Int] = [:]
         for category in categories.values { counts[category, default: 0] += 1 }
         let screenshots = PHAsset.fetchAssets(with: Self.screenshotOptions).count
@@ -275,6 +447,7 @@ actor PhotoToolbox {
     }
 
     func show(refs: [String], caption: String?) -> String {
+        toolLog.append("show_photos")
         let ids = refs.compactMap { idByRef[$0] }
         guard !ids.isEmpty else { return "Error: none of those refs are known. Use refs from a search first." }
         shownIDs += ids
@@ -282,6 +455,7 @@ actor PhotoToolbox {
     }
 
     func proposeAlbum(title: String, refs: [String]) -> String {
+        toolLog.append("propose_album")
         let ids = refs.compactMap { idByRef[$0] }
         let name = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !ids.isEmpty, !name.isEmpty else { return "Error: an album needs a title and known refs." }
@@ -341,6 +515,11 @@ actor PhotoToolbox {
 
     private func clamped(_ limit: Int) -> Int { min(max(limit, 1), 30) }
 
+    private func addMatches(_ ids: [String]) {
+        let known = Set(allMatchIDs)
+        allMatchIDs += ids.filter { !known.contains($0) }
+    }
+
     private func ref(for id: String) -> String {
         if let ref = refByID[id] { return ref }
         let ref = "p\(refByID.count + 1)"
@@ -357,8 +536,11 @@ actor PhotoToolbox {
         let places = (try? IndexStore.shared.placeLabels(for: ids)) ?? [:]
         let documents = (try? IndexStore.shared.documents(for: ids)) ?? [:]
 
-        return ids.map { id in
+        return ids.enumerated().map { position, id in
             var parts = [ref(for: id)]
+            // The best two matches carry much more of their text, so a total
+            // at the bottom of a receipt or a seat on a ticket can be read.
+            let textLength = position < 2 ? max(snippetLength * 5, 300) : snippetLength
             if let date = dates[id] { parts.append(Self.stamp.string(from: date)) }
             if let place = places[id] { parts.append(place) }
             if let category = categories[id] { parts.append(category.rawValue) }
@@ -371,9 +553,12 @@ actor PhotoToolbox {
                     parts.append("looks like: " + english.joined(separator: ", "))
                 }
                 if !info.labels.isEmpty { parts.append("shows: " + info.labels.prefix(4).joined(separator: ", ")) }
+                // A screenshot's text starts with the status bar clock, which
+                // small models then give as the answer to "what time…?".
                 let text = info.text.replacingOccurrences(of: "\n", with: " ")
+                    .replacing(/^\s*\d{1,2}:\d{2}\s+/, with: "")
                 if !text.isEmpty {
-                    let snippet = text.count > snippetLength ? text.prefix(snippetLength) + "…" : Substring(text)
+                    let snippet = text.count > textLength ? text.prefix(textLength) + "…" : Substring(text)
                     parts.append("text: “\(snippet)”")
                 }
             }
@@ -415,6 +600,11 @@ nonisolated enum AssistantPrompt {
             what it shows and the text recognized in it. Use the tools to look things up instead of \
             guessing, and say so when nothing matches.
 
+            The recognized text lets you answer questions about what is written in photos: prices \
+            and totals on receipts, times and seats on tickets, dates in letters, messages in \
+            screenshots. For such a question, find the photo, then read the answer from its text. \
+            Never say you can't access something before you have searched for it.
+
             Use find_photos once with every detail the user gave: the place, a date range, a category, \
             and a short English description of what the photo shows or the words in it. Leave out \
             details the user didn't give: no category unless they named one, no description if they \
@@ -424,8 +614,9 @@ nonisolated enum AssistantPrompt {
             Never run more than three searches for one question; then answer with what you found.
 
             Whenever your answer is about particular photos, call show_photos with their refs so the \
-            user sees them. Never write refs like p1 in your reply: the user can't see them. To group photos, call propose_album; the user confirms with a button, so \
-            never claim an album was created.
+            user sees them. Never write refs like p1 in your reply: the user can't see them. When the user asks for an album, call propose_album right away with \
+            the photos you found, without asking first: the user confirms with a button, so never \
+            claim an album was created.
 
             Answer in the user's language, in one to three short sentences. Today is \(date).
             """

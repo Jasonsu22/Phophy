@@ -116,6 +116,10 @@ func postJSON(_ url: URL, body: [String: Any], headers: [String: String]) async 
         default: throw AssistantError.server(status, message)
         }
     }
+    // Count the tokens for the cost shown under answers (E11).
+    if let usage = TokenUsage(response: json) {
+        await UsageMeter.record(usage, model: body["model"] as? String ?? "unknown")
+    }
     return json
 }
 

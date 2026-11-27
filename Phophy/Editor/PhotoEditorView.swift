@@ -73,6 +73,7 @@ struct PhotoEditorView: View {
         .animation(.easeInOut(duration: 0.2), value: model.message)
         .animation(.easeInOut(duration: 0.2), value: pendingAI)
         .task { await model.load() }
+        .onDisappear { model.leave() }
         .confirmationDialog("Discard your changes?", isPresented: $confirmDiscard, titleVisibility: .visible) {
             Button("Discard Changes", role: .destructive) { dismiss() }
         }
@@ -135,9 +136,30 @@ struct PhotoEditorView: View {
             case .loading:
                 ProgressView("Opening photo…")
             case let .working(text):
-                ProgressView(text)
-                    .padding(18)
-                    .glassEffect(.regular, in: .rect(cornerRadius: 20))
+                if let started = model.aiStarted {
+                    // AI edits take a while: show the time and that leaving is fine.
+                    TimelineView(.periodic(from: started, by: 1)) { context in
+                        VStack(spacing: 8) {
+                            ProgressView()
+                            Text(text).font(.subheadline.weight(.semibold))
+                            Text("\(Int(context.date.timeIntervalSince(started)))s · usually 20–60s")
+                                .font(.caption)
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                            Text("You can leave: it keeps going and saves a new photo when done.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: 260)
+                        .padding(18)
+                        .glassEffect(.regular, in: .rect(cornerRadius: 20))
+                    }
+                } else {
+                    ProgressView(text)
+                        .padding(18)
+                        .glassEffect(.regular, in: .rect(cornerRadius: 20))
+                }
             case let .failed(text):
                 ContentUnavailableView("Can't edit this photo", systemImage: "exclamationmark.triangle", description: Text(text))
             case .ready:

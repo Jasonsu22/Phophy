@@ -40,7 +40,7 @@ actor DescriptionService {
 
     /// Recognized text longer than this means the photo is mostly text, and
     /// is described as a screen or document.
-    nonisolated static let textHeavy = 160
+    nonisolated static let textHeavy = 100
     /// Similarity above which two photos taken close together count as the same shot.
     nonisolated static let duplicateSimilarity: Float = 0.93
 
@@ -64,8 +64,16 @@ actor DescriptionService {
         repeat {
             runAgain = false
             await describePending(status: status)
+            // Photos indexed meanwhile are new work: go round again.
+            if !runAgain, await PhotoIndexer.shared.isIndexing(), !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(20))
+                runAgain = true
+            }
         } while runAgain
     }
+
+    private var indexBatchesAtLastTurn = 0
+    private var lastTurn = Date.distantPast
 
     /// Describes up to `limit` of `ids` that have no description yet, right
     /// away (for a search that came back weak). Returns how many were described.
@@ -155,6 +163,18 @@ actor DescriptionService {
                 try? await Task.sleep(for: .seconds(10))
                 continue
             }
+            // Indexing a big library can take days (photos wait on iCloud),
+            // so describing doesn't wait for it to finish: the two take
+            // turns. Indexing gets a few batches between descriptions, and
+            // if it's stuck waiting on a download, describing goes ahead.
+            if await PhotoIndexer.shared.isIndexing() {
+                let batches = await PhotoIndexer.shared.batchCount()
+                if batches - indexBatchesAtLastTurn < 4, Date.now.timeIntervalSince(lastTurn) < 12 {
+                    try? await Task.sleep(for: .milliseconds(400))
+                    continue
+                }
+                indexBatchesAtLastTurn = batches
+            }
             if AppSettings.describeOnlyWhenCharging, !(await Self.isCharging()) {
                 return "Waiting for the charger"
             }
@@ -162,6 +182,7 @@ actor DescriptionService {
                 try? await Task.sleep(for: .milliseconds(250))
                 continue
             }
+            lastTurn = .now
             return nil
         }
         return "Stopped"
@@ -224,7 +245,7 @@ actor DescriptionService {
         guard let asset, let image = await loadImage(asset, size: describer.imageSize) else { return false }
         let text = (try? IndexStore.shared.info(for: job.id))?.text ?? ""
         let context = DescribeContext(
-            isScreen: asset.mediaSubtypes.contains(.photoScreenshot) || text.count >= Self.textHeavy,
+            isScreen: asset.mediaSubtypes.contains(.photoScreenshot) || TextNormalizer.textAmount(text) >= Self.textHeavy,
             text: text
         )
         do {
